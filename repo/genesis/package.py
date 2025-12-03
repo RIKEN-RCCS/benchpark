@@ -4,9 +4,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+import os
 
 
-class Genesis(AutotoolsPackage):
+class Genesis(AutotoolsPackage, CudaPackage):
     """GENESIS package contains two MD programs (atdyn and spdyn), trajectory
     analysis programs, and other useful tools. GENESIS (GENeralized-Ensemble
     SImulation System) has been developed mainly by Sugita group in RIKEN-CCS.
@@ -14,10 +17,17 @@ class Genesis(AutotoolsPackage):
     
     tags = ['genesis','benchmark']
     
-    homepage = "https://www.r-ccs.riken.jp/labs/cbrt/"
+    homepage = "https://mdgenesis.org/"
     git = "https://github.com/genesis-release-r-ccs/genesis"
 
     version("main", branch="main", submodules=False)
+    version(
+        "2.1.6", submodules=False, tag="v2.1.6", commit="025e9eba262ac9f1b5447573b5ad73af87cfc4b0"
+    )
+
+    version(
+        "2.1.5", submodules=False, tag="v2.1.5", commit="5c5ac814a4ab081a6852362444ef88d50c1e9d0f"
+    )
     version(
         "2.1.4", submodules=False, tag="v2.1.4", commit="48fa5654ae1ecdf606fb6cd0bdcc2952f5caaa65"
     )
@@ -35,7 +45,7 @@ class Genesis(AutotoolsPackage):
     variant("openmp", default=True, description="Build with OpenMP enabled.")
     variant("lapack", default=True, description="Build with LAPACK enabled.")
     variant("gpu", default=False, description="Build with GPGPU enabled.")
-    variant("precision", description="Build with selected precision.", default="double", values=("double", "mixed", "single", "large_int"), multi=False)
+    variant("precision", description="Build with selected precision.", default="double", values=("double", "mixed", "single"), multi=False)
     variant("simd", description="Build with SIMD width.", default="auto", values=("auto", "MIC-AVX512", "CORE-AVX512", "CORE-AVX2"), multi=False)
     variant("debug", description="Set Debug level", default="0", values=("0", "1", "2", "3", "4"), multi=False)
 
@@ -61,16 +71,22 @@ class Genesis(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = [f"--enable-{spec.variants['precision'].value}",
-                       f"--with-simd={spec.variants['simd'].value}"]
+        args = []
 
-        if int(spec.variants['debug'].value) > 0:
-            config_args.extend(f"--enable-debug={spec.variants['debug'].value}")
+        precision = spec.variants["precision"].value
+        args.append(f"--enable-{precision}")
 
-        config_args.extend(self.enable_or_disable("mpi"))
-        config_args.extend(self.enable_or_disable("openmp"))
-        config_args.extend(self.with_or_without("lapack"))
-        config_args.extend(self.enable_or_disable("gpu"))
+        simd = spec.variants["simd"].value
+        args.append(f"--with-simd={simd}")
+
+        debug_level = int(spec.variants['debug'].value) 
+        if debug_level > 0:
+            args.append(f"--enable-debug={debug_level}")
+
+        args.append("--enable-mpi" if "+mpi" in spec else "--disable-mpi")
+        args.append("--enable-openmp" if "+openmp" in spec else "--disable-openmp")
+        args.append("--with-lapack" if "+lapack" in spec else "--without-lapack")
+        args.append("--enable-gpu" if "+gpu" in spec else "--disable-gpu")
 
         if "+mpi" in spec:
             env["CC"] = spec["mpi"].mpicc
@@ -111,7 +127,56 @@ class Genesis(AutotoolsPackage):
             env["FCFLAGS"] = f"{opt_flags} -ffree-line-length-none"
             env["F77FLAGS"] = f"{opt_flags} -ffree-line-length-none"
 
-        if "+gpu" in spec:
-            config_args.extend(self.with_or_without("cuda", activation_value=spec["cuda"].prefix))
+        return args
 
-        return config_args
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        spec = self.spec
+
+        if self.spec.satisfies("+lapack"):
+            env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
+
+        if self.spec.satisfies("+gpu") and "cuda" in spec:
+            cuda_arch_variant = self.spec.variants.get("cuda_arch", None)
+
+            if cuda_arch_variant is None:
+                cuda_arch_list = ["90"]
+            else:
+                cuda_arch_list = list(cuda_arch_variant.value)
+
+                cuda_arch_list = [a for a in cuda_arch_list if a != "none"]
+                if not cuda_arch_list:
+                    cuda_arch_list = ["90"]
+
+            cuda_gencode = " ".join(self.cuda_flags(cuda_arch_list))
+            env.set("NVCCFLAGS", cuda_gencode)
+
+            cuda_prefix = spec["cuda"].prefix
+
+            inc_dirs = [
+                join_path(cuda_prefix, "include"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "include"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "include", "nvtx3"),
+            ]
+            lib_dirs = [
+                join_path(cuda_prefix, "lib64"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "lib"),
+            ]
+
+            for d in inc_dirs:
+                if os.path.isdir(d):
+                    env.prepend_path("CPATH",d)
+                    env.prepend_path("CPLUS_INCLUDE_PATH",d)
+                    env.prepend_path("C_INCLUDE_PATH",d)
+
+                    env.append_flags("CFLAGS",    f"-I{d}")
+                    env.append_flags("CXXFLAGS",  f"-I{d}")
+                    env.append_flags("CPPFLAGS",  f"-I{d}")
+                    env.append_flags("NVCCFLAGS", f"-I{d}")
+
+            for d in lib_dirs:
+                if os.path.isdir(d):
+                    env.append_flags("LDFLAGS", f"-L{d}")
+                    env.prepend_path("LD_LIBRARY_PATH", d)
+
+            env.set("CUDA_HOME", str(cuda_prefix))
+            env.set("CUDA_PATH", str(cuda_prefix))
