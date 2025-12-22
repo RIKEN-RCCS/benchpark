@@ -14,6 +14,8 @@ class Ffb(Package):
 
     version("main", sha256="9629ce4a97c295cbfdc4df0bcfaf6efe12919ff7aa438e812b26f438c60d22ba")
 
+    depends_on("nvhpc", type="build")
+
     def install(self, spec, prefix):
 
         chmod = which("chmod")

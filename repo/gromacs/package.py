@@ -205,7 +205,8 @@ class Gromacs(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     depends_on("c", type="build")
-
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on("mpi", when="+mpi")
 
     # Plumed 2.9.0 needs Gromacs 2023,  2022.5, 2021.7, 2020.7

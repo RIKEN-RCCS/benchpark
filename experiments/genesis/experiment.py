@@ -59,7 +59,7 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment):
         )
 
     def compute_package_section(self):
-        spec = f"genesis{self.determine_version()} precision=mixed"
+        spec = f"genesis{self.determine_version()} precision=mixed "
         if self.spec.variants["backend"][0] == "gpu":
             spec += " +gpu cuda_arch=90 "
 

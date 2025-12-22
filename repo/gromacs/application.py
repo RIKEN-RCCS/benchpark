@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-
 from ramble.appkit import *
 from ramble.expander import Expander
 
@@ -21,7 +20,7 @@ class Gromacs(ExecutableApplication):
     software_spec('impi2018', pkg_spec='intel-mpi@2018.4.274', package_manager='spack*')
     software_spec('gromacs', pkg_spec='gromacs@2023.3', compiler='gcc12', package_manager='spack*')
 
-    executable('pre-process', 'gmx_mpi grompp ' +
+    executable('pre-process', 'srun --mpi=pmix -n 1 gmx_mpi grompp ' +
                '-f {input_path}/{type}.mdp ' +
                '-c {input_path}/conf.gro ' +
                '-p {input_path}/topol.top ' +

@@ -333,7 +333,7 @@ class Allocation(BasicModifier):
 
         sbatch_directives = list(f"#SBATCH {x}" for x in (srun_opts + sbatch_opts))
 
-        v.mpi_command = f"srun {' '.join(srun_opts)}"
+        v.mpi_command = f"srun --mpi=pmix {' '.join(srun_opts)}"
         v.batch_submit = "sbatch {execute_experiment}"
         v.allocation_directives = "\n".join(sbatch_directives)
 

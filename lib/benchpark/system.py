@@ -211,7 +211,7 @@ class System(ExperimentSystemBase):
         # "'packages:':" syntax is required to enforce spack to use benchpark-defined
         # compilers instead of external compilers defined by spack compiler search (from ramble).
         if pkg_cfg:
-            pkg_cfg = {"packages:": pkg_cfg["packages"]}
+            pkg_cfg = {"packages": pkg_cfg["packages"]}
         else:
             pkg_cfg = {"packages": {}}
         return {

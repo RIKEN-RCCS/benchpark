@@ -45,23 +45,26 @@ class Gromacs(
 
     def compute_applications_section(self):
         # MPI-only defaults
-        self.add_experiment_variable("n_ranks", 8, True)
+        self.add_experiment_variable("n_nodes", 2, True)
+        self.add_experiment_variable("n_ranks", 16, True)
         target = "cpu"
         bonded_target = "cpu"
         npme = "0"
 
         if self.spec.satisfies("+openmp"):
-            self.set_environment_variable("OMP_PROC_BIND", "close")
-            self.set_environment_variable("OMP_PLACES", "cores")
-            self.add_experiment_variable("n_threads_per_proc", 8, True)
-            self.add_experiment_variable("n_ranks", 8, True)
+#            self.set_environment_variable("OMP_PROC_BIND", "close")
+#            self.set_environment_variable("OMP_PLACES", "cores")
+            self.add_experiment_variable("n_threads_per_proc", 4, True)
+            self.add_experiment_variable("n_nodes", 2, True)
+            self.add_experiment_variable("n_ranks", 16, True)
+            self.add_experiment_variable("omp_num_threads", 4)
             target = "cpu"
             bonded_target = "cpu"
             npme = "0"
 
         # Overrides +openmp settings
         if self.spec.satisfies("+cuda"):
-            self.add_experiment_variable("n_gpus", 8, True)
+            #self.add_experiment_variable("n_gpus", 8, True)
             target = "gpu"
             bonded_target = "cpu"
             npme = "1"
