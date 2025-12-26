@@ -24,7 +24,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
     version(
         "2.1.6", submodules=False, tag="v2.1.6", commit="025e9eba262ac9f1b5447573b5ad73af87cfc4b0"
     )
-
     version(
         "2.1.5", submodules=False, tag="v2.1.5", commit="5c5ac814a4ab081a6852362444ef88d50c1e9d0f"
     )

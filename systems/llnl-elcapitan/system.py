@@ -130,7 +130,7 @@ class LlnlElcapitan(System):
     variant(
         "rocm",
         default="6.4.0",
-        values=("5.7.1", "6.2.4", "6.3.1", "6.4.0", "6.4.1", "6.4.2"),
+        values=("5.7.1", "6.2.4", "6.3.1", "6.4.0", "6.4.1", "6.4.2", "6.4.3", "7.0.1"),
         description="ROCm version",
     )
     variant(
@@ -339,13 +339,13 @@ class LlnlElcapitan(System):
                 "texinfo": {"externals": [{"spec": "texinfo@6.5", "prefix": "/usr"}]},
                 "bison": {"externals": [{"spec": "bison@3.0.4", "prefix": "/usr"}]},
                 "python": {
+                    "buildable": False,
                     "externals": [
                         {
                             "spec": "python@3.9.12",
                             "prefix": "/usr/tce/packages/python/python-3.9.12",
-                            "buildable": False,
                         }
-                    ]
+                    ],
                 },
                 "unzip": {
                     "buildable": False,
@@ -353,9 +353,8 @@ class LlnlElcapitan(System):
                 },
                 "hypre": {"variants": f"amdgpu_target={self.rocm_arch}"},
                 "hwloc": {
-                    "externals": [
-                        {"spec": "hwloc@2.9.1", "prefix": "/usr", "buildable": False}
-                    ]
+                    "buildable": False,
+                    "externals": [{"spec": "hwloc@2.9.1", "prefix": "/usr"}],
                 },
                 "fftw": {"buildable": False},
                 "intel-oneapi-mkl": {
@@ -371,7 +370,7 @@ class LlnlElcapitan(System):
                     "buildable": False,
                     "require": "intel-oneapi-mkl",
                 },
-                "mpi": {"buildable": False},
+                "mpi": {"require": "cray-mpich-gtl"},
                 "libfabric": {
                     "externals": [
                         {"spec": "libfabric@2.1", "prefix": "/opt/cray/libfabric/2.1"}

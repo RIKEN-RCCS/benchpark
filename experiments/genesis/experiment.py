@@ -26,13 +26,19 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment):
 
     variant(
         "version",
-        default="main",
+        default="2.1.6",
+        values=("2.1.6", "main"),
         description="app version",
     )
 
     maintainers("jdomke", "SBA0486")
 
     def compute_applications_section(self):
+        if self.spec.satisfies("exec_mode=test"):
+            self.add_experiment_variable("n_nodes", ["1"], True)
+        # Must be exec_mode=perf
+        else:
+            self.add_experiment_variable("n_nodes", ["2"], True)
 
 
         if self.spec.satisfies("+openmp"):
@@ -51,7 +57,6 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment):
 #            self.add_experiment_variable("n_gpus", "{n_nodes}", True)
 
         self.add_experiment_variable("size", ["5000"])
-
         self.set_required_variables(
             n_resources="{n_ranks}",
             process_problem_size="{size}/{n_ranks}",
