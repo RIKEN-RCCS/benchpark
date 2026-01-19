@@ -1,0 +1,71 @@
+### Example settup for riken-cloud
+
+## On fx700
+
+srun -N 1 -p fx7200 --time=03:00:00 --pty bash
+
+git clone https://github.com/RIKEN-RCCS/benchpark
+cd benchpark
+. ./setup-env.sh
+
+#Use python3.12 on fx700 nodes (maybe not necessary for all fx nodes)
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install .[analyze]
+
+export BM="saxpy"
+export SYS="riken-cloud"
+export WSDIR="workspace"
+export CLUSTER="fx700"
+export COMP="fj"
+
+# On gh200 clusters cuda/nvhpc version can be added as argument just like for compiler
+# On fx700, compiler options: fj,gcc,clang
+# On gh200, compiler options: gcc,nvhpc,cuda
+
+benchpark system init --dest=${SYS}-${CLUSTER}-${COMP} ${SYS} cluster=${CLUSTER} compiler=${COMP}
+benchpark experiment init ${SYS}-${CLUSTER}-${COMP} ${BM}+mpi+openmp
+benchpark setup ${SYS}-${CLUSTER}-${COMP}/${BM} ${WSDIR}
+. ./${WSDIR}/setup.sh
+
+
+# Somme patches for fujitsu externals and clang compiler (Run once after initial spack/ramble/spack-packages setup
+wget https://raw.githubusercontent.com/SBA0486/spack-packages/refs/heads/develop/repos/spack_repo/builtin/packages/hpl/package.py -O ${WSDIR}/spack-packages/repos/spack_repo/builtin/packages/hpl/package.py
+wget https://raw.githubusercontent.com/SBA0486/spack-packages/refs/heads/develop/repos/spack_repo/builtin/packages/fujitsu_mpi/package.py -O ${WSDIR}/spack-packages/repos/spack_repo/builtin/packages/fujitsu_mpi/package.py
+sed -i -e 's@SYSTEM_PATHS = \[\(.*\)\]@SYSTEM_PATHS = [\1, "/opt/FJSVstclanga/cp-1.0.30.01"]@g'  ${WSDIR}/spack/lib/spack/spack/util/environment.py
+sed -i -e 's@%fj"):@%fj") or (spec.target == "a64fx" and spec.satisfies("%clang\@11:")):@g'  ${WSDIR}/spack-packages/repos/spack_repo/builtin/packages/cmake/package.py
+
+
+# setup
+ramble --workspace-dir ./${WSDIR}/${SYS}-${CLUSTER}-${COMP}/${BM}/workspace workspace setup
+
+# run workspace from login node
+ramble --workspace-dir ./${WSDIR}/${SYS}-${CLUSTER}-${COMP}/${BM}/workspace on
+ramble --workspace-dir ./${WSDIR}/${SYS}-${CLUSTER}-${COMP}/${BM}/workspace workspace analyze
+
+
+# qws with caliper using gcc compiler
+export BM="qws"
+export SYS="riken-cloud"
+export WSDIR="workspace"
+export CLUSTER="fx700"
+export COMP="gcc"
+benchpark system init --dest=${SYS}-${CLUSTER}-${COMP} ${SYS} cluster=${CLUSTER} compiler=${COMP}
+benchpark experiment init ${SYS}-${CLUSTER}-${COMP} ${BM} +openmp caliper=time,mpi
+benchpark setup ${SYS}-${CLUSTER}-${COMP}/${BM} ${WSDIR}
+
+## Run genesis-cuda on cluster=gh200
+
+srun -N 1 -p qc-gh200 --time=03:00:00 --pty bash
+
+cd ${BENCHPARK_DIR}
+export BM="genesis"
+export SYS="riken-cloud"
+export WSDIR="workspace"
+export CLUSTER="gh200"
+export COMP="gcc"
+benchpark system init --dest=${SYS}-${CLUSTER}-${COMP} ${SYS} cluster=${CLUSTER} compiler=${COMP}
+benchpark experiment init ${SYS}-${CLUSTER}-${COMP} ${BM} +openmp backend=gpu
+benchpark setup ${SYS}-${CLUSTER}-${COMP}/${BM} ${WSDIR}
