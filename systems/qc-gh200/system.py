@@ -84,6 +84,7 @@ class QcGh200(System):
         return {
             "cuda_arch": "90",
             "queue": "qc-gh200",
+            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
         }
 
     def compute_software_section(self):
