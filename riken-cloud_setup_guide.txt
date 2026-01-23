@@ -2,7 +2,7 @@
 
 ## On fx700
 
-srun -N 1 -p fx7200 --time=03:00:00 --pty bash
+srun -N 1 -p fx700 --time=03:00:00 --pty bash
 
 git clone https://github.com/RIKEN-RCCS/benchpark
 cd benchpark
