@@ -64,7 +64,7 @@ class Gromacs(
 
         # Overrides +openmp settings
         if self.spec.satisfies("+cuda"):
-            #self.add_experiment_variable("n_gpus", 8, True)
+            self.add_experiment_variable("n_gpus", 8, True)
             target = "gpu"
             bonded_target = "cpu"
             npme = "1"
