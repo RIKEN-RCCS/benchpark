@@ -996,13 +996,14 @@ class RikenCloud(System):
                 "cuda_arch": "90",
                 "queue": "qc-gh200",
                 "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+                "extra_cmd_opts": "--gpus 0",
             }
         if self.spec.variants["cluster"][0] == "fx700":
             return {
                 "queue": "fx700",
                 "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix ; module load system/fx700 FJSVstclanga",
             }
-            
+
     def compute_software_section(self):
         default_comp = self.spec.variants["compiler"][0]
         if default_comp == "clang":
