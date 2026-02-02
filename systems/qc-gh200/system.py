@@ -41,7 +41,7 @@ class QcGh200(System):
     variant(
         "compiler",
         default="gcc",
-        values=("gcc", "cuda_12.5", "cuda", "nvhpc_24.3", "nvhpc_24.9", "nvhpc"),
+        values=("gcc", "cuda_12.5", "cuda", "nvhpc_24.3", "nvhpc_24.9", "nvhpc", "nvhpc_hpcx"),
         description="Which compiler to use",
     )
     variant(
@@ -107,6 +107,54 @@ class QcGh200(System):
         }
 
     def compute_packages_section(self):
+        if self.spec.satisfies("compiler=nvhpc_hpcx"):
+           nvhpc_modules = ["system/qc-gh200", "nvhpc-hpcx-cuda12/25.7"]
+           hpcx_path = "/opt/nvidia/hpc_sdk/Linux_aarch64/25.7/comm_libs/12.9/hpcx/hpcx-2.22.1/ompi"
+           nccl_path = "/opt/nvidia/hpc_sdk/Linux_aarch64/25.7/comm_libs/12.9/nccl"
+           selections = {
+               "packages": {
+                   "nvhpc": {
+                       "externals": [
+                           {
+                               "spec": f"nvhpc@25.7",
+                               "modules": nvhpc_modules,
+                           },
+                       ],
+                   },
+                   "all": {
+                       "variants": ["cuda_arch=90"]
+                   },
+                   "nccl": {
+                       "buildable": False,
+                       "externals": [
+                           {
+                               "spec": f"nccl@2.26.5",
+                               "prefix": nccl_path,
+                           },
+                       ],
+                   },
+                   "mpi": {
+                       "buildable": False,
+                       "externals": [
+                           {
+                               "spec": "openmpi@4.1.7",
+                               "modules": nvhpc_modules,
+                               "prefix": hpcx_path,
+                           },
+                       ],
+                   },
+                   "cuda": {
+                       "buildable": False,
+                       "externals": [
+                           {
+                               "spec": "cuda@12.7",
+                               "modules": nvhpc_modules,
+                               "prefix": "/opt/nvidia/hpc_sdk/Linux_aarch64/25.7/cuda",
+                           },
+                       ],
+                   },
+               }
+           }
         if self.spec.satisfies("compiler=nvhpc"):
            selections = {
                "packages": {

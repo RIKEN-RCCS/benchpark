@@ -102,21 +102,128 @@ class OsuMicroBenchmarks(
         values=("latest", "7.5"),
         description="app version",
     )
+    variant(
+        "xccl",
+        default=False,
+        description="Enable NCCL/RCCL support",
+    )
+    variant(
+        "papi",
+        default=False,
+        description="Enable PAPI support",
+    )
+    variant(
+        "graphing",
+        default=False,
+        description="Enable graphing support",
+    )
+    variant(
+        "managed",
+        default=False,
+        description="Enable Managed Memory support",
+    )
+    variant(
+        "papi_events",
+        default = "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM,PAPI_L1_ICM,PAPI_L2_DCM,PAPI_L2_ICM",
+        description="PAPI events"
+    )
+    variant(
+        "papi_output",
+        default="papi.out",
+        description="PAPI output file"
+    )
+    variant(
+        "graph_type",
+        default="png",
+        description="Graph type"
+    )
 
     maintainers("nhanford")
 
     def compute_applications_section(self):
+        import yaml
+        import os
+        import sys
+
+        dest_dir = None
+        for i, arg in enumerate(sys.argv):
+            if arg == 'init' and i + 1 < len(sys.argv):
+                dest_dir = sys.argv[i + 1]
+                break
+
+        if not dest_dir:
+            return
+
+        # read packages.yaml
+        yaml_path = os.path.join(dest_dir, 'auxiliary_software_files', 'packages.yaml')
+        modules = []
+        if os.path.exists(yaml_path):
+            with open(yaml_path, 'r') as f:
+                data = yaml.safe_load(f)
+                # get mpi externals
+                mpi_externals = data.get('packages', {}).get('mpi', {}).get('externals', [])
+                if mpi_externals:
+                    modules = mpi_externals[0].get('modules', [])
+
+        setup_env_cmd = "echo ''; "
+        for m in modules:
+            setup_env_cmd += f"module load {m};"
+        self.add_experiment_variable("pre_run_cmds", setup_env_cmd, False)
+
+        #########################################################################
+        #print("\nDEBUG: --- self Attributes List ---")
+        #for attr in dir(self):
+        #    if not attr.startswith('__'):
+        #        try:
+        #            value = getattr(self, attr)
+        #            if not callable(value):
+        #                print(f"DEBUG: {attr} = {value}")
+        #        except:
+        #            print(f"DEBUG: {attr} = [Access Error]")
+        #print("DEBUG: ----------------------------\n")
+        #########################################################################
+
+        papi_events_val = "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM,PAPI_L1_ICM,PAPI_L2_DCM,PAPI_L2_ICM"
+        papi_output_val = "papi.out"
+        graph_type_val = "png"
+
+        if self.spec.satisfies("+papi"):
+            papi_val = self.spec.variants.get("papi_events")
+            if papi_val:
+                papi_events_val = str(papi_val[0]).replace(":", ",")
+
+            papi_output = self.spec.variants.get("papi_output")
+            if papi_output:
+                papi_output_val = str(papi_output[0])
+
+        if self.spec.satisfies("+graphing"):
+            graph_type = self.spec.variants.get("graph_type")
+            if graph_type:
+                graph_type_val = str(graph_type[0])
+
+        run_args = []
+        if self.spec.satisfies("+rocm"):
+            run_args.append("-d rocm")
+
+        if self.spec.satisfies("+cuda"):
+            if self.spec.satisfies("+managed"):
+                run_args.append("-d managed")
+            else:
+                run_args.append("-d cuda")
+
+        if self.spec.satisfies("+papi"):
+            run_args.append(f"-P {papi_events_val}:{papi_output_val}")
+
+        if self.spec.satisfies("+graphing"):
+            run_args.append(f"-G {graph_type_val}")
+
+        self.add_experiment_variable("additional_args", " ".join(run_args), False)
 
         num_nodes = {"n_nodes": 2}
-
         if self.spec.satisfies("exec_mode=test"):
             for pk, pv in num_nodes.items():
                 self.add_experiment_variable(pk, pv, True)
 
-        if self.spec.satisfies("+rocm"):
-            self.add_experiment_variable("additional_args", " -d rocm", False)
-        if self.spec.satisfies("+cuda"):
-            self.add_experiment_variable("additional_args", " -d cuda", False)
         if self.spec.satisfies("+rocm") or self.spec.satisfies("+cuda"):
             resource = "n_gpus"
             for pk, pv in num_nodes.items():
@@ -133,3 +240,20 @@ class OsuMicroBenchmarks(
         self.add_package_spec(
             self.name, [f"osu-micro-benchmarks{self.determine_version()}"]
         )
+
+    def compute_package_section(self):
+        pkg_spec = f"osu-micro-benchmarks{self.determine_version()}"
+
+        if self.spec.satisfies("+xccl"):
+            pkg_spec += "+xccl"
+
+        if self.spec.satisfies("+papi"):
+            pkg_spec += "+papi"
+
+        if self.spec.satisfies("+graphing"):
+            pkg_spec += "+graphing"
+
+        if self.spec.satisfies("+managed"):
+            pkg_spec += "+managed"
+
+        self.add_package_spec(self.name, [pkg_spec])
