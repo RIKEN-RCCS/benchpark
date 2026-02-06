@@ -331,6 +331,12 @@ class Allocation(BasicModifier):
 
         sbatch_opts.append("--exclusive")
 
+        if '--gpus 0' in srun_opts:
+            srun_opts = [
+                opt for opt in srun_opts
+                if not (opt.startswith('--gpu') and opt != '--gpus 0')
+            ]
+
         sbatch_directives = list(f"#SBATCH {x}" for x in (srun_opts + sbatch_opts))
 
         v.mpi_command = f"srun {' '.join(srun_opts)}"

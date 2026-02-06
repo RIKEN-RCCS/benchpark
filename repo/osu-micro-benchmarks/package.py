@@ -9,8 +9,10 @@ from spack_repo.builtin.packages.osu_micro_benchmarks.package import (
     OsuMicroBenchmarks as BuiltinOsu,
 )
 
-
 class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
+
+    patch("add-papi-option.patch", when="@7.5:")
+    
     variant("managed", default=False, description="Enable CUDA managed memory support")
 
     depends_on("cray-mpich+gtl", when="+rocm")
@@ -18,6 +20,9 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
     def configure_args(self):
         _base_args = super().configure_args()
     
+        cuda_root = os.path.abspath(os.path.join(self.spec['cuda'].prefix, "..", ".."))
+        #nvhpc_root = os.path.abspath(os.path.join(self.spec['nvhpc'].prefix, "..", ".."))
+        mpi_root = self.spec['mpi'].prefix
         # ---------------------------------------------
         # --- デバッグ用：Spackが生成した生の引数を確認 ---
         #print("DEBUG: === Raw arguments from super() ===")
@@ -26,6 +31,9 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
         # --- ついでにSpecの状態も確認 ---
         #if "+cuda" in self.spec:
         #    print(f"DEBUG: cuda prefix = '{self.spec['cuda'].prefix}'")
+        #print(f"DEBUG: mpi_root    = '{mpi_root}'")
+        #print(f"DEBUG: nvhpc_root  = '{nvhpc_root}'")
+        #print(f"DEBUG: cuda_root   = '{cuda_root}'")
         #print("DEBUG: === Fin. ===")
         # ---------------------------------------------
 
@@ -85,7 +93,7 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
                 extra_ld.append(f"-L{nvshmem_path}/lib")
                 extra_libs.append("-lnvshmem")
                 os.environ['SHMEM_HOME'] = nvshmem_path
-            # CUDA library
+            # CUDA library etc.
             extra_libs.extend(["-lcudart", "-lrt", "-lstdc++"])
 
             # for NCCL
@@ -181,10 +189,14 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
         env.prepend_path("PATH", join_path(oshmdir))
 
     #def patch(self):
-    #    # add prototype into osu_util.c
+    #    filter_file(
+    #        r'#ifdef _ENABLE_PAPI_',
+    #        '#ifdef FORCE_PAPI_ON',
+    #        'c/util/osu_util.c'
+    #    )
     #    filter_file(
     #        r'#include "osu_util.h"',
-    #        '#include "osu_util.h"\nvoid omb_papi_parse_event_options(char *opt_arr);',
+    #        '#ifdef _ENABLE_PAPI_\n#define FORCE_PAPI_ON 1\n#endif\n#include "osu_util.h"',
     #        'c/util/osu_util.c'
     #    )
 
@@ -212,8 +224,8 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
                     f.write('osu_util_oshm.o: ../util/osu_util.c\n')
                     f.write('\t$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o $@ $<\n')
 
-                #print("DEBUG: Patching completed successfully")
+            #    print("DEBUG: Patching completed successfully")
             #else:
-                #print(f"DEBUG: ERROR - Makefile NOT FOUND at {oshm_makefile}")
+            #    print(f"DEBUG: ERROR - Makefile NOT FOUND at {oshm_makefile}")
 
         #print("DEBUG: =========================================")

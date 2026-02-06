@@ -996,6 +996,7 @@ class RikenCloud(System):
                 "cuda_arch": "90",
                 "queue": "qc-gh200",
                 "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+                "extra_cmd_opts": "--gpus 0",
             }
         if self.spec.variants["cluster"][0] == "fx700":
             return {
