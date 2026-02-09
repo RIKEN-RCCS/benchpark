@@ -154,7 +154,7 @@ class OsuMicroBenchmarks(
     )
     variant(
         "papi_events",
-        default = "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM,PAPI_L1_ICM,PAPI_L2_DCM,PAPI_L2_ICM",
+        default = "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM,PAPI_L1_ICM,PAPI_L2_DCM",
         description="PAPI events"
     )
     variant(
@@ -213,10 +213,6 @@ class OsuMicroBenchmarks(
         #print("DEBUG: ----------------------------\n")
         #########################################################################
 
-        papi_events_val = "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM,PAPI_L1_ICM,PAPI_L2_DCM,PAPI_L2_ICM"
-        papi_output_val = "papi.out"
-        graph_type_val = "png"
-
         if self.spec.satisfies("+papi"):
             papi_val = self.spec.variants.get("papi_events")
             if papi_val:
@@ -264,11 +260,6 @@ class OsuMicroBenchmarks(
         n_resources = "{" + resource + "}"
         self.set_required_variables(
             n_resources=n_resources, process_problem_size="", total_problem_size=""
-        )
-
-    def compute_package_section(self):
-        self.add_package_spec(
-            self.name, [f"osu-micro-benchmarks{self.determine_version()}"]
         )
 
     def compute_package_section(self):

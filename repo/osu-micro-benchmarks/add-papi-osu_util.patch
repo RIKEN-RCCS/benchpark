@@ -1,0 +1,11 @@
+--- a/c/util/osu_util.c
++++ b/c/util/osu_util.c
+@@ -965,7 +965,7 @@
+             jchar += sprintf(&optstring_buf[jchar], "%s", "W:");
+         }
+         if (accel_enabled) {
+-            jchar += sprintf(&optstring_buf[jchar], "%s", "d:");
++            jchar += sprintf(&optstring_buf[jchar], "%s", "d:P:");
+         } else {
+             jchar += sprintf(&optstring_buf[jchar], "%s", "P:");
+         }

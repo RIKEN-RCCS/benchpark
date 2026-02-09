@@ -24,7 +24,6 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
             'c','java','python','openacc']
 
     # 実行テンプレート
-    #executable('run_mpi', '{benchmark_name} {additional_args}', use_mpi=True)
     executable('run_mpi', '{pre_run_cmds}\n{mpi_command} {benchmark_name} {additional_args}', use_mpi=True)
 
     workload('osu_bibw', executables=['run_mpi'])

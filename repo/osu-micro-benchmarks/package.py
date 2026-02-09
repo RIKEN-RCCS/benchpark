@@ -12,6 +12,7 @@ from spack_repo.builtin.packages.osu_micro_benchmarks.package import (
 class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
 
     patch("add-papi-option.patch", when="@7.5:")
+    patch("add-papi-osu_util.patch", when="@7.5:")
     
     variant("managed", default=False, description="Enable CUDA managed memory support")
 
@@ -189,16 +190,19 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
         env.prepend_path("PATH", join_path(oshmdir))
 
     #def patch(self):
-    #    filter_file(
-    #        r'#ifdef _ENABLE_PAPI_',
-    #        '#ifdef FORCE_PAPI_ON',
-    #        'c/util/osu_util.c'
-    #    )
-    #    filter_file(
-    #        r'#include "osu_util.h"',
-    #        '#ifdef _ENABLE_PAPI_\n#define FORCE_PAPI_ON 1\n#endif\n#include "osu_util.h"',
-    #        'c/util/osu_util.c'
-    #    )
+    #    import time
+    #    ###############################################################################
+    #    # Forces the building of binaries that require MPI4.
+    #    # Linking errors will occur if the MPI4 library is not present.
+    #    ###############################################################################
+    #    filter_file(r'SUBDIRS = neighborhood blocking non_blocking',
+    #                'SUBDIRS = neighborhood blocking non_blocking persistent',
+    #                'c/mpi/collective/Makefile.am')
+    #    time.sleep(1)
+    #    filter_file(r'SUBDIRS = neighborhood blocking non_blocking',
+    #                'SUBDIRS = neighborhood blocking non_blocking persistent',
+    #                'c/mpi/collective/Makefile.in')
+
 
     def configure(self, spec, prefix):
         # execute configure and create Makefile
