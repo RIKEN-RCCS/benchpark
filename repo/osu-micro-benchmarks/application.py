@@ -25,127 +25,77 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
 
     # 実行テンプレート
     executable('run_mpi', '{pre_run_cmds}\n{mpi_command} {benchmark_name} {additional_args}', use_mpi=True)
+    executable('run_mpi4', '{pre_run_cmds}\n{mpi_command} -n 4 {benchmark_name} {additional_args}', use_mpi=True)
+    executable('run_mpi_MT', '{pre_run_cmds}\n{export_environments} {mpi_command} {benchmark_name} {additional_args}', use_mpi=True)
 
-    workload('osu_bibw', executables=['run_mpi'])
-    workload('osu_bw', executables=['run_mpi'])
-    workload('osu_latency', executables=['run_mpi'])
-    workload('osu_latency_mp', executables=['run_mpi'])
-    workload('osu_latency_mt', executables=['run_mpi'])
-    workload('osu_mbw_mr', executables=['run_mpi'])
-    workload('osu_multi_lat', executables=['run_mpi'])
-    wl_mpi_pt2pt=['osu_bibw', 'osu_bw', 'osu_latency', 'osu_latency_mp', 'osu_latency_mt',
-                  'osu_mbw_mr', 'osu_multi_lat'
+    # workloads
+    wl_mpi_pt2pt = ['osu_bibw', 'osu_bw', 'osu_latency', 'osu_latency_mp', 'osu_latency_mt',
+                    'osu_mbw_mr', 'osu_multi_lat'
     ]
+    for exe in wl_mpi_pt2pt:
+        if exe == 'osu_latency_mt':
+            workload(exe, executables=['run_mpi_MT'])
+        else:
+            workload(exe, executables=['run_mpi'])
 
-    workload('osu_alltoallw', executables=['run_mpi'])
-    workload('osu_allreduce', executables=['run_mpi'])
-    workload('osu_reduce', executables=['run_mpi'])
-    workload('osu_iallgather', executables=['run_mpi'])
-    workload('osu_alltoall', executables=['run_mpi'])
-    workload('osu_scatterv', executables=['run_mpi'])
-    workload('osu_ialltoallw', executables=['run_mpi'])
-    workload('osu_iallreduce', executables=['run_mpi'])
-    workload('osu_ineighbor_alltoall', executables=['run_mpi'])
-    workload('osu_gather', executables=['run_mpi'])
-    workload('osu_ineighbor_alltoallw', executables=['run_mpi'])
-    workload('osu_ialltoall', executables=['run_mpi'])
-    workload('osu_neighbor_allgather', executables=['run_mpi'])
-    workload('osu_reduce_scatter', executables=['run_mpi'])
-    workload('osu_bcast', executables=['run_mpi'])
-    workload('osu_ineighbor_alltoallv', executables=['run_mpi'])
-    workload('osu_ireduce', executables=['run_mpi'])
-    workload('osu_neighbor_alltoall', executables=['run_mpi'])
-    workload('osu_neighbor_allgatherv', executables=['run_mpi'])
-    workload('osu_neighbor_alltoallv', executables=['run_mpi'])
-    workload('osu_ialltoallv', executables=['run_mpi'])
-    workload('osu_barrier', executables=['run_mpi'])
-    workload('osu_alltoallv', executables=['run_mpi'])
-    workload('osu_igather', executables=['run_mpi'])
-    workload('osu_allgatherv', executables=['run_mpi'])
-    workload('osu_ineighbor_allgatherv', executables=['run_mpi'])
-    workload('osu_iscatter', executables=['run_mpi'])
-    workload('osu_igatherv', executables=['run_mpi'])
-    workload('osu_gatherv', executables=['run_mpi'])
-    workload('osu_iscatterv', executables=['run_mpi'])
-    workload('osu_ireduce_scatter', executables=['run_mpi'])
-    workload('osu_ineighbor_allgather', executables=['run_mpi'])
-    workload('osu_ibcast', executables=['run_mpi'])
-    workload('osu_neighbor_alltoallw', executables=['run_mpi'])
-    workload('osu_ibarrier', executables=['run_mpi'])
-    workload('osu_scatter', executables=['run_mpi'])
-    workload('osu_allgather', executables=['run_mpi'])
-    workload('osu_iallgatherv', executables=['run_mpi'])
-    wl_mpi_collective=['osu_alltoallw', 'osu_allreduce', 'osu_reduce', 'osu_iallgather', 'osu_alltoall',
-                       'osu_scatterv', 'osu_ialltoallw', 'osu_iallreduce', 'osu_ineighbor_alltoall', 'osu_gather',
-                       'osu_ineighbor_alltoallw', 'osu_ialltoall', 'osu_neighbor_allgather', 'osu_reduce_scatter', 'osu_bcast',
-                       'osu_ineighbor_alltoallv', 'osu_ireduce', 'osu_neighbor_alltoall', 'osu_neighbor_allgatherv', 'osu_neighbor_alltoallv',
-                       'osu_ialltoallv', 'osu_barrier', 'osu_alltoallv', 'osu_igather', 'osu_allgatherv',
-                       'osu_ineighbor_allgatherv', 'osu_iscatter', 'osu_igatherv', 'osu_gatherv', 'osu_iscatterv',
-                       'osu_ireduce_scatter', 'osu_ineighbor_allgather', 'osu_ibcast', 'osu_neighbor_alltoallw', 'osu_ibarrier',
-                       'osu_scatter', 'osu_allgather', 'osu_iallgatherv'
+    wl_mpi_pt2pt_p = ['osu_bibw_persistent', 'osu_bw_persistent', 'osu_latency_persistent']
+    for exe in wl_mpi_pt2pt_p:
+        workload(exe, executables=['run_mpi'])
+
+    wl_mpi_collective = ['osu_alltoallw', 'osu_allreduce', 'osu_reduce', 'osu_iallgather', 'osu_alltoall',
+                         'osu_scatterv', 'osu_ialltoallw', 'osu_iallreduce', 'osu_gather', 'osu_ialltoall',
+                         'osu_reduce_scatter', 'osu_bcast', 'osu_ireduce', 'osu_ialltoallv', 'osu_barrier',
+                         'osu_alltoallv', 'osu_igather', 'osu_allgatherv', 'osu_iscatter', 'osu_igatherv',
+                         'osu_gatherv', 'osu_iscatterv', 'osu_ireduce_scatter', 'osu_ibcast', 'osu_scatter',
+                         'osu_allgather', 'osu_iallgatherv', 'osu_ibarrier'
     ]
+    for exe in wl_mpi_collective:
+        workload(exe, executables=['run_mpi'])
 
-    workload('osu_put_bw', executables=['run_mpi'])
-    workload('osu_fop_latency', executables=['run_mpi'])
-    workload('osu_put_bibw', executables=['run_mpi'])
-    workload('osu_get_bw', executables=['run_mpi'])
-    workload('osu_cas_latency', executables=['run_mpi'])
-    workload('osu_get_latency', executables=['run_mpi'])
-    workload('osu_put_latency', executables=['run_mpi'])
-    workload('osu_acc_latency', executables=['run_mpi'])
-    workload('osu_get_acc_latency', executables=['run_mpi'])
-    wl_mpi_onesided=['osu_put_bw', 'osu_fop_latency', 'osu_put_bibw', 'osu_get_bw', 'osu_cas_latency',
-                     'osu_get_latency', 'osu_put_latency', 'osu_acc_latency', 'osu_get_acc_latency'
+    wl_mpi_collective_n = ['osu_ineighbor_allgather', 'osu_ineighbor_alltoall', 'osu_ineighbor_alltoallw',
+                           'osu_neighbor_allgather', 'osu_ineighbor_alltoallv', 'osu_neighbor_alltoall',
+                           'osu_neighbor_allgatherv', 'osu_neighbor_alltoallv', 'osu_ineighbor_allgatherv',
+                           'osu_neighbor_alltoallw'
     ]
+    for exe in wl_mpi_collective_n:
+        workload(exe, executables=['run_mpi4'])
 
-    workload('osu_bw_fan_in', executables=['run_mpi'])
-    workload('osu_bw_fan_out', executables=['run_mpi'])
-    wl_mpi_congestion=['osu_bw_fan_in', 'osu_bw_fan_out']
-
-    workload('osu_hello', executables=['run_mpi'])
-    workload('osu_init', executables=['run_mpi'])
-    wl_mpi_startup=['osu_hello', 'osu_init']
-
-    workload('osu_xccl_latency', executables=['run_mpi'])
-    workload('osu_xccl_bibw', executables=['run_mpi'])
-    workload('osu_xccl_bw', executables=['run_mpi'])
-    wl_xccl_pt2pt=['osu_xccl_latency', 'osu_xccl_bibw', 'osu_xccl_bw']
-
-    workload('osu_xccl_reduce_scatter', executables=['run_mpi'])
-    workload('osu_xccl_alltoall', executables=['run_mpi'])
-    workload('osu_xccl_allgather', executables=['run_mpi'])
-    workload('osu_xccl_reduce', executables=['run_mpi'])
-    workload('osu_xccl_bcast', executables=['run_mpi'])
-    workload('osu_xccl_allreduce', executables=['run_mpi'])
-    wl_xccl_collective=['osu_xccl_reduce_scatter', 'osu_xccl_alltoall', 'osu_xccl_allgather', 'osu_xccl_reduce', 'osu_xccl_bcast', 
-                        'osu_xccl_allreduce'
+    wl_mpi_onesided = ['osu_put_bw', 'osu_fop_latency', 'osu_put_bibw', 'osu_get_bw', 'osu_cas_latency',
+                       'osu_get_latency', 'osu_put_latency', 'osu_acc_latency', 'osu_get_acc_latency'
     ]
+    for exe in wl_mpi_onesided:
+        workload(exe, executables=['run_mpi'])
 
-    workload('osu_oshm_put_bw', executables=['run_mpi'])
-    workload('osu_oshm_get_nb', executables=['run_mpi'])
-    workload('osu_oshm_put_mr_nb', executables=['run_mpi'])
-    workload('osu_oshm_get_nb_bw', executables=['run_mpi'])
-    workload('osu_oshm_broadcast', executables=['run_mpi'])
-    workload('osu_oshm_get_overlap', executables=['run_mpi'])
-    workload('osu_oshm_get_bw', executables=['run_mpi'])
-    workload('osu_oshm_put_nb_bw', executables=['run_mpi'])
-    workload('osu_oshm_get_mr_nb', executables=['run_mpi'])
-    workload('osu_oshm_put_overlap', executables=['run_mpi'])
-    workload('osu_oshm_reduce', executables=['run_mpi'])
-    workload('osu_oshm_get', executables=['run_mpi'])
-    workload('osu_oshm_put', executables=['run_mpi'])
-    workload('osu_oshm_put_nb', executables=['run_mpi'])
-    workload('osu_oshm_collect', executables=['run_mpi'])
-    workload('osu_oshm_atomics', executables=['run_mpi'])
-    workload('osu_oshm_barrier', executables=['run_mpi'])
-    workload('osu_oshm_put_mr', executables=['run_mpi'])
-    workload('osu_oshm_fcollect', executables=['run_mpi'])
-    wl_oshm=['osu_oshm_put_bw', 'osu_oshm_get_nb', 'osu_oshm_put_mr_nb', 'osu_oshm_get_nb_bw', 'osu_oshm_broadcast',
-             'osu_oshm_get_overlap', 'osu_oshm_get_bw', 'osu_oshm_put_nb_bw', 'osu_oshm_get_mr_nb', 'osu_oshm_put_overlap',
-             'osu_oshm_reduce', 'osu_oshm_get', 'osu_oshm_put', 'osu_oshm_put_nb', 'osu_oshm_collect',
-             'osu_oshm_atomics', 'osu_oshm_barrier', 'osu_oshm_put_mr', 'osu_oshm_fcollect'
+    wl_mpi_congestion = ['osu_bw_fan_in', 'osu_bw_fan_out']
+    for exe in wl_mpi_congestion:
+        workload(exe, executables=['run_mpi'])
+
+    wl_mpi_startup = ['osu_hello', 'osu_init']
+    for exe in wl_mpi_startup:
+        workload(exe, executables=['run_mpi'])
+
+    wl_xccl_pt2pt = ['osu_xccl_latency', 'osu_xccl_bibw', 'osu_xccl_bw']
+    for exe in wl_xccl_pt2pt:
+        workload(exe, executables=['run_mpi'])
+
+    wl_xccl_collective = ['osu_xccl_reduce_scatter', 'osu_xccl_alltoall', 'osu_xccl_allgather', 'osu_xccl_reduce', 'osu_xccl_bcast', 
+                          'osu_xccl_allreduce'
     ]
+    for exe in wl_xccl_collective:
+        workload(exe, executables=['run_mpi'])
 
+    wl_oshm = ['osu_oshm_broadcast', 'osu_oshm_reduce', 'osu_oshm_collect', 'osu_oshm_barrier', 'osu_oshm_fcollect']
+    for exe in wl_oshm:
+        workload(exe, executables=['run_mpi'])
+
+    wl_oshm_mem = ['osu_oshm_put_bw', 'osu_oshm_get_nb', 'osu_oshm_put_mr_nb', 'osu_oshm_get_nb_bw',
+                   'osu_oshm_get_overlap', 'osu_oshm_get_bw', 'osu_oshm_put_nb_bw', 'osu_oshm_get_mr_nb', 'osu_oshm_put_overlap',
+                   'osu_oshm_get', 'osu_oshm_put', 'osu_oshm_put_nb', 'osu_oshm_atomics', 'osu_oshm_put_mr'
+    ]
+    for exe in wl_oshm_mem:
+        workload(exe, executables=['run_mpi'])
+
+    # workload_variables
 #    workload_variable('benchmark_name', default='{workload_name}',
 #                      description='Name of the OSU benchmark binary',
 #                      workloads=['osu_bibw', 'osu_bw', 'osu_latency',
@@ -153,7 +103,22 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
 #                                 'osu_mbw_mr', 'osu_multi_lat'])
     workload_variable('benchmark_name', default='{workload_name}',
                       description='Name of the OSU benchmark binary',
-                      workloads=wl_mpi_pt2pt+wl_mpi_collective+wl_mpi_onesided+wl_mpi_congestion+wl_mpi_startup
-                                +wl_xccl_pt2pt+wl_xccl_collective+wl_oshm
+                      workloads=wl_mpi_pt2pt+wl_mpi_pt2pt_p+wl_mpi_collective+wl_mpi_collective_n+wl_mpi_onesided
+                                +wl_mpi_congestion+wl_mpi_startup+wl_xccl_pt2pt+wl_xccl_collective+wl_oshm
                      )
+    workload_variable('benchmark_name', default='{workload_name} {oshm_mem_type}',
+                      description='Name of the OSU benchmark binary with memory type',
+                      workloads=wl_oshm_mem
+                     )
+
+    workload_variable('oshm_mem_type', default='heap',
+                      description='OSHM memory type: heap or global',
+                      workloads=wl_oshm_mem
+                     )
+
+    workload_variable('export_environments', default='OMPI_MCA_coll="^hcoll,ucc" OMPI_MCA_pml=ob1 OMPI_MCA_btl=vader,self,tcp OMPI_MCA_btl_tcp_timeout=5 ',
+                      description='special setting for osu_latency_mt',
+                      workloads=['osu_latency_mt']
+                     )
+
 

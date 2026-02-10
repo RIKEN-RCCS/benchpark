@@ -180,6 +180,7 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
         env.prepend_path("PATH", join_path(mpidir, "one-sided"))
         env.prepend_path("PATH", join_path(mpidir, "collective"))
         env.prepend_path("PATH", join_path(mpidir, "congestion"))
+        env.prepend_path("PATH", join_path(mpidir, "pt2pt/persistent"))
         if self.spec.satisfies("+rocm"):
             if 'gtl_flags' in self.spec['mpi'].extra_attributes:
                 env.prepend_path("LOCAL_RANK", self.spec['mpi'].extra_attributes['gtl_flags'])

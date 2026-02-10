@@ -93,6 +93,9 @@ class OsuMicroBenchmarks(
             "osu_init",
             "osu_bw_fan_in",
             "osu_bw_fan_out",
+            "osu_latency_persistent",
+            "osu_bw_persistent",
+            "osu_bibw_persistent",
             "osu_oshm_put_bw",
             "osu_oshm_get_nb",
             "osu_oshm_put_mr_nb",
@@ -242,6 +245,8 @@ class OsuMicroBenchmarks(
 
         if self.spec.satisfies("+graphing"):
             run_args.append(f"-G {graph_type_val}")
+
+        self.add_experiment_variable("oshm_mem_type", "heap", False)
 
         self.add_experiment_variable("additional_args", " ".join(run_args), False)
 
