@@ -26,6 +26,8 @@ create_workload_list "$@"
 
 WS_NAME="${WS_NAME_TEST}${LIST_FEATURE}"
 WS_NAME="${WS_NAME//+/_}"
+DEST3="test${LIST_FEATURE}"
+DEST3="${DEST3//+/_}"
 PREP_PATH="$(find ${SLURM_SUBMIT_DIR}/${OUTPUT_DIR}/${WS_BUILD}/spack/opt/spack/linux-neoverse_v2/${BASE}-*/libexec/${BASE}/ -type d | tr '\n' ':' | sed 's/:$//')"
 echo "##### setup workload #####"
 echo "--- ${LIST_WL} ---"
@@ -34,10 +36,10 @@ echo "--- ${WS_NAME} ---"
 
 [ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx
 
-benchpark experiment init ${OUTPUT_DIR}/${DEST2} ${BASE} ${LIST_FEATURE} workload="${LIST_WL}" prepend_path=\"${PREP_PATH}\" package_manager="user-managed"
-benchpark setup ${OUTPUT_DIR}/${DEST2}/${BASE} ${OUTPUT_DIR}/${WS_NAME}
+benchpark experiment init ${OUTPUT_DIR}/${DEST2} ${BASE} ${LIST_FEATURE} workload="${LIST_WL}" prepend_path=\"${PREP_PATH}\" package_manager="user-managed" --dest=${DEST3}
+benchpark setup ${OUTPUT_DIR}/${DEST2}/${DEST3} ${OUTPUT_DIR}/${WS_NAME}
 . ${OUTPUT_DIR}/${WS_NAME}/setup.sh
-ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${BASE}/workspace workspace setup
+ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${DEST3}/workspace workspace setup
 
 echo "--- setup.sh has finished ---"
 

@@ -8,7 +8,8 @@ create_workload_list "$@"
 
 WS_NAME="${WS_NAME_TEST}${LIST_FEATURE}"
 WS_NAME="${WS_NAME//+/_}"
-PREP_PATH="$(find ${PWD}/${OUTPUT_DIR}/${WS_BUILD}/spack/opt/spack/linux-neoverse_v2/osu-micro-benchmarks-*/libexec/osu-micro-benchmarks/ -type d | tr '\n' ':' | sed 's/:$//')"
+DEST3="test${LIST_FEATURE}"
+DEST3="${DEST3//+/_}"
 echo "##### execute workload #####"
 echo "--- ${LIST_WL} ---"
 echo "--- ${LIST_FEATURE} ---"
@@ -18,7 +19,7 @@ echo "--- ${WS_NAME} ---"
 find ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${BASE}/workspace -name "execute_experiment" | xargs sed -i -e '/^#SBATCH[[:space:]]\+--gpus\b/d' -e 's/[[:space:]]\+--gpus[[:space:]]\+[0-9]\+//g'
 
 . ${OUTPUT_DIR}/${WS_NAME}/setup.sh
-ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${BASE}/workspace on
+ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${DEST3}/workspace on
 
 
 echo "--- ${LIST_WL} ---"
