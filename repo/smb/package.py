@@ -24,7 +24,9 @@ class Smb(MakefilePackage):
 
     depends_on("c", type="build")
 
-    depends_on("mpi", when="+mpi")
+    #depends_on("mpi", when="+mpi")
+    depends_on("openmpi@5.0.9 fabrics=ucx", type=("build", "link", "run"))
+    depends_on("mpi", when="+rma")
 
     build_directory = ["src/mpi_overhead"]
     
@@ -32,6 +34,7 @@ class Smb(MakefilePackage):
         if "+rma" in spec:
             makefile = FileFilter("src/rma_mt_mpi/Makefile")
             makefile.filter('CC=cc', "CC = {0}".format(spec["mpi"].mpicc))
+
     #TODO: add shm variant
     def build(self, spec, prefix):
         if "+rma" in spec: 
@@ -42,13 +45,16 @@ class Smb(MakefilePackage):
         for path in self.build_directory:
             with fs.working_dir(path):
                 make()
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
+
         install("src/mpi_overhead/mpi_overhead", prefix.bin)
-        install("src/mpi_overhead/README", prefix.doc)
+        install("src/mpi_overhead/README", join_path(prefix.doc,"README.mpi_overhead"))
         if "+rma" in spec:
-            install("src/rma_mt_mpi/msgrate", prefix.bin)
+            install("src/rma_mt_mpi/msgrate", join_path(prefix.bin,"rma_mt_mpi"))
+            install("src/rma_mt_mpi/README", join_path(prefix.doc,"README.rma_mt_mpi"))
         else:
             install("src/msgrate/msgrate", prefix.bin)
-            install("src/msgrate/README", prefix.doc)
+            install("src/msgrate/README", join_path(prefix.doc,"README.msgrate"))

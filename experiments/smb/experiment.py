@@ -12,7 +12,7 @@ class Smb(Experiment, MpiOnlyExperiment):
     variant(
         "workload",
         default="mpi_overhead",
-        values=("mpi_overhead", "msgrate", "rma_mt"),
+        values=("mpi_overhead", "msgrate", "rma_mt_mpi"),
         description="workload",
     )
 
@@ -28,11 +28,13 @@ class Smb(Experiment, MpiOnlyExperiment):
     def compute_applications_section(self):
         if self.spec.satisfies("workload=mpi_overhead"):
             self.add_experiment_variable("n_ranks", "2")
-        elif self.spec.satisfies("workload=msgrate") or self.spec.satisfies(
-            "workload=rma_mt"
-        ):
+        elif self.spec.satisfies("workload=msgrate"):
             self.add_experiment_variable("n_nodes", "1")
             self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}")
+        elif self.spec.satisfies("workload=rma_mt_mpi"):
+            self.add_experiment_variable("n_nodes", "1")
+            #self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}")
+            self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}//2")
 
         self.set_required_variables(
             n_resources="{n_ranks}", process_problem_size="", total_problem_size=""
@@ -40,6 +42,6 @@ class Smb(Experiment, MpiOnlyExperiment):
 
     def compute_package_section(self):
         spec_string = f"smb{self.determine_version()}"
-        if self.spec.satisfies("workload=rma_mt"):
+        if self.spec.satisfies("workload=rma_mt_mpi"):
             spec_string += "+rma"
         self.add_package_spec(self.name, [spec_string])

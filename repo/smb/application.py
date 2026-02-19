@@ -14,14 +14,15 @@ class Smb(ExecutableApplication):
 
     executable('p1', 'mpi_overhead', use_mpi=True)
     executable('p2', 'msgrate -n {ppn}', use_mpi=True)
+    executable('p3', 'rma_mt_mpi -n {ppn}', use_mpi=True)
 
     workload('mpi_overhead', executables=['p1'])
     workload('msgrate', executables=['p2'])
-    workload('rma_mt', executables=['p2'])
+    workload('rma_mt_mpi', executables=['p3'])
 
     workload_variable('ppn', default='1',
                    description='Number of procs per node',
-                   workloads=['msgrate', 'rma_mt'])
+                   workloads=['msgrate', 'rma_mt_mpi'])
 
     figure_of_merit('single direction',
                    log_file='{experiment_run_dir}/{experiment_name}.out',

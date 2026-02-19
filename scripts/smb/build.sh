@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 #SBATCH -n 1
 #SBATCH -N 1
 #SBATCH -p qc-gh200
@@ -10,7 +10,7 @@ source ./common.sh
 
 ##### module load #####
 module load system/qc-gh200
-module load nvhpc-hpcx-cuda12/25.7
+module load openmpi/4.1.7rc1
 
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
@@ -31,19 +31,26 @@ source .venv/bin/activate
 cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
-benchpark system init --dest=${OUTPUT_DIR}/${SYSTEM} qc-gh200
+benchpark system init --dest=${OUTPUT_DIR}/${SYSTEM} qc-gh200 
 
-# workload="network_test"
-WL="network_test"
-benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest=${WL}
-benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL}  ${OUTPUT_DIR}/${WORKSPACE}
+# workload="mpi_overhead"
+WL="mpi_overhead"
+benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest="${WL}"
+benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL} ${OUTPUT_DIR}/${WORKSPACE}
 . ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
 ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/${WL}/workspace workspace setup
 
-# workload="network_load_test"
-WL="network_load_test"
-benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest=${WL}
-benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL}  ${OUTPUT_DIR}/${WORKSPACE}
+# workload="msgrate"
+WL="msgrate"
+benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest="${WL}"
+benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL} ${OUTPUT_DIR}/${WORKSPACE}
+. ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
+ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/${WL}/workspace workspace setup
+
+# workload="rma_mt_mpi"
+WL="rma_mt_mpi"
+benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest="${WL}"
+benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL} ${OUTPUT_DIR}/${WORKSPACE}
 . ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
 ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/${WL}/workspace workspace setup
 

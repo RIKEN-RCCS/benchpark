@@ -1,7 +1,8 @@
 #!/usr/bin/bash 
 
 #---variables
-BENCHPARK_HOME="/home/users/u0001896/work/benchpark"
+SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$(pwd)}"
+BENCHPARK_HOME="$(cd "$SCRIPT_DIR/../../" && pwd)"
 OUTPUT_DIR="./output"
 BASE='osu-micro-benchmarks'
 DEST1='GH200_nvhpc'
@@ -37,7 +38,7 @@ WORKLOAD_LIST_ALL=(  \
     "osu_xccl_reduce_scatter" "osu_xccl_alltoall" "osu_xccl_allgather" "osu_xccl_reduce" "osu_xccl_bcast" \
     "osu_xccl_allreduce" 
 )
-#WORKLOAD_LIST_ALL=( "osu_latency" "osu_bw" )
+#workload list: ROCm, CUDA and OpenACC Extensions to OMB
 WORKLOAD_LIST_OPTION_C=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_multi_lat" \
     "osu_put_latency" "osu_get_latency" "osu_put_bw" "osu_get_bw" "osu_put_bibw" \
     "osu_acc_latency" "osu_cas_latency" "osu_fop_latency" "osu_allgather" "osu_allgatherv" \
@@ -47,6 +48,7 @@ WORKLOAD_LIST_OPTION_C=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_mul
     "osu_ialltoallw" "osu_ibcast" "osu_igather" "osu_igatherv" "osu_ireduce" \
     "osu_iscatter" "osu_iscatterv"
 )
+#workload list: Support for Graphs
 WORKLOAD_LIST_OPTION_G=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_multi_lat" \
     "osu_latency_mt" "osu_latency_mp" "osu_allgather" "osu_allgatherv" "osu_alltoall" \
     "osu_alltoallv" "osu_alltoallw" "osu_allreduce" "osu_bcast" "osu_gather" \
@@ -57,11 +59,13 @@ WORKLOAD_LIST_OPTION_G=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_mul
     "osu_get_latency" "osu_put_bw" "osu_get_bw" "osu_put_bibw" "osu_acc_latency" \
     "osu_cas_latency" "osu_fop_latency" "osu_get_acc_latency"
 )
+#workload list: Support for CUDA Managed Memory
 WORKLOAD_LIST_OPTION_M=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_multi_lat" \
     "osu_allgather" "osu_allgatherv" "osu_allreduce" "osu_alltoall" "osu_alltoallv" \
     "osu_bcast" "osu_gather" "osu_gatherv" "osu_reduce" "osu_reduce_scatter" \
     "osu_scatter" "osu_scatterv"
 )
+#workload list: Support for PAPI
 WORKLOAD_LIST_OPTION_P=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_multi_lat" \
     "osu_latency_mp" "osu_allgather" "osu_allgatherv" "osu_alltoall" "osu_alltoallv" \
     "osu_alltoallw" "osu_allreduce" "osu_bcast" "osu_gather" "osu_gatherv" \

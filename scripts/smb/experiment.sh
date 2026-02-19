@@ -1,4 +1,4 @@
-#!/usr/bin/bash 
+#!/bin/bash
 
 ##### common variables #####
 WORK_DIR=${PWD}
@@ -12,8 +12,8 @@ cd ${WORK_DIR}
 
 ##### run experiments at this directory #####
 . ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
-ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/network_test/workspace on
-
-ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/network_load_test/workspace on
+ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/mpi_overhead/workspace on
+ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/msgrate/workspace on
+ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/rma_mt_mpi/workspace on
 
 
