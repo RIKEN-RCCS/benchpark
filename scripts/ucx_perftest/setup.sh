@@ -22,7 +22,7 @@ cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
 #---
-PREP_PATH=`find /home/users/u0001896/work/20260226_test_ucx_perftest/benchpark/workspace_base/spack/opt/spack/linux-neoverse_v2/ucx_perftest-* -type d -name "bin"`
+PREP_PATH="$(find ${SLURM_SUBMIT_DIR}/${OUTPUT_DIR}/${WS_BUILD}/spack/opt/spack/linux-neoverse_v2/${BASE}-*/ -type d -name "bin" | tr '\n' ':' | sed 's/:$//')"
 TEST_CASE="$@"
 if [ $# -eq 0 ]; then
   TARGET="${BASE_NAME}"
