@@ -26,17 +26,14 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
     # 実行テンプレート
     executable('run_mpi', '{pre_run_cmds}\n{mpi_command} {benchmark_name} {additional_args}', use_mpi=True)
     executable('run_mpi4', '{pre_run_cmds}\n{mpi_command} -n 4 {benchmark_name} {additional_args}', use_mpi=True)
-    executable('run_mpi_MT', '{pre_run_cmds}\n{export_environments} {mpi_command} {benchmark_name} {additional_args}', use_mpi=True)
+    executable('run_mpi_int', '{pre_run_cmds}\n{mpi_command} {benchmark_name} {additional_args} -T mpi_int', use_mpi=True)
 
     # workloads
     wl_mpi_pt2pt = ['osu_bibw', 'osu_bw', 'osu_latency', 'osu_latency_mp', 'osu_latency_mt',
                     'osu_mbw_mr', 'osu_multi_lat'
     ]
     for exe in wl_mpi_pt2pt:
-        if exe == 'osu_latency_mt':
-            workload(exe, executables=['run_mpi_MT'])
-        else:
-            workload(exe, executables=['run_mpi'])
+        workload(exe, executables=['run_mpi'])
 
     wl_mpi_pt2pt_p = ['osu_bibw_persistent', 'osu_bw_persistent', 'osu_latency_persistent']
     for exe in wl_mpi_pt2pt_p:
@@ -60,11 +57,14 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
     for exe in wl_mpi_collective_n:
         workload(exe, executables=['run_mpi4'])
 
-    wl_mpi_onesided = ['osu_put_bw', 'osu_fop_latency', 'osu_put_bibw', 'osu_get_bw', 'osu_cas_latency',
+    wl_mpi_onesided = ['osu_put_bw', 'osu_put_bibw', 'osu_get_bw',
                        'osu_get_latency', 'osu_put_latency', 'osu_acc_latency', 'osu_get_acc_latency'
     ]
     for exe in wl_mpi_onesided:
         workload(exe, executables=['run_mpi'])
+    wl_mpi_onesided_int = ['osu_fop_latency', 'osu_cas_latency']
+    for exe in wl_mpi_onesided_int:
+        workload(exe, executables=['run_mpi_int'])
 
     wl_mpi_congestion = ['osu_bw_fan_in', 'osu_bw_fan_out']
     for exe in wl_mpi_congestion:
@@ -96,14 +96,9 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
         workload(exe, executables=['run_mpi'])
 
     # workload_variables
-#    workload_variable('benchmark_name', default='{workload_name}',
-#                      description='Name of the OSU benchmark binary',
-#                      workloads=['osu_bibw', 'osu_bw', 'osu_latency',
-#                                 'osu_latency_mp', 'osu_latency_mt',
-#                                 'osu_mbw_mr', 'osu_multi_lat'])
     workload_variable('benchmark_name', default='{workload_name}',
                       description='Name of the OSU benchmark binary',
-                      workloads=wl_mpi_pt2pt+wl_mpi_pt2pt_p+wl_mpi_collective+wl_mpi_collective_n+wl_mpi_onesided
+                      workloads=wl_mpi_pt2pt+wl_mpi_pt2pt_p+wl_mpi_collective+wl_mpi_collective_n+wl_mpi_onesided+wl_mpi_onesided_int
                                 +wl_mpi_congestion+wl_mpi_startup+wl_xccl_pt2pt+wl_xccl_collective+wl_oshm
                      )
     workload_variable('benchmark_name', default='{workload_name} {oshm_mem_type}',
@@ -114,11 +109,6 @@ class OsuMicroBenchmarks(OsuMicroBenchmarksBase):
     workload_variable('oshm_mem_type', default='heap',
                       description='OSHM memory type: heap or global',
                       workloads=wl_oshm_mem
-                     )
-
-    workload_variable('export_environments', default='OMPI_MCA_coll="^hcoll,ucc" OMPI_MCA_pml=ob1 OMPI_MCA_btl=vader,self,tcp OMPI_MCA_btl_tcp_timeout=5 ',
-                      description='special setting for osu_latency_mt',
-                      workloads=['osu_latency_mt']
                      )
 
 

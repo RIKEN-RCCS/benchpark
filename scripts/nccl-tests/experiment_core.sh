@@ -100,6 +100,7 @@ generate_combos() {
 	    echo "Processing [${exp_id}]: ${args}"
             echo "=========================================================="
             
+            rm -rf "${SYSTEM_DIR}/${EXEC_ID}/${exp_id}"
             rm -rf "${SYSTEM_DIR}/nccl-tests"
             #rm -rf "${ws_parent}"
 
@@ -107,17 +108,20 @@ generate_combos() {
             benchpark experiment init "${SYSTEM_DIR}" nccl-tests+cuda \
                 package_manager="user-managed" \
                 prepend_path="${BIN_PATH}" \
-                $args
+                $args \
+		--dest="${EXEC_ID}/${exp_id}"
 
             # Benchpark Setup
-            benchpark setup "${SYSTEM_DIR}/nccl-tests" "${ws_parent}"
+            #benchpark setup "${SYSTEM_DIR}/nccl-tests" "${ws_parent}"
+            benchpark setup "${SYSTEM_DIR}/${EXEC_ID}/${exp_id}" "${ws_parent}"
 
             # Loading the environment and running Ramble
             if [ -f "${ws_parent}/setup.sh" ]; then
                 source "${ws_parent}/setup.sh"
                 
                 # ws_parent / SystemDirName / Benchmark Name / workspace
-                local ramble_ws_dir="${ws_parent}/GH200_nvhpc/nccl-tests/workspace"
+                #local ramble_ws_dir="${ws_parent}/GH200_nvhpc/nccl-tests/workspace"
+                local ramble_ws_dir="${ws_parent}/GH200_nvhpc/${EXEC_ID}/${exp_id}/workspace"
                 
                 echo "Ramble Workspace Setup: $ramble_ws_dir"
                 ramble --workspace-dir "$ramble_ws_dir" workspace setup

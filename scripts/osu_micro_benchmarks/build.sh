@@ -30,7 +30,7 @@ source .venv/bin/activate
 cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
-benchpark system init --dest=${OUTPUT_DIR}/${DEST1} qc-gh200 compiler=nvhpc_hpcx
+benchpark system init --dest=${OUTPUT_DIR}/${DEST1} qc-gh200 compiler=nvhpc_hpcx_cuda12
 benchpark experiment init ${OUTPUT_DIR}/${DEST1} ${BASE}+cuda+xccl+papi+graphing+managed
 benchpark setup ${OUTPUT_DIR}/${DEST1}/${BASE} ${OUTPUT_DIR}/${WS_BUILD}
 . ${OUTPUT_DIR}/${WS_BUILD}/setup.sh

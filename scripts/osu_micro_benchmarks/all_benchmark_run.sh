@@ -18,6 +18,14 @@ if [ ! -d ${OUTPUT_DIR}/${WS_BUILD} ]; then
         sleep 10
     done
 fi
+if [ ! -d "${OUTPUT_DIR}_mt"/${WS_BUILD} ]; then
+    echo "##### build multi thread package #####"
+    jid=$(sbatch --parsable build_mt.sh)
+    while squeue -j "$jid" >/dev/null 2>&1 && \
+          [ "$(squeue -h -j "$jid")" != "" ]; do
+        sleep 10
+    done
+fi
 
 #--- setup experiments ---#
 for p in "${LIST_PAPI[@]}"; do
@@ -25,20 +33,39 @@ for p in "${LIST_PAPI[@]}"; do
         for g in "${LIST_GRAPH[@]}"; do
             for c in "${LIST_CUDA[@]}"; do
 
-                # Wait until there are fewer waiting jobs
-                while true; do
-                    job_count=$(squeue -u "$USER" -h | wc -l)
-                    if [[ "$job_count" -lt 2  ]]; then
-                        break
-                    else
-                        sleep 10
-                    fi
-                done
-                echo "##### setup workload : ${c} ${g} ${m} ${p} #####"
-                sbatch setup.sh  ${c} ${g} ${m} ${p}
+                create_workload_list  ${c} ${g} ${m} ${p}
+
+                if [ ! -z "${LIST_WL}" ]; then
+
+                    echo "##### setup workload : ${c} ${g} ${m} ${p} #####"
+                    sbatch setup.sh  ${c} ${g} ${m} ${p}
+
+                    # Wait until there are fewer waiting jobs
+                    while true; do
+                        job_count=$(squeue -u "$USER" -h | grep "setup" | wc -l)
+                        if [[ "$job_count" -lt 4  ]]; then
+                            break
+                        else
+                            sleep 10
+                        fi
+                    done
+                fi
+
             done
         done
     done
+done
+# setup for osu_latency_mt (multi thread)
+sbatch setup_mt.sh
+sbatch setup_mt.sh graphing
+# Wait until there are fewer waiting jobs
+while true; do
+    job_count=$(squeue -u "$USER" -h | grep "setup" | wc -l)
+    if [[ "$job_count" -lt 1  ]]; then
+        break
+    else
+        sleep 10
+    fi
 done
 
 #--- execute experiments ---#
@@ -47,19 +74,28 @@ for p in "${LIST_PAPI[@]}"; do
         for g in "${LIST_GRAPH[@]}"; do
             for c in "${LIST_CUDA[@]}"; do
 
-                # Wait until there are fewer waiting jobs
-                while true; do
-                    job_count=$(squeue -u "$USER" -h | wc -l)
-                    if [[ "$job_count" -lt 5  ]]; then
-                        break
-                    else
-                        sleep 10
-                    fi
-                done
-                sh ./experiment.sh  ${c} ${g} ${m} ${p}
+                create_workload_list  ${c} ${g} ${m} ${p}
+
+                if [ ! -z "${LIST_WL}" ]; then
+
+                    # Wait until there are fewer waiting jobs
+                    while true; do
+                        job_count=$(squeue -u "$USER" -h | wc -l)
+                        if [[ "$job_count" -lt 5  ]]; then
+                            break
+                        else
+                            sleep 10
+                        fi
+                    done
+                    sh ./experiment.sh  ${c} ${g} ${m} ${p}
+                fi
+
             done
         done
     done
 done
+# execute for osu_latency_mt (multi thread)
+sh ./experiment_mt.sh
+sh ./experiment_mt.sh graphing
 
 

@@ -21,9 +21,9 @@ class OsuMicroBenchmarks(BuiltinOsu, ROCmPackage):
     def configure_args(self):
         _base_args = super().configure_args()
     
-        cuda_root = os.path.abspath(os.path.join(self.spec['cuda'].prefix, "..", ".."))
+        #cuda_root = os.path.abspath(os.path.join(self.spec['cuda'].prefix, "..", ".."))
         #nvhpc_root = os.path.abspath(os.path.join(self.spec['nvhpc'].prefix, "..", ".."))
-        mpi_root = self.spec['mpi'].prefix
+        #mpi_root = self.spec['mpi'].prefix
         # ---------------------------------------------
         # --- デバッグ用：Spackが生成した生の引数を確認 ---
         #print("DEBUG: === Raw arguments from super() ===")

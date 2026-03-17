@@ -194,7 +194,8 @@ class OsuMicroBenchmarks(
             with open(yaml_path, 'r') as f:
                 data = yaml.safe_load(f)
                 # get mpi externals
-                mpi_externals = data.get('packages', {}).get('mpi', {}).get('externals', [])
+                mpi_externals = data.get('packages', {}).get('nvhpc', {}).get('externals', [])
+                #mpi_externals = data.get('packages', {}).get('mpi', {}).get('externals', [])
                 if mpi_externals:
                     modules = mpi_externals[0].get('modules', [])
 

@@ -26,10 +26,11 @@ WORKLOAD_LIST_ALL=(  \
     "osu_allgather" "osu_iallgatherv" \
     "osu_put_bw" "osu_fop_latency" "osu_put_bibw" "osu_get_bw" "osu_cas_latency" \
     "osu_get_latency" "osu_put_latency" "osu_acc_latency" "osu_get_acc_latency" \
-    "osu_latency_mp" "osu_bibw" "osu_latency" "osu_latency_mt" "osu_mbw_mr" \
+    "osu_latency_mp" "osu_bibw" "osu_latency" "osu_mbw_mr" \
     "osu_multi_lat" "osu_bw" \
     "osu_bibw_persistent" "osu_bw_persistent" "osu_latency_persistent" \
     "osu_hello" "osu_init" \
+    "osu_bw_fan_in" "osu_bw_fan_out" \
     "osu_oshm_put_bw" "osu_oshm_get_nb" "osu_oshm_put_mr_nb" "osu_oshm_get_nb_bw" "osu_oshm_broadcast" \
     "osu_oshm_get_overlap" "osu_oshm_get_bw" "osu_oshm_put_nb_bw" "osu_oshm_get_mr_nb" "osu_oshm_put_overlap" \
     "osu_oshm_reduce" "osu_oshm_get" "osu_oshm_put" "osu_oshm_put_nb" "osu_oshm_collect" \
@@ -38,6 +39,9 @@ WORKLOAD_LIST_ALL=(  \
     "osu_xccl_reduce_scatter" "osu_xccl_alltoall" "osu_xccl_allgather" "osu_xccl_reduce" "osu_xccl_bcast" \
     "osu_xccl_allreduce" 
 )
+#workload list: ucx multi thread
+WORKLOAD_LIST_MT=( "osu_latency_mt" )
+
 #workload list: ROCm, CUDA and OpenACC Extensions to OMB
 WORKLOAD_LIST_OPTION_C=( "osu_bibw" "osu_bw" "osu_latency" "osu_mbw_mr" "osu_multi_lat" \
     "osu_put_latency" "osu_get_latency" "osu_put_bw" "osu_get_bw" "osu_put_bibw" \

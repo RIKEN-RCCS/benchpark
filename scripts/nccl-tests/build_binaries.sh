@@ -43,7 +43,7 @@ fi
 mkdir -p ./workdir/nccl-tests
 SYSTEM_DIR=./workdir/nccl-tests/GH200_nvhpc
 WORKSPACE=./workdir/nccl-tests/workspace
-benchpark system init --dest=${SYSTEM_DIR} qc-gh200 compiler=nvhpc_hpcx
+benchpark system init --dest=${SYSTEM_DIR} qc-gh200 compiler=nvhpc_hpcx_cuda12
 benchpark experiment init ${SYSTEM_DIR} nccl-tests+cuda
 benchpark setup ${SYSTEM_DIR}/nccl-tests ${WORKSPACE}
 . ${WORKSPACE}/setup.sh

@@ -32,7 +32,7 @@ else
   TARGET="${TARGET//=/_}"
 fi
 
-[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx
+[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx_cuda12
 
 benchpark experiment init ${OUTPUT_DIR}/${DEST2} ${BASE} +cuda+verbs+rc+ud+dc+ib_hw_tm+rdmacm+mlx5 prepend_path=${PREP_PATH} package_manager="user-managed" ${TEST_CASE} --dest=${TARGET}
 

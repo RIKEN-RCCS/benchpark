@@ -8,7 +8,10 @@
 cd ${SLURM_SUBMIT_DIR}
 source ./common.sh
 
+#----------------------------------------#
+
 ##### module load #####
+module purge
 module load system/qc-gh200
 module load openmpi/4.1.7rc1
 
@@ -47,12 +50,27 @@ benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL} ${OUTPUT_DIR}/${WORKSPACE}
 . ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
 ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/${WL}/workspace workspace setup
 
+#----------------------------------------#
+
+##### module load #####
+module purge
+module load system/qc-gh200
+module load nvhpc-hpcx/25.7
+
+##### build packages and setup experiments at this directory #####
+OUTPUT_DIR="${OUTPUT_DIR}_mt"
+[ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
+
+benchpark system init --dest=${OUTPUT_DIR}/${SYSTEM} qc-gh200  compiler=nvhpc_hpcx
+
 # workload="rma_mt_mpi"
 WL="rma_mt_mpi"
 benchpark experiment init ${OUTPUT_DIR}/${SYSTEM} ${BASE} workload="${WL}" --dest="${WL}"
 benchpark setup ${OUTPUT_DIR}/${SYSTEM}/${WL} ${OUTPUT_DIR}/${WORKSPACE}
 . ${OUTPUT_DIR}/${WORKSPACE}/setup.sh
 ramble --workspace-dir ${OUTPUT_DIR}/${WORKSPACE}/${SYSTEM}/${WL}/workspace workspace setup
+
+#----------------------------------------#
 
 echo "--- build.sh has finished ---"
 

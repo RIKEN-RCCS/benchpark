@@ -10,7 +10,7 @@ source ./common.sh
 
 ##### module load #####
 module load system/qc-gh200
-module load nvhpc-hpcx-cuda12/25.7
+module load nvhpc-hpcx/25.7
 
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
@@ -18,11 +18,16 @@ cd ${BENCHPARK_HOME}
 source .venv/bin/activate
 
 ##### setup experiments at this directory #####
+OUTPUT_DIR="${OUTPUT_DIR}_mt"
 cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
 #---
-create_workload_list "$@"
+LIST_WL="osu_latency_mt"
+LIST_FEATURE=""
+if [ "$1" == "graphing" ]; then
+  LIST_FEATURE="+graphing"
+fi
 
 WS_NAME="${WS_NAME_TEST}${LIST_FEATURE}"
 WS_NAME="${WS_NAME//+/_}"
@@ -34,7 +39,7 @@ echo "--- ${LIST_WL} ---"
 echo "--- ${LIST_FEATURE} ---"
 echo "--- ${WS_NAME} ---"
 
-[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx_cuda12
+[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx
 
 benchpark experiment init ${OUTPUT_DIR}/${DEST2} ${BASE} ${LIST_FEATURE} workload="${LIST_WL}" prepend_path=\"${PREP_PATH}\" package_manager="user-managed" --dest=${DEST3}
 benchpark setup ${OUTPUT_DIR}/${DEST2}/${DEST3} ${OUTPUT_DIR}/${WS_NAME}

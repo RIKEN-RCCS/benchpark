@@ -10,7 +10,7 @@ source ./common.sh
 
 ##### module load #####
 module load system/qc-gh200
-module load nvhpc-hpcx-cuda12/25.7
+module load nvhpc-hpcx/25.7
 
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
@@ -23,17 +23,16 @@ if [ ! -d .venv ]; then
   pip install -r requirements.txt
   pip install .[analyze]
 fi
-
-pwd
 . ./setup-env.sh
 source .venv/bin/activate
 
 ##### build packages at this directory #####
+OUTPUT_DIR="${OUTPUT_DIR}_mt"
 cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
-benchpark system init --dest=${OUTPUT_DIR}/${DEST1} qc-gh200 compiler=nvhpc_hpcx_cuda12
-benchpark experiment init ${OUTPUT_DIR}/${DEST1} ${BASE}+cuda+verbs+rc+ud+dc+ib_hw_tm+rdmacm+mlx5 
+benchpark system init --dest=${OUTPUT_DIR}/${DEST1} qc-gh200 compiler=nvhpc_hpcx
+benchpark experiment init ${OUTPUT_DIR}/${DEST1} ${BASE}+graphing
 benchpark setup ${OUTPUT_DIR}/${DEST1}/${BASE} ${OUTPUT_DIR}/${WS_BUILD}
 . ${OUTPUT_DIR}/${WS_BUILD}/setup.sh
 ramble --workspace-dir ${OUTPUT_DIR}/${WS_BUILD}/${DEST1}/${BASE}/workspace workspace setup
