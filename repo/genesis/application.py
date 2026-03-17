@@ -33,9 +33,22 @@ class Genesis(ExecutableApplication):
     )
 
     input_file(
+        'genesis-cx_input',
+        url='file:///lvs0/dne1/rccs-nghpcadu/CX_input/CX_Input-20260317.tar.gz',
+        sha256='e257ef4ccc920bbcdc807551dd46497618c03d7ce93bf8d88b866c7a54b4f4b9',
+        description='CX_Input input set 20260317'
+    )
+
+    input_file(
         'genesis-tests',
         url='https://github.com/genesis-release-r-ccs/genesis/archive/refs/tags/v2.1.5.tar.gz',
         description='GENESIS v2.1.5 source tree containing regression test inputs'
+    )
+
+    workload(
+        'Lysozyme',
+        executables=[ 'genesis'],
+        input='genesis-cx_input'
     )
 
     workload(
@@ -60,6 +73,13 @@ class Genesis(ExecutableApplication):
         'CryoEM',
         executables=[ 'fix_path', 'genesis'],
         input='genesis-tests'
+    )
+
+    workload_variable(
+        'input_file',
+        '{genesis-cx_input}/GENESIS/Evaluation_duplication/orig_1dalltoall_2nodes/lyso_vres_org.inp',
+        'Lysozyme duplication system input file for sol 1x1x1',
+        workload='Lysozyme'
     )
 
     workload_variable(

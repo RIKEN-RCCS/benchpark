@@ -13,12 +13,13 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment, CudaExperiment,):
 
     variant(
         "workload",
-        default="DHFR",
+        default="Lysozyme",
+        # Lyzozyme : < 4 GPU would be better, 
         # DHFR : < 4 GPU would be better, 
         # Apoa1 100K atoms :  1-16 GPUs OK, 
         # UUN 200K atoms : 1-32/64 GPUs OK
         # CryoEM (GPU not work)
-        values=("DHFR", "ApoA1", "UUN", "cryoEM"),
+        values=("Lysozyme", "DHFR", "ApoA1", "UUN", "cryoEM"),
         description="genesis",
     )
 
@@ -27,6 +28,13 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment, CudaExperiment,):
         default="cpu",
         values=("cpu","gpu"),
         description="genesis backend (cpu or gpu)"
+    )
+
+    variant(
+        "precision",
+        default="mixed",
+        values=("double","mixed","single"),
+        description="Floating point precision"
     )
 
     variant(
