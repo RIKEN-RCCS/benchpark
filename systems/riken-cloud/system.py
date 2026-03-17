@@ -33,8 +33,12 @@ class RikenCloud(System):
         },
         "genoa": {
             "sys_cores_per_node": 96,
-            "sys_gpus_per_node": 1,
-        }
+            "sys_mem_per_node_GB": 768,
+            "system_site": "rccs",
+            "queue": "genoa",
+            "hardware_key": str(hardware_descriptions)
+            + "/AWS_PCluster-zen-EFA/hardware_description.yaml",
+        },
     }
 
     variant(
@@ -71,6 +75,10 @@ class RikenCloud(System):
     def __init__(self, spec):
         super().__init__(spec)
         if self.spec.variants["cluster"][0] == "fx700":
+            self.programming_models = [OpenMPCPUOnlySystem()]
+            self.scheduler = "slurm"
+
+        if self.spec.variants["cluster"][0] == "genoa":
             self.programming_models = [OpenMPCPUOnlySystem()]
             self.scheduler = "slurm"
 
@@ -790,11 +798,182 @@ class RikenCloud(System):
                         "prefix": "/usr",
                         }
                     ]
-                }
+                },
             }
         }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
+        
+        return selections
+
+    def genoa_packages(self):
+        selections = {
+            "packages": {
+                "mpi": {
+                    "externals": [
+                        {
+                            "spec": f"openmpi@4.1.1",
+                            "prefix": f"/usr/lib64/openmpi",
+                            "extra_attributes": {
+                                "ldflags": "-L/usr/lib64/openmpi/lib -lmpi"
+                            },
+                        },
+                    ],
+                },
+                "pkgconf": {
+                    "externals": [
+                        {
+                        "spec": "pkgconf@1.7.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "git": {
+                    "externals": [
+                        {
+                        "spec": "git@2.47.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "cmake": {
+                    "externals": [
+                        {
+                        "spec": "cmake@3.26.5",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "python": {
+                    "externals": [
+                        {
+                        "spec": "python@3.9.25",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "m4": {
+                    "externals": [
+                        {
+                        "spec": "m4@1.4.19",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gettext": {
+                    "externals": [
+                        {
+                        "spec": "gettext@0.21",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gawk": {
+                    "externals": [
+                        {
+                        "spec": "gawk@5.1.0",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "openssl": {
+                    "externals": [
+                        {
+                        "spec": "openssl@3.5.1",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "bison": {
+                    "externals": [
+                        {
+                        "spec": "bison@3.7.4",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "groff": {
+                    "externals": [
+                        {
+                        "spec": "groff@1.22.4",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "tar": {
+                    "externals": [
+                        {
+                        "spec": "tar@1.34",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "automake": {
+                    "externals": [
+                        {
+                        "spec": "automake@1.16.2",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "flex": {
+                    "externals": [
+                        {
+                        "spec": "flex@2.6.4",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gmake": {
+                    "externals": [
+                        {
+                        "spec": "gmake@4.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "sed": {
+                    "externals": [
+                        {
+                        "spec": "sed@4.8",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "autoconf": {
+                    "externals": [
+                        {
+                        "spec": "autoconf@2.69",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "perl": {
+                    "externals": [
+                        {
+                        "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "curl": {
+                    "externals": [
+                        {
+                        "spec": "curl@7.76.1",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                        "spec": "libtool@2.4.6",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+            }
+        }
         
         return selections
 
@@ -946,6 +1125,19 @@ class RikenCloud(System):
                         )
                     ],
                 )
+        elif cluster == "genoa":
+            gcc_cfg = compiler_section_for(
+                "gcc",
+                [
+                    compiler_def(
+                        "gcc@11.5.0 languages:=c,c++,fortran",
+                        "/usr/",
+                        {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
+                    )
+                ],
+            )
+            cfg = gcc_cfg
+
         elif cluster == "gh200":
             gcc_cfg = compiler_section_for(
                 "gcc",
@@ -1003,6 +1195,11 @@ class RikenCloud(System):
                 "queue": "fx700",
                 "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix ; module load system/fx700 FJSVstclanga",
             }
+        if self.spec.variants["cluster"][0] == "genoa":
+            return {
+                "queue": "genoa",
+                "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+            }
 
     def compute_software_section(self):
         default_comp = self.spec.variants["compiler"][0]
@@ -1032,6 +1229,18 @@ class RikenCloud(System):
                         "compiler-gcc": {"pkg_spec": "gcc"},
                         "compiler-nvhpc": {"pkg_spec": "nvhpc"},
                         "cublas-cuda": {"pkg_spec": f"cublas"},
+                        "blas": {"pkg_spec": "openblas"},
+                        "lapack": {"pkg_spec": "openblas"},
+                    }
+                }
+            }
+        if self.spec.variants["cluster"][0] == "genoa":
+            return {
+                "software": {
+                    "packages": {
+                        "default-compiler": {"pkg_spec": f"{default_comp}"},
+                        "default-mpi": {"pkg_spec": "openmpi"},
+                        "compiler-gcc": {"pkg_spec": "gcc"},
                         "blas": {"pkg_spec": "openblas"},
                         "lapack": {"pkg_spec": "openblas"},
                     }
