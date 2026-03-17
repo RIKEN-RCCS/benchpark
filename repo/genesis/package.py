@@ -55,7 +55,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("lapack", when="+lapack")
-    depends_on("cuda", when="+gpu")
+    requires("+cuda", when="+gpu")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
@@ -134,18 +134,8 @@ class Genesis(AutotoolsPackage, CudaPackage):
         if self.spec.satisfies("+lapack"):
             env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
 
-        if self.spec.satisfies("+gpu") and "cuda" in spec:
-            cuda_arch_variant = self.spec.variants.get("cuda_arch", None)
-
-            if cuda_arch_variant is None:
-                cuda_arch_list = ["90"]
-            else:
-                cuda_arch_list = list(cuda_arch_variant.value)
-
-                cuda_arch_list = [a for a in cuda_arch_list if a != "none"]
-                if not cuda_arch_list:
-                    cuda_arch_list = ["90"]
-
+        if self.spec.satisfies("+gpu") :
+            cuda_arch_list = list(spec.variants["cuda_arch"].value)
             cuda_gencode = " ".join(self.cuda_flags(cuda_arch_list))
             env.set("NVCCFLAGS", cuda_gencode)
 
