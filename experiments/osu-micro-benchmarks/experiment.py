@@ -3,18 +3,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from benchpark.cuda import CudaExperiment
 from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
-from benchpark.rocm import ROCmExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
 
 class OsuMicroBenchmarks(
     Experiment,
-    MpiOnlyExperiment,
-    ROCmExperiment,
-    CudaExperiment,
+    ProgrammingModel(
+        ProgrammingModelType.Mpionly,
+        ProgrammingModelType.Cuda,
+        ProgrammingModelType.Rocm,
+    ),
 ):
 
     variant(
@@ -194,7 +194,8 @@ class OsuMicroBenchmarks(
             with open(yaml_path, 'r') as f:
                 data = yaml.safe_load(f)
                 # get mpi externals
-                mpi_externals = data.get('packages', {}).get('mpi', {}).get('externals', [])
+                mpi_externals = data.get('packages', {}).get('nvhpc', {}).get('externals', [])
+                #mpi_externals = data.get('packages', {}).get('mpi', {}).get('externals', [])
                 if mpi_externals:
                     modules = mpi_externals[0].get('modules', [])
 
@@ -250,7 +251,12 @@ class OsuMicroBenchmarks(
 
         self.add_experiment_variable("additional_args", " ".join(run_args), False)
 
+#<<<<<<< HEAD
         num_nodes = {"n_nodes": 2}
+#=======
+#        num_nodes = {"n_nodes": 2, "n_ranks": 1}
+#
+#>>>>>>> upstream/develop
         if self.spec.satisfies("exec_mode=test"):
             for pk, pv in num_nodes.items():
                 self.add_experiment_variable(pk, pv, True)

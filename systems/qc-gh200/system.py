@@ -41,7 +41,7 @@ class QcGh200(System):
     variant(
         "compiler",
         default="gcc",
-        values=("gcc", "cuda_12.5", "cuda", "nvhpc_24.3", "nvhpc_24.9", "nvhpc", "nvhpc_hpcx"),
+        values=("gcc", "cuda_12.5", "cuda", "nvhpc_24.3", "nvhpc_24.9", "nvhpc", "nvhpc_hpcx_cuda12", "nvhpc_hpcx"),
         description="Which compiler to use",
     )
     variant(
@@ -108,7 +108,7 @@ class QcGh200(System):
         }
 
     def compute_packages_section(self):
-        if self.spec.satisfies("compiler=nvhpc_hpcx"):
+        if self.spec.satisfies("compiler=nvhpc_hpcx_cuda12"):
            nvhpc_modules = ["system/qc-gh200", "nvhpc-hpcx-cuda12/25.7"]
            hpcx_path = "/opt/nvidia/hpc_sdk/Linux_aarch64/25.7/comm_libs/12.9/hpcx/hpcx-2.22.1/ompi"
            nccl_path = "/opt/nvidia/hpc_sdk/Linux_aarch64/25.7/comm_libs/12.9/nccl"
@@ -166,6 +166,23 @@ class QcGh200(System):
                                "modules": [
                                    "system/qc-gh200",
                                    "nvhpc/25.7",
+                               ],
+                           },
+                       ],
+                   },
+               }
+           }
+
+        if self.spec.satisfies("compiler=nvhpc_hpcx"):
+           selections = {
+               "packages": {
+                   "nvhpc": {
+                       "externals": [
+                           {
+                               "spec": f"nvhpc@25.7",
+                               "modules": [
+                                   "system/qc-gh200",
+                                   "nvhpc-hpcx/25.7",
                                ],
                            },
                        ],

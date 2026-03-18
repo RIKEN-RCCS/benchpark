@@ -5,10 +5,13 @@
 
 from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
 
-class Smb(Experiment, MpiOnlyExperiment):
+class Smb(
+    Experiment,
+    ProgrammingModel(ProgrammingModelType.Mpionly),
+):
     variant(
         "workload",
         default="mpi_overhead",
@@ -30,7 +33,8 @@ class Smb(Experiment, MpiOnlyExperiment):
             self.add_experiment_variable("n_ranks", "2")
         elif self.spec.satisfies("workload=msgrate"):
             self.add_experiment_variable("n_nodes", "1")
-            self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}")
+            #self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}")
+            self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}//2")
         elif self.spec.satisfies("workload=rma_mt_mpi"):
             self.add_experiment_variable("n_nodes", "1")
             #self.add_experiment_variable("n_ranks", "{n_nodes}*{sys_cores_per_node}")

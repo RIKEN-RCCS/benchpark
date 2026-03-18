@@ -9,4 +9,4 @@ DEST1='GH200_base'
 DEST2='GH200_test'
 WS_BUILD="workspace_base"
 WS_TEST="workspace_test"
-BASE_NAME="CHECK_PARAM"
+BASE_NAME="CHECK_TEST"

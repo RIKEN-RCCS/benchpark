@@ -34,7 +34,7 @@ echo "--- ${LIST_WL} ---"
 echo "--- ${LIST_FEATURE} ---"
 echo "--- ${WS_NAME} ---"
 
-[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx
+[ ! -d ${OUTPUT_DIR}/${DEST2} ] && benchpark system init --dest=${OUTPUT_DIR}/${DEST2} qc-gh200 compiler=nvhpc_hpcx_cuda12
 
 benchpark experiment init ${OUTPUT_DIR}/${DEST2} ${BASE} ${LIST_FEATURE} workload="${LIST_WL}" prepend_path=\"${PREP_PATH}\" package_manager="user-managed" --dest=${DEST3}
 benchpark setup ${OUTPUT_DIR}/${DEST2}/${DEST3} ${OUTPUT_DIR}/${WS_NAME}

@@ -1,12 +1,23 @@
-from benchpark.cuda import CudaExperiment
+#from benchpark.cuda import CudaExperiment
+#from benchpark.directives import variant
+#from benchpark.experiment import Experiment
+#from benchpark.mpi import MpiOnlyExperiment
+#
+#class NcclTests(
+#    Experiment,
+#    MpiOnlyExperiment,
+#    CudaExperiment,
+#):
 from benchpark.directives import variant
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
 class NcclTests(
-    Experiment,
-    MpiOnlyExperiment,
-    CudaExperiment,
+      Experiment,
+      ProgrammingModel(
+          ProgrammingModelType.Mpionly,
+          ProgrammingModelType.Cuda,
+      ),
 ):
     """NCCL Tests experiment class for GH200 (Benchpark style)"""
     name = "nccl-tests"
@@ -130,6 +141,7 @@ class NcclTests(
         for m in modules:
             setup_env_cmd += f"module load {m};"
         self.add_experiment_variable("pre_run_cmds", setup_env_cmd, False)
+        self.add_experiment_variable("nccl-tests_path", 'None', False)
 
         # setting all_options
         all_options = [

@@ -4,21 +4,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from benchpark.caliper import Caliper
-from benchpark.cuda import CudaExperiment
 from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
-from benchpark.openmp import OpenMPExperiment
-from benchpark.rocm import ROCmExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 from benchpark.scaling import Scaling, ScalingMode
 
 
 class Kripke(
     Experiment,
-    MpiOnlyExperiment,
-    OpenMPExperiment,
-    CudaExperiment,
-    ROCmExperiment,
+    ProgrammingModel(
+        ProgrammingModelType.Mpionly,
+        ProgrammingModelType.Openmp,
+        ProgrammingModelType.Cuda,
+        ProgrammingModelType.Rocm,
+    ),
     Scaling(ScalingMode.Strong, ScalingMode.Weak, ScalingMode.Throughput),
     Caliper,
 ):
@@ -31,8 +30,8 @@ class Kripke(
 
     variant(
         "version",
-        default="2025-07",
-        values=("develop", "latest", "2025-07", "1.2.7.0"),
+        default="2025.12.0",
+        values=("develop", "latest", "2025.12.0", "2025.07.0", "1.2.7.0"),
         description="app version",
     )
 

@@ -28,7 +28,7 @@ else
 fi
 if [ ! -d ".venv_calc" ]; then
     echo ".venv_calc not found. Creating virtual environment and installing modules..."
-    python3 -m venv .venv_calc
+    python3.11 -m venv .venv_calc
     source .venv_calc/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
@@ -43,7 +43,7 @@ fi
 mkdir -p ./workdir/nccl-tests
 SYSTEM_DIR=./workdir/nccl-tests/GH200_nvhpc
 WORKSPACE=./workdir/nccl-tests/workspace
-benchpark system init --dest=${SYSTEM_DIR} qc-gh200 compiler=nvhpc_hpcx
+benchpark system init --dest=${SYSTEM_DIR} qc-gh200 compiler=nvhpc_hpcx_cuda12
 benchpark experiment init ${SYSTEM_DIR} nccl-tests+cuda
 benchpark setup ${SYSTEM_DIR}/nccl-tests ${WORKSPACE}
 . ${WORKSPACE}/setup.sh

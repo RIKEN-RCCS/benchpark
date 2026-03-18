@@ -16,14 +16,11 @@ echo "--- ${LIST_FEATURE} ---"
 echo "--- ${WS_NAME} ---"
 
 # temporary fix
-find ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${BASE}/workspace -name "execute_experiment" | xargs sed -i -e '/^#SBATCH[[:space:]]\+--gpus\b/d' -e 's/[[:space:]]\+--gpus[[:space:]]\+[0-9]\+//g'
+find ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${DEST3}/workspace -name "execute_experiment" | xargs sed -i -e '/^#SBATCH[[:space:]]\+--gpus\b/d' -e 's/[[:space:]]\+--gpus[[:space:]]\+[0-9]\+//g'
 
 . ${OUTPUT_DIR}/${WS_NAME}/setup.sh
-ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${DEST3}/workspace on
+ramble --workspace-dir ${OUTPUT_DIR}/${WS_NAME}/${DEST2}/${DEST3}/workspace on --executor 'bash -c "while [ $(squeue -u $USER -h | wc -l) -ge 5 ]; do sleep 10; done; {batch_submit}"'
 
 
-echo "--- ${LIST_WL} ---"
-echo "--- ${LIST_FEATURE} ---"
-echo "--- ${WS_NAME} ---"
 echo "--- experiment.sh has finished ---"
 

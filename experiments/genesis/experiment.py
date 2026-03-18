@@ -5,10 +5,17 @@
 
 from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
-from benchpark.openmp import OpenMPExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
-class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment):
+#<<<<<<< HEAD
+#class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment):
+#=======
+
+class Genesis(
+    Experiment,
+    ProgrammingModel(ProgrammingModelType.Mpionly, ProgrammingModelType.Openmp),
+):
+#>>>>>>> upstream/develop
 
     variant(
         "workload",
