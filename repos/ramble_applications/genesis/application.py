@@ -4,52 +4,123 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
-
 from ramble.appkit import *
 
-
 class Genesis(ExecutableApplication):
-    """GENESIS package contains two MD programs (atdyn and spdyn), trajectory
-    analysis programs, and other useful tools. GENESIS (GENeralized-Ensemble
-    SImulation System) has been developed mainly by Sugita group in RIKEN-CCS.
-    """
     name = "GENESIS"
 
-    tags = ['molecular-dynamics','mpi']
+    tags = ['molecular-dynamics', 'mpi']
 
-    executable('chdir', 'cd $(dirname {input})', use_mpi=False)
-    executable('genesis', 'spdyn {input}', use_mpi=True)
+    executable(
+        'genesis',
+        "bash -lc 'cd $(dirname {input_file}) && spdyn $(basename {input_file})'",
+        use_mpi=True
+    )
 
-    input_file('benchmark-input',
-               url='https://github.com/genesis-release-r-ccs/genesis_benchmark_input/archive/refs/tags/v1.0.0.tar.gz',
-               sha256='13a04449f4036e38a640fd44adb08c723942515ecf512e7c64161c4ff96c8b5c',
-               description='Benchmark set for GENESIS 2.0 beta / 1.6 on FUGAKU')
-    input_file('tests-2.1.5',
-               url='https://github.com/genesis-release-r-ccs/genesis/archive/refs/tags/v2.1.5.tar.gz',
-               sha256='622e6dc0bf9db54b2d18165f098044146abbf20837cb6209af2015856469afbf',
-               description='Regression tests are prepared for ATDYN, SPDYN, prst_setup (parallel I/O), and analysis tools to check if these programs work correctly.')
+    executable(
+        'fix_path',
+        template=[
+            "sed -i 's|../../../build/cryoEM/go_model/|{build_path}/|g' inp",
+        ],
+        workloads=['cryoEM']
+    )
 
-    workload('DHFR', executables=['chdir', 'genesis'], input='benchmark-input')
-    workload('ApoA1', executables=['chdir', 'genesis'], input='benchmark-input')
-    workload('UUN', executables=['chdir', 'genesis'], input='benchmark-input')
-    workload('cryoEM', executables=['chdir', 'genesis'], input='tests-2.1.5')
+    input_file(
+        'genesis-benchmark',
+        url='https://github.com/genesis-release-r-ccs/genesis_benchmark_input/archive/refs/tags/v1.0.0.tar.gz',
+        sha256='13a04449f4036e38a640fd44adb08c723942515ecf512e7c64161c4ff96c8b5c',
+        description='Benchmark input set for GENESIS'
+    )
 
-    workload_variable('input', default='{benchmark-input}',
-                      description='input/ : benchmark-input root directory',
-                      workloads=['DHFR','ApoA1','UUN'])
-    workload_variable('input', default='{benchmark-input}/npt/genesis2.0beta/jac_amber/p{n_ranks}.inp',
-                      description='jac_amber/ : DHFR (27,346 atoms), AMBER format, soluble system',
-                      workloads=['DHFR'])
-    workload_variable('input', default='{benchmark-input}/npt/genesis2.0beta/apoa1/p{n_ranks}.inp',
-                      description='apoa1/ : apoa1 (92,224 atoms), CHARMM format, soluble system',
-                      workloads=['ApoA1'])
-    workload_variable('input', default='{benchmark-input}/npt/genesis2.0beta/uun/p{n_ranks}.inp',
-                      description='uun/ : uun (216,726 atoms), CHARMM format, membrane+solvent system',
-                      workloads=['UUN'])
-    workload_variable('input', default='{tests-2.1.5}/tests/regression_test/test_spdyn/cryoEM/All_atom/inp',
-                      description='cryoEM/All_atom/ : cryoEM (? atoms), CHARMM format',
-                      workloads=['cryoEM'])
+    # input_file(
+    #     'genesis-cx_input',
+    #     url='file:///lvs0/dne1/rccs-nghpcadu/CX_input/CX_Input-20260317.tar.gz',
+    #     sha256='e257ef4ccc920bbcdc807551dd46497618c03d7ce93bf8d88b866c7a54b4f4b9',
+    #     description='CX_Input input set 20260317'
+    # )
 
-    figure_of_merit('Figure of Merit (FOM)', log_file='{experiment_run_dir}/{experiment_name}.out', fom_regex=r'^\s+dynamics\s+=\s+(?P<fom>[-+]?([0-9]*[.])?[0-9]+([eED][-+]?[0-9]+)?)', group_name='fom', units='')
+    input_file(
+        'genesis-tests',
+        url='https://github.com/genesis-release-r-ccs/genesis/archive/refs/tags/v2.1.5.tar.gz',
+        description='GENESIS v2.1.5 source tree containing regression test inputs'
+    )
 
-    success_criteria('pass', mode='string', match=r'Figure of Merit \(FOM\)', file='{experiment_run_dir}/{experiment_name}.out')
+    # workload(
+    #     'Lysozyme',
+    #     executables=['genesis'],
+    #     input='genesis-cx_input'
+    # )
+
+    workload(
+        'DHFR',
+        executables=[ 'genesis'],
+        input='genesis-benchmark'
+    )
+
+    workload(
+        'ApoA1',
+        executables=[ 'genesis'],
+        input='genesis-benchmark'
+    )
+
+    workload(
+        'UUN',
+        executables=[ 'genesis'],
+        input='genesis-benchmark'
+    )
+
+    workload(
+        'cryoEM',
+        executables=[ 'fix_path', 'genesis'],
+        input='genesis-tests'
+    )
+
+    # workload_variable(
+    #     'input_file',
+    #     '{genesis-cx_input}/GENESIS/Evaluation_duplication/orig_1dalltoall_2nodes/lyso_vres_org.inp',
+    #     'Lysozyme duplication system input file for sol 1x1x1',
+    #     workload='Lysozyme'
+    # )
+
+    workload_variable(
+        'input_file',
+        '{genesis-benchmark}/npt/genesis2.0beta/jac_amber/p{n_ranks}.inp',
+        'DHFR input file',
+        workload='DHFR'
+    )
+
+    workload_variable(
+        'input_file',
+        '{genesis-benchmark}/npt/genesis2.0beta/apoa1/p{n_ranks}.inp',
+        'ApoA1 input file',
+        workload='ApoA1'
+    )
+
+    workload_variable(
+        'input_file',
+        '{genesis-benchmark}/npt/genesis2.0beta/uun/p{n_ranks}.inp',
+        'UUN input file',
+        workload='UUN'
+    )
+
+    workload_variable(
+        'input_file',
+        '{genesis-tests}/tests/regression_test/test_spdyn/cryoEM/All_atom/inp',
+        'CryoEM input file',
+        workload='cryoEM'
+    )
+
+    figure_of_merit(
+        'Figure of Merit (FOM)',
+        log_file='{experiment_run_dir}/{experiment_name}.out',
+        fom_regex=r'^\s+dynamics\s+=\s+(?P<fom>[-+]?([0-9]*[.])?[0-9]+([eED][-+]?[0-9]+)?)',
+        group_name='fom',
+        units=''
+    )
+
+    success_criteria(
+        'pass',
+        mode='string',
+        match=r'Figure of Merit \(FOM\)',
+        file='{experiment_run_dir}/{experiment_name}.out'
+    )
