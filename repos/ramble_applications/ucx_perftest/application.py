@@ -12,6 +12,9 @@ class UcxPerftest(ExecutableApplication):
     """UCX perftest benchmark"""
     name = "ucx_perftest"
 
+    with when("package_manager_family=spack"):
+        software_spec("ucx_perftest", "ucx-perftest")     ##### upstream
+
     executable(
         'run_server',
         'srun -N 1 -n 1 -w ${server_node} ucx_perftest {server_opts} & sleep 5',

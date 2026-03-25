@@ -16,15 +16,15 @@ module load nvhpc-hpcx/25.7
 cd ${BENCHPARK_HOME}
 
 ##### initialize python environment #####
-if [ ! -d .venv ]; then
-  python3 -m venv .venv
-  source .venv/bin/activate
+if [ ! -d .venv_calc ]; then
+  python3.11 -m venv .venv_calc
+  source .venv_calc/bin/activate
   pip install --upgrade pip
   pip install -r requirements.txt
   pip install .[analyze]
 fi
 . ./setup-env.sh
-source .venv/bin/activate
+source .venv_calc/bin/activate
 
 ##### build packages at this directory #####
 OUTPUT_DIR="${OUTPUT_DIR}_mt"

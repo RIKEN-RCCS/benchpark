@@ -5,12 +5,14 @@
 import os
 import inspect
 
-import llnl.util.filesystem as fs
 from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 class UcxPerftest(AutotoolsPackage, CudaPackage):
     tags = []
+
+    name = "ucx-perftest"    ##### upstream
 
     url = "https://github.com/openucx/ucx/releases/download/v1.19.0/ucx-1.19.0.tar.gz"
     git = "https://github.com/openucx/ucx"
@@ -18,8 +20,6 @@ class UcxPerftest(AutotoolsPackage, CudaPackage):
     version("master", branch="master")
     version("1.19", tag="v1.19.0")
 
-    variant("cuda", default=False, description="Build with CUDA")
-    variant("cuda_arch", default="90", description="CUDA architecture")
     variant("verbs", default=False, description="Build OpenFabrics support")
     variant("rc", default=False, description="Compile with IB Reliable Connection support")
     variant("ud", default=False, description="Compile with IB Unreliable Datagram support")

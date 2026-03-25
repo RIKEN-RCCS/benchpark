@@ -177,6 +177,7 @@ class OsuMicroBenchmarks(
         import yaml
         import os
         import sys
+        import glob
 
         dest_dir = None
         for i, arg in enumerate(sys.argv):
@@ -217,19 +218,27 @@ class OsuMicroBenchmarks(
         #print("DEBUG: ----------------------------\n")
         #########################################################################
 
+        graph_type_val = "png"
+        papi_events_val = ""
+        papi_output_val = ""
+
         if self.spec.satisfies("+papi"):
             papi_val = self.spec.variants.get("papi_events")
             if papi_val:
-                papi_events_val = str(papi_val[0]).replace(":", ",")
+                #papi_events_val = str(papi_val[0]).replace(":", ",")
+                papi_events_val = str(self.spec.variants["papi_events"][0]).replace(":", ",")
 
             papi_output = self.spec.variants.get("papi_output")
             if papi_output:
-                papi_output_val = str(papi_output[0])
+                #papi_output_val = str(papi_output[0])
+                papi_output_val = str(self.spec.variants["papi_output"][0])
 
+        #if self.spec.satisfies("+graphing"):
+        #    graph_type = self.spec.variants.get("graph_type")
+        #    if graph_type:
+        #        graph_type_val = str(graph_type[0])
         if self.spec.satisfies("+graphing"):
-            graph_type = self.spec.variants.get("graph_type")
-            if graph_type:
-                graph_type_val = str(graph_type[0])
+            graph_type_val = str(self.spec.variants["graph_type"][0])
 
         run_args = []
         if self.spec.satisfies("+rocm"):
@@ -257,21 +266,37 @@ class OsuMicroBenchmarks(
 #        num_nodes = {"n_nodes": 2, "n_ranks": 1}
 #
 #>>>>>>> upstream/develop
-        if self.spec.satisfies("exec_mode=test"):
-            for pk, pv in num_nodes.items():
-                self.add_experiment_variable(pk, pv, True)
+        #if self.spec.satisfies("exec_mode=test"):
+        #    for pk, pv in num_nodes.items():
+        #        self.add_experiment_variable(pk, pv, True)
 
+        n_resources = 2
+        n_ranks = 2
         if self.spec.satisfies("+rocm") or self.spec.satisfies("+cuda"):
-            resource = "n_gpus"
-            for pk, pv in num_nodes.items():
-                self.add_experiment_variable("n_gpus", pv, True)
+            self.add_experiment_variable("n_gpus", 1, True)
         else:
-            resource = "n_nodes"
+            self.add_experiment_variable("n_nodes", 2, True)
 
-        n_resources = "{" + resource + "}"
+        #n_resources = "{" + resource + "}"
         self.set_required_variables(
             n_resources=n_resources, process_problem_size="", total_problem_size=""
         )
+        self.add_experiment_variable("n_ranks", n_ranks, True)
+
+        # set osu-micro-benchmarks_path using prepend_path
+        prep_dir = None
+        for i, arg in enumerate(sys.argv):
+            if arg.startswith('prepend_path='):
+                path_str = arg.split('=', 1)[1].strip('"')
+                prep_dir = path_str.split(":")[0]
+                break
+        if prep_dir is not None: 
+            matches = glob.glob(prep_dir)
+            if not matches:
+                raise RuntimeError(f"Cannot find osu-micro-benchmarks : {prep_dir}")
+            osu_base_path = matches[0]
+            self.add_experiment_variable("osu-micro-benchmarks_path", osu_base_path, False)
+
 
     def compute_package_section(self):
         pkg_spec = f"osu-micro-benchmarks{self.determine_version()}"

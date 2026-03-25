@@ -16,16 +16,16 @@ module load nvhpc-hpcx-cuda12/25.7
 cd ${BENCHPARK_HOME}
 
 ##### initialize python environment #####
-if [ ! -d .venv ]; then
+if [ ! -d .venv_calc ]; then
   . ./setup-env.sh
-  python3 -m venv .venv
-  source .venv/bin/activate
+  python3.11 -m venv .venv_calc
+  source .venv_calc/bin/activate
   pip install --upgrade pip
   pip install -r requirements.txt
   pip install .[analyze]
 fi
 . ./setup-env.sh
-source .venv/bin/activate
+source .venv_calc/bin/activate
 
 ##### build packages and setup experiments at this directory #####
 cd ${SLURM_SUBMIT_DIR}

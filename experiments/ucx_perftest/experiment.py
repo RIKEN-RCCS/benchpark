@@ -5,14 +5,17 @@
 
 from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
-from benchpark.cuda import CudaExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
 
-class UcxPerftest(Experiment, CudaExperiment):
+class UcxPerftest(
+        Experiment,
+        ProgrammingModel(ProgrammingModelType.Cuda),
+):
     variant(
         "workload",
         default="ucx_perftest",
-        values=("ucx_perftest", "ucx_perftesti_daemon"),
+        values=("ucx_perftest", ),
         description="ucx_perf_test benchmark",
     )
 
@@ -23,7 +26,6 @@ class UcxPerftest(Experiment, CudaExperiment):
         description="UCX version",
     )
 
-    variant("cuda", default=False, description="Build with CUDA")
     variant("verbs", default=False, description="Build OpenFabrics support")
     variant("rc", default=False, description="Compile with IB Reliable Connection support")
     variant("ud", default=False, description="Compile with IB Unreliable Datagram support")
@@ -126,13 +128,19 @@ class UcxPerftest(Experiment, CudaExperiment):
 
 
         # --- ---
-        self.add_experiment_variable("n_nodes", 2)
+        n_resources = 2
+        n_ranks = 2
+        n_nodes = 2
         self.set_required_variables(
-            n_resources="{n_nodes}", process_problem_size="", total_problem_size=""
+            n_resources=n_resources, process_problem_size="", total_problem_size=""
         )
+        self.add_experiment_variable("n_ranks", n_ranks)
+        self.add_experiment_variable("n_nodes", n_nodes)
 
         def get_val(name):
             val = self.spec.variants[name]
+            if isinstance(val, dict):
+                val = val.get("value") or val.get("values") or val
             if isinstance(val, (tuple, list)):
                 return ",".join(map(str, val))
             return str(val)
@@ -209,16 +217,16 @@ class UcxPerftest(Experiment, CudaExperiment):
         server_opts = " ".join(s_opts)
         client_opts = " ".join(c_opts)
 
-        self.add_experiment_variable("client_opts", client_opts)
-        self.add_experiment_variable("server_opts", server_opts)
-        self.add_experiment_variable("UCX_TLS", get_val("UCX_TLS"))
-        self.add_experiment_variable("UCX_SELF_DEVICES", get_val("UCX_SELF_DEVICES"))
-        self.add_experiment_variable("UCX_SHM_DEVICES", get_val("UCX_SHM_DEVICES"))
-        self.add_experiment_variable("UCX_NET_DEVICES", get_val("UCX_NET_DEVICES"))
+        self.add_experiment_variable("client_opts", str(client_opts))
+        self.add_experiment_variable("server_opts", str(server_opts))
+        self.add_experiment_variable("UCX_TLS", str(get_val("UCX_TLS")))
+        self.add_experiment_variable("UCX_SELF_DEVICES", str(get_val("UCX_SELF_DEVICES")))
+        self.add_experiment_variable("UCX_SHM_DEVICES", str(get_val("UCX_SHM_DEVICES")))
+        self.add_experiment_variable("UCX_NET_DEVICES", str(get_val("UCX_NET_DEVICES")))
 
 
     def compute_package_section(self):
-        spec = "ucx_perftest"
+        spec = "ucx-perftest"  ##### upstream
 
         if self.spec.satisfies("+verbs"):
             spec += "+verbs"

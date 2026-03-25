@@ -5,6 +5,7 @@
 
 import os
 from spack.package import *
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 from spack_repo.builtin.packages.osu_micro_benchmarks.package import (
     OsuMicroBenchmarks as BuiltinOsu,
 )

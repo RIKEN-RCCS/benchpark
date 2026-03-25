@@ -5,6 +5,7 @@ SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$(pwd)}"
 BENCHPARK_HOME="$(cd "$SCRIPT_DIR/../../" && pwd)"
 OUTPUT_DIR="./output"
 BASE="ucx_perftest"
+BASE_SPACK="ucx-perftest"
 DEST1='GH200_base'
 DEST2='GH200_test'
 WS_BUILD="workspace_base"

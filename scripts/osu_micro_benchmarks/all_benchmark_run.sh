@@ -43,7 +43,7 @@ for p in "${LIST_PAPI[@]}"; do
                     # Wait until there are fewer waiting jobs
                     while true; do
                         job_count=$(squeue -u "$USER" -h | grep "setup" | wc -l)
-                        if [[ "$job_count" -lt 4  ]]; then
+                        if [[ "$job_count" -lt 5  ]]; then
                             break
                         else
                             sleep 10

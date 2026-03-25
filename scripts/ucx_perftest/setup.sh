@@ -15,14 +15,14 @@ module load nvhpc-hpcx-cuda12/25.7
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
 . ./setup-env.sh
-source .venv/bin/activate
+source .venv_calc/bin/activate
 
 ##### setup experiments at this directory #####
 cd ${SLURM_SUBMIT_DIR}
 [ ! -d ${OUTPUT_DIR} ] && mkdir ${OUTPUT_DIR}
 
 #---
-PREP_PATH="$(find ${SLURM_SUBMIT_DIR}/${OUTPUT_DIR}/${WS_BUILD}/spack/opt/spack/linux-neoverse_v2/${BASE}-*/ -type d -name "bin" | tr '\n' ':' | sed 's/:$//')"
+PREP_PATH="$(find ${SLURM_SUBMIT_DIR}/${OUTPUT_DIR}/${WS_BUILD}/spack/opt/spack/linux-neoverse_v2/${BASE_SPACK}-*/ -type d -name "bin" | tr '\n' ':' | sed 's/:$//')"
 TEST_CASE="$@"
 if [ $# -eq 0 ]; then
   TARGET="${BASE_NAME}"

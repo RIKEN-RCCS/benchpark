@@ -15,7 +15,7 @@ module load nvhpc-hpcx-cuda12/25.7
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
 . ./setup-env.sh
-source .venv/bin/activate
+source .venv_calc/bin/activate
 
 ##### setup experiments at this directory #####
 cd ${SLURM_SUBMIT_DIR}

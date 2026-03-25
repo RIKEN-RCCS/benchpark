@@ -15,7 +15,7 @@ module load nvhpc-hpcx/25.7
 ##### setting at benchpark home directory #####
 cd ${BENCHPARK_HOME}
 . ./setup-env.sh
-source .venv/bin/activate
+source .venv_calc/bin/activate
 
 ##### setup experiments at this directory #####
 OUTPUT_DIR="${OUTPUT_DIR}_mt"
