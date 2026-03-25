@@ -13,7 +13,7 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment, CudaExperiment,):
 
     variant(
         "workload",
-        default="Lysozyme",
+        default="DHFR",
         # Lyzozyme : < 4 GPU would be better, 
         # DHFR : < 4 GPU would be better, 
         # Apoa1 100K atoms :  1-16 GPUs OK, 
@@ -44,7 +44,7 @@ class Genesis(Experiment, MpiOnlyExperiment, OpenMPExperiment, CudaExperiment,):
         description="app version",
     )
 
-    maintainers("jdomke", "SBA0486")
+    maintainers("jdomke", "SBA0486", "chig")
 
     def compute_applications_section(self):
         #        if self.spec.satisfies("exec_mode=test"):
