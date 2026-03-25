@@ -27,7 +27,7 @@ exclude = '''
   | buck-out
   | build
   | dist
-  | repo
+  | repos
 )/
 '''
 force-exclude = '''
@@ -63,7 +63,7 @@ per-file-ignores = """
 """
 
 [tool.codespell]
-skip = './docs/_build,./docs/_static,./taxonomy.yaml,./repo/**/*.patch'
+skip = './docs/_build,./docs/_static,./taxonomy.yaml,./repos/spack_repo/*/*/*/*.patch'
 ignore-words-list = 'fom'
 
 [tool.yamlfix]
@@ -73,7 +73,7 @@ explicit_start = false
 
 [project.optional-dependencies]
 analyze = [
-  "llnl-hatchet==2024.1.3",
-  "llnl-thicket[plotting]==2025.1.0",
+  "llnl-hatchet>=2025.2.0",
+  "llnl-thicket[plotting]>=2026.1.0",
   "matplotlib"
 ]

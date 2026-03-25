@@ -23,6 +23,12 @@ SKIP_EXPR = [
     "stream generic-x86",
     # Broken URL's in application.py going to cause dryrun failure
     "genesis",
+    # Not ProgrammingModelType.Mpionly
+    "py-scaffold+strong",
+    "py-scaffold+weak",
+    # Needs package_manager=spack-pip
+    "py-scaffold+rocm",
+    "py-scaffold+cuda",
 ]
 
 
@@ -117,7 +123,6 @@ def main():
         ["./bin/benchpark", "list", "modifiers", "--no-title"], decode=True
     )
     nmods = [i for i in mods_str.replace(" " * 4, "").split("\n") if i != ""]
-    print(nmods)
     modifiers_expr = []
     exclude_mods = ["allocation"]
     i = 0
@@ -128,7 +133,6 @@ def main():
             continue
         if not nmods[i].startswith("\t"):
             curmod = nmods[i]
-            print(curmod)
             end = "=on" if curmod != "caliper" else "=time"
             if "(all benchmarks)" in nmods[i + 1]:
                 for b in mpi_only_expr:

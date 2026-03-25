@@ -10,8 +10,8 @@ import tempfile
 from ramble.expander import Expander
 
 import benchpark.caliper
-import benchpark.paths
 import benchpark.spec
+from benchpark.paths import paths
 
 
 def get_caliper_vars_section(expr_spec):
@@ -30,6 +30,7 @@ def test_experiment_compute_variables_section_caliper(monkeypatch):
     assert vars_section == {
         "caliper_metadata": {
             "affinity": "none",
+            "allocation": "standard",
             "hwloc": "none",
             "application_name": "{application_name}",
             "experiment_name": "{experiment_name}",
@@ -39,6 +40,7 @@ def test_experiment_compute_variables_section_caliper(monkeypatch):
             "n_threads_per_proc": "{n_threads_per_proc}",
             "benchpark_spec": ["~cuda+mpi~openmp~rocm"],
             "append_path": "'",
+            "cali_version": "master",
             "caliper": "time",
             "exec_mode": "test",
             "package_manager": "spack",
@@ -58,9 +60,9 @@ def test_caliper_modifier(monkeypatch):
     expr_vars_section = get_caliper_vars_section(expr_spec)
 
     # Append path to enable import of modifier and application
-    sys.path.append(str(benchpark.paths.benchpark_root))
+    sys.path.append(str(paths.benchpark_root))
     from modifiers.caliper.modifier import Caliper as CaliperModifier
-    from repo.saxpy.application import Saxpy
+    from repos.ramble_applications.saxpy.application import Saxpy
 
     app_inst = Saxpy("")
 
@@ -88,6 +90,7 @@ def test_caliper_modifier(monkeypatch):
     # Check file
     assert data == {
         "sys_cores_per_node": 84,
+        "allocation": "standard",
         "scheduler": "flux",
         "rocm_arch": "gfx942",
         "sys_cores_os_reserved_per_node": 12,
@@ -119,6 +122,7 @@ def test_caliper_modifier(monkeypatch):
         "benchpark_spec": "['~cuda+mpi~openmp~rocm']",
         "affinity": "none",
         "append_path": "'",
+        "cali_version": "master",
         "caliper": "time",
         "exec_mode": "test",
         "hwloc": "none",
