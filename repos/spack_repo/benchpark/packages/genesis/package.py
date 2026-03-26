@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from spack.package import *
 from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
@@ -38,13 +39,25 @@ class Genesis(AutotoolsPackage):
         "2.0.3", submodules=False, tag="v2.0.3", commit="6989e0b24470e374ea343b2b7b685aca87909571"
     )
 
+    patch("fix-nvtx-include.patch", when="+cuda")
+    patch("fix-nvtx-include.patch", when="+gpu")
+
     variant("mpi", default=True, description="Build with MPI.")
     variant("openmp", default=True, description="Build with OpenMP enabled.")
     variant("lapack", default=True, description="Build with LAPACK enabled.")
-    variant("gpu", default=False, description="Build with GPGPU enabled.")
     variant("precision", description="Build with selected precision.", default="double", values=("double", "mixed", "single"), multi=False)
     variant("simd", description="Build with SIMD width.", default="auto", values=("auto", "MIC-AVX512", "CORE-AVX512", "CORE-AVX2"), multi=False)
     variant("debug", description="Set Debug level", default="0", values=("0", "1", "2", "3", "4"), multi=False)
+
+    variant("gpu", default=False, description="Build with GPGPU enabled.")
+    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cuda_arch", default="none", description="CUDA architecture", values=("none", "90"), multi=False)
+
+    depends_on("cuda", when="+cuda")
+    depends_on("cuda", when="+gpu")
+    depends_on("cuda", when="+cuda")
+    depends_on("cuda@12:", when="cuda_arch=90")
+    conflicts("cuda_arch=90", when="~cuda ~gpu")
 
     # Has Fortran but I didn't see c/c++ code
     depends_on("c", type="build")
@@ -53,7 +66,9 @@ class Genesis(AutotoolsPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("lapack", when="+lapack")
-    requires("+cuda", when="+gpu")
+
+    def _with_cuda(self):
+        return self.spec.satisfies("+gpu") or self.spec.satisfies("+cuda")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
@@ -81,9 +96,14 @@ class Genesis(AutotoolsPackage):
             args.append(f"--enable-debug={debug_level}")
 
         args.append("--enable-mpi" if "+mpi" in spec else "--disable-mpi")
-        args.append("--enable-openmp" if "+openmp" in spec else "--disable-openmp")
         args.append("--with-lapack" if "+lapack" in spec else "--without-lapack")
-        args.append("--enable-gpu" if "+gpu" in spec else "--disable-gpu")
+
+        if self._with_cuda():
+            args.append("--enable-gpu")
+            args.append("--enable-openmp")
+        else:
+            args.append("--disable-gpu")
+            args.append("--enable-openmp" if "+openmp" in spec else "--disable-openmp")
 
         if "+mpi" in spec:
             env["CC"] = spec["mpi"].mpicc
@@ -132,12 +152,10 @@ class Genesis(AutotoolsPackage):
         if self.spec.satisfies("+lapack"):
             env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
 
-        if self.spec.satisfies("+gpu") :
-            cuda_arch_list = list(spec.variants["cuda_arch"].value)
-            cuda_gencode = " ".join(self.cuda_flags(cuda_arch_list))
-            env.set("NVCCFLAGS", cuda_gencode)
-
+        if self._with_cuda() :
+            cuda_arch = spec.variants["cuda_arch"].value
             cuda_prefix = spec["cuda"].prefix
+
 
             inc_dirs = [
                 join_path(cuda_prefix, "include"),
@@ -149,21 +167,23 @@ class Genesis(AutotoolsPackage):
                 join_path(cuda_prefix, "targets", "sbsa-linux", "lib"),
             ]
 
-            for d in inc_dirs:
-                if os.path.isdir(d):
-                    env.prepend_path("CPATH",d)
-                    env.prepend_path("CPLUS_INCLUDE_PATH",d)
-                    env.prepend_path("C_INCLUDE_PATH",d)
+            existing_inc_dirs = [d for d in inc_dirs if os.path.isdir(d)]
+            existing_lib_dirs = [d for d in lib_dirs if os.path.isdir(d)]
 
-                    env.append_flags("CFLAGS",    f"-I{d}")
-                    env.append_flags("CXXFLAGS",  f"-I{d}")
-                    env.append_flags("CPPFLAGS",  f"-I{d}")
-                    env.append_flags("NVCCFLAGS", f"-I{d}")
+            if existing_inc_dirs:
+                incflags = " ".join(f"-I{x}" for x in existing_inc_dirs)
+                env.append_flags("CPPFLAGS", incflags)
+                env.append_flags("NVCCFLAG", incflags)
 
-            for d in lib_dirs:
-                if os.path.isdir(d):
-                    env.append_flags("LDFLAGS", f"-L{d}")
-                    env.prepend_path("LD_LIBRARY_PATH", d)
+            if existing_lib_dirs:
+                ldflags = " ".join(f"-L{x}" for x in existing_lib_dirs)
+                env.append_flags("LDFLAGS", ldflags)
+
+            if cuda_arch == "90":
+                env.append_flags(
+                    "NVCCFLAG",
+                    '--generate-code=arch=compute_90,code="sm_90,compute_90"'
+                )
 
             env.set("CUDA_HOME", str(cuda_prefix))
             env.set("CUDA_PATH", str(cuda_prefix))
