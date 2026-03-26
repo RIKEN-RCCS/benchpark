@@ -65,6 +65,7 @@ class Genesis(AutotoolsPackage):
     depends_on("fortran", type="build")
 
     depends_on("mpi", when="+mpi")
+    depends_on("blas", when="+lapack")
     depends_on("lapack", when="+lapack")
 
     def _with_cuda(self):
