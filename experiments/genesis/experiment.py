@@ -64,7 +64,9 @@ class Genesis(
             )
         elif self.spec.satisfies("backend=gpu"):
             self.add_experiment_variable("n_nodes", "1", True)
-            self.add_experiment_variable("n_gpus", "{n_resources}", True)
+            self.add_experiment_variable(
+                "n_threads_per_proc", ["{sys_cores_per_node} // {n_ranks}"]
+            )
 
         self.set_required_variables(
             process_problem_size="{size}/{n_ranks}",
