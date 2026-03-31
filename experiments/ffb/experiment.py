@@ -4,11 +4,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from benchpark.experiment import Experiment
-from benchpark.mpi import MpiOnlyExperiment
+from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 from benchpark.directives import variant, maintainers
 
-class Ffb(Experiment, MpiOnlyExperiment):
-
+class Ffb(
+    Experiment,
+    ProgrammingModel(
+        ProgrammingModelType.Mpionly,
+    ),
+):
     variant(
         "workload",
         default="cavity",
@@ -31,6 +35,7 @@ class Ffb(Experiment, MpiOnlyExperiment):
             self.add_experiment_variable("processes_per_node", 1)
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
             self.add_experiment_variable("size", 31255875, True)
+            self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
         else: # CPU
             self.add_experiment_variable("n_nodes", ["4"], True)
             self.add_experiment_variable("processes_per_node", ["4"])

@@ -43,13 +43,11 @@ class Ffb(ExecutableApplication):
     input_file('benchmark-input',
                url=url,
                sha256=chksum,
-               when='^system~cuda',
                description='Benchmark set for FFB')
 
     workload("cavity",
              executables=executables,
-             input="benchmark-input",
-             when="^system+cuda")
+             input="benchmark-input")
 
     workload_variable('input', default='{benchmark-input}',
                       description='input/ : benchmark-input root directory',
