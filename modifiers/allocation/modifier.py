@@ -348,8 +348,9 @@ class Allocation(BasicModifier):
 
         if '--gpus 0' in srun_opts:
             srun_opts.remove(f"--gpus 0")
-            srun_opts.remove(f"--gpus {v.n_gpus}")
-            sbatch_opts.remove(f"--gpus {v.n_gpus}")
+            if v.n_gpus:
+                srun_opts.remove(f"--gpus {v.n_gpus}")
+                sbatch_opts.remove(f"--gpus {v.n_gpus}")
 
         sbatch_directives = list(f"#SBATCH {x}" for x in (sbatch_opts))
 
