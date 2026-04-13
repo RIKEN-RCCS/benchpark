@@ -68,6 +68,9 @@ class Genesis(AutotoolsPackage):
     depends_on("blas", when="+lapack")
     depends_on("lapack", when="+lapack")
 
+    patch("fj_compiler_2.0.0.patch", when="@2.0.0:2.1.3 %fj")
+    patch("fj_compiler_2.1.4.patch", when="@2.1.4:2.1.6 %fj")
+
     def _with_cuda(self):
         return self.spec.satisfies("+gpu") or self.spec.satisfies("+cuda")
 
@@ -126,24 +129,10 @@ class Genesis(AutotoolsPackage):
                 env["FPP"] = "/opt/FJSVxtclanga/tcsds-1.2.38/bin/../lib/fpp"
                 env["PPFLAGS"] = "-traditional-cpp -traditional"
         elif spec.satisfies("%fj"):
-            opt_flags = "-Kfast"
-            env["CFLAGS"] = f"{opt_flags}"
-            env["CXXFLAGS"] = f"{opt_flags}"
-            env["FCFLAGS"] = f"{opt_flags}"
-            env["F77FLAGS"] = f"{opt_flags}"
             if spec.target == "a64fx":
-                # Using same flags as the version installed outside benchpark
-                env["CFLAGS"] = "-Kfast -Kocl -Kswp"
-                env["FCFLAGS"] = "-Kocl -Kfast -Kopenmp -Nlst=t -Koptmsg=2"
-                env["LDFLAGS"] = "-SSL2BLAMP -Kparallel -Kopenmp -Nlibomp"
                 # if Lapack_libs is not specified, build fails when linking
                 env["LAPACK_LIBS"] = spec["lapack"].libs.ld_flags
-        elif spec.satisfies("%gcc"):
-            opt_flags = "-O3 -ffast-math"
-            env["CFLAGS"] = f"{opt_flags}"
-            env["CXXFLAGS"] = f"{opt_flags}"
-            env["FCFLAGS"] = f"{opt_flags} -ffree-line-length-none"
-            env["F77FLAGS"] = f"{opt_flags} -ffree-line-length-none"
+                args.append("--host=Fugaku")
 
         return args
 
