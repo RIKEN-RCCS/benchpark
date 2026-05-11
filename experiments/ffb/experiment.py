@@ -42,6 +42,7 @@ class Ffb(
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
             self.add_experiment_variable("omp_num_threads", ["12"])
             self.add_experiment_variable("size", 8493380, True)
+            self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
 
         self.set_required_variables(
             n_resources="{n_ranks}",
@@ -51,8 +52,13 @@ class Ffb(
 
     def compute_package_section(self):
         base_version = self.spec.variants['version'][0]
+        ret = self.system_spec.variants['cluster']
+        if ret:
+            cluster = f"-{ret[0]}"
+        else:
+            cluster = ""
 
         suffix = "-gpu" if self.system_spec.satisfies("compiler=cuda") else "-cpu"
-        spec_str = f"ffb@{base_version}{suffix}"
+        spec_str = f"ffb@{base_version}{suffix}{cluster}"
         self.add_package_spec(self.name, [spec_str])
 

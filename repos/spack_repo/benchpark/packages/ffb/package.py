@@ -14,7 +14,8 @@ class Ffb(Package):
     url = ""
 
     version("67.01-cpu", sha256="beba53067ce9f4097cba30cc79a3198718f823e4887e2c290785245eb44de2ed", url="file:///vol0003/rccs-sdt/data/a01008/apps/ffb/ffb-frt_cpu.fugaku.tar.gz")
-    version("67.01-gpu", sha256="9629ce4a97c295cbfdc4df0bcfaf6efe12919ff7aa438e812b26f438c60d22ba", url="file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/ffb-acc_gpu.gh.tar.gz")
+    version("67.01-cpu-genoa", sha256="623b99b9b2644ca68d98bfe092ed3fcc57bae373e20f8bc2697d33a8730c80d6", url="file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/ffb-frt_cpu.genoa.ftz.tar.gz")
+    version("67.01-gpu-gh200", sha256="9629ce4a97c295cbfdc4df0bcfaf6efe12919ff7aa438e812b26f438c60d22ba", url="file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/ffb-acc_gpu.gh.tar.gz")
 
     def install(self, spec, prefix):
         has_cuda = "gpu" in str(spec)
