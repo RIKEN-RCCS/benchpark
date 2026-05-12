@@ -55,13 +55,13 @@ class RikenCloud(System):
     )
     variant(
         "cuda",
-        default="12.9",
+        default="13.0",
         values=("12.5", "12.9", "13.0"),
         description="CUDA version",
     )
     variant(
         "nvhpc",
-        default="25.7",
+        default="25.9",
         values=("25.9", "25.7", "24.9", "24.3"),
         description="CUDA version",
     )
@@ -1152,7 +1152,7 @@ class RikenCloud(System):
                     "openmpi": {
                         "buildable": True,
                         "version": ["4.1.7"],
-                        "variants": "+cuda+cxx cuda_arch=90 fabrics=auto schedulers=slurm",
+                        "variants": "+cuda+cxx cuda_arch=90 fabrics=ucx schedulers=slurm",
                     },
                 }
             }
@@ -1273,8 +1273,11 @@ class RikenCloud(System):
                     [
                         compiler_def(
                             f"nvhpc@{self.nvhpc_version}",
-                            f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers/",
+                            f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers",
                             {"c": "nvc", "cxx": "nvc++", "fortran": "nvfortran"},
+                            extra_rpaths=[
+                                f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/lib64",
+                            ],
                             modules=[
                                 "system/qc-gh200",
                                 f"nvhpc/{self.nvhpc_version}",
