@@ -1,0 +1,36 @@
+diff -Naur spack-src.org/test/python/runtest_expert.py spack-src/test/python/runtest_expert.py
+--- spack-src.org/test/python/runtest_expert.py	2024-10-05 10:52:35.000000000 +0900
++++ spack-src/test/python/runtest_expert.py	2024-10-30 13:34:45.000000000 +0900
+@@ -33,7 +33,7 @@
+ 
+ #result = subprocess.call([bin_to_test, "-s", "%s/StdFace.def" % refdir])
+ #result = subprocess.call([bin_to_test, "-e", "%s/namelist.def" % refdir, "%s/initial.def" % refdir])
+-result = subprocess.call([bin_to_test, "-e", "namelist.def", "initial.def"])
++result = subprocess.call(["mpirun", "-np", "1", bin_to_test, "-e", "namelist.def", "initial.def"])
+ if result != 0:
+     sys.exit(result)
+ 
+diff -Naur spack-src.org/test/python/runtest_mode1.py spack-src/test/python/runtest_mode1.py
+--- spack-src.org/test/python/runtest_mode1.py	2024-10-05 10:52:35.000000000 +0900
++++ spack-src/test/python/runtest_mode1.py	2024-10-30 13:34:56.000000000 +0900
+@@ -29,7 +29,7 @@
+ bin_to_test = os.path.join(rootdir, "..", "..", "src", "mVMC", "vmc.out")
+ #bin_to_test = os.path.join(rootdir, "..", "..", "build/src", "mVMC", "vmc.out")
+ 
+-result = subprocess.call([bin_to_test, "-s", "%s/StdFace.def" % refdir, "%s/zqp_opt.dat" % refdir])
++result = subprocess.call(["mpirun", "-np", "1", bin_to_test, "-s", "%s/StdFace.def" % refdir, "%s/zqp_opt.dat" % refdir])
+ if result != 0:
+     sys.exit(result)
+ 
+diff -Naur spack-src.org/test/python/runtest.py spack-src/test/python/runtest.py
+--- spack-src.org/test/python/runtest.py	2024-10-05 10:52:35.000000000 +0900
++++ spack-src/test/python/runtest.py	2024-10-30 13:35:07.000000000 +0900
+@@ -29,7 +29,7 @@
+ bin_to_test = os.path.join(rootdir, "..", "..", "src", "mVMC", "vmc.out")
+ 
+ #result = subprocess.call([bin_to_test, "-s", "%s/StdFace.def" % refdir])
+-result = subprocess.call([bin_to_test, "-s", "%s/StdFace.def" % refdir, "%s/initial.def" % refdir])
++result = subprocess.call(["mpirun", "-np", "1", bin_to_test, "-s", "%s/StdFace.def" % refdir, "%s/initial.def" % refdir])
+ if result != 0:
+     sys.exit(result)
+ 
