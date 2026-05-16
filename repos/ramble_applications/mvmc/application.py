@@ -5,112 +5,159 @@ from ramble.appkit import *
 
 
 class Mvmc(ExecutableApplication):
-    """Minimal mVMC Standard-mode benchmark for Benchpark/Ramble."""
+    """mVMC FermionHubbard benchmark."""
 
     name = "mvmc"
-    tags = ["materials", "quantum", "monte-carlo", "mpi"]
+    tags = ["materials", "quantum", "monte-carlo", "mpi", "fugaku"]
 
-    # Avoid a here-document here. Ramble appends stdout/stderr redirection to
-    # executable commands, which can break a multi-line `cat <<EOF` construct.
-    # This one-line command creates both the mVMC output directory and StdFace.def.
     executable(
         "make-input",
-        r"""bash -c 'mkdir -p output && printf "%s\n" "L = {L}" "Lsub={Lsub}" "model = \"{model}\"" "lattice = \"{lattice}\"" "J = {J}" "2 Sz = {two_sz}" "NMPtrans={nmptrans}" > StdFace.def'""",
+        r"""bash -c 'mkdir -p output && (printf "%s\n" "W = {W}" "L = {L}" "Wsub = {Wsub}" "Lsub = {Lsub}" "model = {model}" "lattice = {lattice}" "t = {t}" "U = {U}" "ncond = {ncond}" "NSROptItrStep = {nsr_opt_itr_step}" "NVMCSample = {nvmc_sample}"; printf "%s%s\n" "2" "Sz = {two_sz}") > Hubbard.def'""",
         use_mpi=False,
     )
 
     executable(
         "run-mvmc",
-        "vmc.out -s StdFace.def",
+        "vmc.out -s Hubbard.def",
         use_mpi=True,
     )
 
-    # Copy mVMC's output files to top-level files used only by Ramble analysis.
-    # This avoids asking Ramble to pre-touch files under output/, because output/
-    # may not exist when the job script begins.
     executable(
-        "collect-results",
-        r"""bash -c 'for f in zvo_out_001.dat zvo_CalcTimer.dat; do if [ -f output/$f ]; then cp -f output/$f mvmc_$f; else : > mvmc_$f; echo "missing output/$f" >&2; fi; done'""",
+        "compute-fom",
+        r"""bash -c "test -s output/zvo_CalcTimer.dat && python3 -c 'import sys; get=lambda key: int(next(line.split()[-1] for line in open(sys.argv[1]) if line.split() and line.split()[0] == key)); W=get(\"W\"); L=get(\"L\"); Wsub=get(\"Wsub\"); Lsub=get(\"Lsub\"); time=float(next(line.split()[-1] for line in open(sys.argv[2]) if \"All\" in line)); work=((Lsub*Wsub)*(L*W)+(L*W))**3; print(\"mvmc_fom %.17e\nmvmc_time %.10f\nmvmc_work %.17e\" % (time/work, time, work))' Hubbard.def output/zvo_CalcTimer.dat | tee mvmc_fom.dat" """,
         use_mpi=False,
     )
 
     workload(
-        "standard",
-        executables=["make-input", "run-mvmc", "collect-results"],
+        "fermion_hubbard",
+        executables=["make-input", "run-mvmc", "compute-fom"],
+    )
+
+    environment_variable(
+        "OMP_NUM_THREADS",
+        "{n_threads_per_proc}",
+        description="Number of OpenMP threads per MPI process.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "W",
+        default="18",
+        description="Lattice width parameter.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
         "L",
-        default="16",
-        description="Number of sites in the Heisenberg chain.",
-        workloads=["standard"],
+        default="18",
+        description="Lattice length parameter.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "Wsub",
+        default="1",
+        description="Width of the sublattice.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
         "Lsub",
-        default="4",
-        description="mVMC Standard-mode Lsub parameter.",
-        workloads=["standard"],
+        default="1",
+        description="Length of the sublattice.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
         "model",
-        default="Spin",
-        description="mVMC Standard-mode model.",
-        workloads=["standard"],
+        default="FermionHubbard",
+        description="mVMC model.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
         "lattice",
-        default="chain lattice",
-        description="mVMC Standard-mode lattice.",
-        workloads=["standard"],
+        default="Tetragonal",
+        description="mVMC lattice type.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
-        "J",
+        "t",
         default="1.0",
-        description="Nearest-neighbor spin coupling.",
-        workloads=["standard"],
+        description="Hopping parameter.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "U",
+        default="8.0",
+        description="Hubbard interaction parameter.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "ncond",
+        default="100",
+        description="mVMC ncond parameter.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "nsr_opt_itr_step",
+        default="1",
+        description="mVMC NSROptItrStep parameter.",
+        workloads=["fermion_hubbard"],
+    )
+
+    workload_variable(
+        "nvmc_sample",
+        default="4000",
+        description="mVMC NVMCSample parameter.",
+        workloads=["fermion_hubbard"],
     )
 
     workload_variable(
         "two_sz",
         default="0",
-        description="Value written as '2 Sz' in StdFace.def.",
-        workloads=["standard"],
+        description="Spin-sector control parameter.",
+        workloads=["fermion_hubbard"],
     )
 
-    workload_variable(
-        "nmptrans",
-        default="1",
-        description="mVMC Standard-mode NMPtrans parameter.",
-        workloads=["standard"],
-    )
-
-    # Treat the mVMC completion message in Ramble's stdout file as success.
     success_criteria(
-        "pass",
+        "mvmc-run-finished",
         mode="string",
-        match=r"End  : Optimize VMC parameters.",
-        file="{experiment_run_dir}/{experiment_name}.out",
+        match=r"Exit code for run-mvmc: 0",
+        file="{experiment_run_dir}/exit_codes.out",
     )
 
-    # mVMC writes these files under output/. The collect-results executable copies
-    # them to top-level analysis files so Ramble does not need output/ to exist
-    # before executable commands begin.
-    figure_of_merit(
-        "energy",
-        fom_regex=r"^\s*(?P<energy>[-+0-9.Ee]+)\s+[-+0-9.Ee]+\s+[-+0-9.Ee]+\s*$",
-        group_name="energy",
-        log_file="{experiment_run_dir}/mvmc_zvo_out_001.dat",
-        units="",
+    success_criteria(
+        "mvmc-fom-computed",
+        mode="string",
+        match=r"mvmc_fom",
+        file="{experiment_run_dir}/mvmc_fom.dat",
     )
 
     figure_of_merit(
-        "total-time",
-        fom_regex=r"^\s*All\s+\[0\]\s+(?P<time>[0-9.Ee+-]+)\s*$",
+        "mvmc_fom",
+        fom_regex=r"^mvmc_fom\s+(?P<fom>[-+0-9.Ee]+)\s*$",
+        group_name="fom",
+        log_file="{experiment_run_dir}/mvmc_fom.dat",
+        units="s/work",
+    )
+
+    figure_of_merit(
+        "mvmc_time",
+        fom_regex=r"^mvmc_time\s+(?P<time>[-+0-9.Ee]+)\s*$",
         group_name="time",
-        log_file="{experiment_run_dir}/mvmc_zvo_CalcTimer.dat",
+        log_file="{experiment_run_dir}/mvmc_fom.dat",
         units="s",
+    )
+
+    figure_of_merit(
+        "mvmc_work",
+        fom_regex=r"^mvmc_work\s+(?P<work>[-+0-9.Ee]+)\s*$",
+        group_name="work",
+        log_file="{experiment_run_dir}/mvmc_fom.dat",
+        units="work",
     )
