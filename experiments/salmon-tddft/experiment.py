@@ -31,12 +31,14 @@ class SalmonTddft(
     )
 
     def compute_applications_section(self):
+        if self.spec.satisfies("+openmp"):
+            self.add_experiment_variable("omp_num_threads", ["12"])
+
         self.add_experiment_variable("processes_per_node", ["4"], True)
-        self.add_experiment_variable("omp_num_threads", ["12"], True)
         self.add_experiment_variable("n_nodes", ["1"], True)
 
         self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}", True)
-        self.add_experiment_variable("size", 44051, True)   # Defined by rgrid in input
+        self.add_experiment_variable("size", 44051, True)   # Defined by rgrid in input files
         
         self.set_required_variables(
             n_resources="{n_ranks}", 
