@@ -17,11 +17,10 @@ class SalmonTddft(ExecutableApplication):
     if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
         url = 'file:///lvs0/dne1/rccs-nghpcadu/CX_input/SALMON/SALMON.tar.gz'
 
-        exec_pp = 'module purge && module load system/qc-gh200 && module load nvhpc/25.7 && cp {input_path}/* .'
+        exec_pp = 'module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && cp {input_path}/* .'
 
-        exec_gs = 'mpiexec -np {n_ranks} salmon < Si-1-1-1.nml'
-        exec_rt = 'mpiexec -np {n_ranks} salmon < Si-1-1-1-tddft.nml'
-        use_mpi = False
+        exec_gs = 'salmon < Si-1-1-1.nml'
+        exec_rt = 'salmon < Si-1-1-1-tddft.nml'
     else:
         url = 'file:///vol0003/rccs-sdt/data/a01010/benchmark_data/SALMON.tar.gz'
 
@@ -29,7 +28,6 @@ class SalmonTddft(ExecutableApplication):
 
         exec_gs = '-stdin Si-1-1-1.nml salmon'
         exec_rt = '-stdin Si-1-1-1-tddft.nml salmon'
-        use_mpi = True
 
     input_file(
         'benchmark-input',
@@ -43,11 +41,11 @@ class SalmonTddft(ExecutableApplication):
     executable('rename-data', 'mv data_for_restart restart', use_mpi=False)
 
     executable('start-timer-gs', 'date +%s.%N | tee gs_start_time.log > /dev/null', use_mpi=False)
-    executable('execute_gs', exec_gs, use_mpi=use_mpi)
+    executable('execute_gs', exec_gs, use_mpi=True)
     executable('stop-timer-gs', 'date +%s.%N | tee gs_end_time.log > /dev/null', use_mpi=False)
 
     executable('start-timer-rt', 'date +%s.%N | tee rt_start_time.log > /dev/null', use_mpi=False)
-    executable('execute_rt', exec_rt, use_mpi=use_mpi)
+    executable('execute_rt', exec_rt, use_mpi=True)
     executable('stop-timer-rt', 'date +%s.%N | tee rt_end_time.log > /dev/null', use_mpi=False)
 
     executable(
