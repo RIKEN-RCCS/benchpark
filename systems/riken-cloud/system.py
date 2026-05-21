@@ -31,6 +31,15 @@ class RikenCloud(System):
             "hardware_key": str(hardware_descriptions)
             + "/qc-gh200/hardware_description.yaml",
         },
+        "dgx": {
+            "sys_cores_per_node": 20,
+            "sys_gpus_per_node": 1,
+            "sys_mem_per_node_GB": 128,
+            "system_site": "rccs",
+            "queue": "ng-dgx-3h",
+            "hardware_key": str(hardware_descriptions)
+            + "/ng-dgx/hardware_description.yaml",
+        },
         "genoa": {
             "sys_cores_per_node": 96,
             "sys_mem_per_node_GB": 768,
@@ -44,7 +53,7 @@ class RikenCloud(System):
     variant(
         "cluster",
         default="fx700",
-        values=("fx700", "gh200", "genoa"),
+        values=("fx700", "gh200", "genoa", "dgx"),
         description="Which cluster to run on",
     )
     variant(
@@ -55,15 +64,15 @@ class RikenCloud(System):
     )
     variant(
         "cuda",
-        default="13.0",
-        values=("12.5", "12.9", "13.0"),
+        default="12.9",
+        values=("12.3", "12.4", "12.5", "12.6", "12.8", "12.9", "13.0", "13.1", "13.2"),
         description="CUDA version",
     )
     variant(
         "nvhpc",
-        default="25.9",
-        values=("25.9", "25.7", "24.9", "24.3"),
-        description="CUDA version",
+        default="25.7",
+        values=("26.3", "25.9", "25.7", "24.9", "24.3"),
+        description="NVHPC version",
     )
     variant(
         "gtl",
@@ -87,7 +96,26 @@ class RikenCloud(System):
             self.cuda_version = Version(self.spec.variants["cuda"][0])
             self.gtl_flag = self.spec.variants["gtl"][0]
             self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
+            if str(self.nvhpc_version) == "26.3":
+                self.cuda_version = "13.1"
+            if str(self.nvhpc_version) == "25.9":
+                self.cuda_version = "13.0"
+            if str(self.nvhpc_version) == "25.7":
+                self.cuda_version = "12.9"
+            if str(self.nvhpc_version) == "24.9":
+                self.cuda_version = "12.6"
+            if str(self.nvhpc_version) == "24.3":
+                self.cuda_version = "12.3"
+            self.scheduler = "slurm"
 
+        if self.spec.variants["cluster"][0] == "dgx":
+            self.programming_models = [CudaSystem(), OpenMPCPUOnlySystem()]
+            self.cuda_version = Version(self.spec.variants["cuda"][0])
+            self.gtl_flag = self.spec.variants["gtl"][0]
+            self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
+            self.nvhpc_version = "26.3"
+            if str(self.nvhpc_version) == "26.3":
+                self.cuda_version = "13.1"
             self.scheduler = "slurm"
 
         attrs = self.id_to_resources.get(self.spec.variants["cluster"][0])
@@ -115,6 +143,8 @@ class RikenCloud(System):
             selections["packages"] |= self.fx700_packages()["packages"]
         if cluster == "gh200":
             selections["packages"] |= self.gh200_packages()["packages"]
+        if cluster == "dgx":
+            selections["packages"] |= self.dgx_packages()["packages"]
         if cluster == "genoa":
             selections["packages"] |= self.genoa_packages()["packages"]
             
@@ -900,7 +930,279 @@ class RikenCloud(System):
                },
            }
         if not self.spec.satisfies("compiler=cuda"):
-            selections["packages"] |= self.cuda_config()["packages"]
+            selections["packages"] |= self.cuda_config_gh200()["packages"]
+        
+        return selections
+
+    def dgx_packages(self):
+        selections = {
+            "packages": {
+                "autoconf": {
+                    "externals": [
+                        {
+                        "spec": "autoconf@2.71",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "automake": {
+                    "externals": [
+                        {
+                        "spec": "automake@1.16.5",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "binutils": {
+                    "externals": [
+                        {
+                        "spec": "binutils@2.42",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "bzip2": {
+                    "externals": [
+                        {
+                        "spec": "bzip2@1.0.8",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "bison": {
+                    "externals": [
+                        {
+                        "spec": "bison@3.8.2",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "cmake": {
+                    "externals": [
+                        {
+                        "spec": "cmake@3.28.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "coreutils": {
+                    "externals": [
+                        {
+                        "spec": "coreutils@9.4",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "curl": {
+                    "externals": [
+                        {
+                        "spec": "curl@8.5.0",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "diffutils": {
+                    "externals": [
+                        {
+                        "spec": "diffutils@3.10",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "findutils": {
+                    "externals": [
+                        {
+                        "spec": "findutils@4.9.0",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "flex": {
+                    "externals": [
+                        {
+                        "spec": "flex@2.6.4",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gawk": {
+                    "externals": [
+                        {
+                        "spec": "gawk@5.2.1",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gettext": {
+                    "externals": [
+                        {
+                        "spec": "gettext@0.21",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "git": {
+                    "externals": [
+                        {
+                        "spec": "git@2.43.0",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "gmake": {
+                    "externals": [
+                        {
+                        "spec": "gmake@4.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "groff": {
+                    "externals": [
+                        {
+                        "spec": "groff@1.23.0",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                        "spec": "libtool@2.4.7",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "libiconv": {
+                    "externals": [
+                        {
+                        "spec": "libiconv@2.39",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "m4": {
+                    "externals": [
+                        {
+                        "spec": "m4@1.4.19",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "openssh": {
+                    "externals": [
+                        {
+                        "spec": "openssh@9.6p1",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "openssl": {
+                    "externals": [
+                        {
+                        "spec": "openssl@3.0.13",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "perl": {
+                    "externals": [
+                        {
+                        "spec": "perl@5.38.2",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "pkgconf": {
+                    "externals": [
+                        {
+                        "spec": "pkgconf@1.8.1",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "python": {
+                    "externals": [
+                        {
+                        "spec": "python@3.12.3",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "sed": {
+                    "externals": [
+                        {
+                        "spec": "sed@4.9",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "singularity": {
+                    "externals": [
+                        {
+                            "spec": "singularity@4.1.1",
+                            "prefix": "/usr",
+                        }
+                    ]
+                },
+                "slurm": {
+                    "externals": [
+                        {
+                            "spec": "slurm@24.05.8",
+                            "prefix": "/usr",
+                        }
+                    ]
+                },
+                "tar": {
+                    "externals": [
+                        {
+                        "spec": "tar@1.35",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+                "xz": {
+                    "externals": [
+                        {
+                        "spec": "xz@5.4.5",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+#                "zlib": {
+#                    "externals": [
+#                        {
+#                        "spec": "zlib@1.12",
+#                        "prefix": "/usr",
+#                        }
+#                    ]
+#                },
+                "zstd": {
+                    "externals": [
+                        {
+                        "spec": "zstd@1.5.5",
+                        "prefix": "/usr",
+                        }
+                    ]
+                },
+            }
+        }
+        if (self.spec.satisfies("compiler=nvhpc")):
+            selections["packages"] |= {
+               "openmpi": {
+                   "externals": [
+                       {
+                           "spec": f"openmpi@4.1.9",
+                           "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi",
+                           "extra_attributes": {
+                               "ldflags": "-L/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi -lmpi"
+                           },
+                       },
+                   ],
+               },
+           }
+        if not self.spec.satisfies("compiler=cuda"):
+            selections["packages"] |= self.cuda_config_dgx()["packages"]
         
         return selections
 
@@ -1083,7 +1385,7 @@ class RikenCloud(System):
         
         return selections
 
-    def cuda_config(self):
+    def cuda_config_gh200(self):
         cuda_version = self.cuda_version
         nvhpc_version = self.nvhpc_version
         if self.spec.satisfies("compiler=nvhpc"):
@@ -1157,6 +1459,95 @@ class RikenCloud(System):
                 }
             }
         else:
+            return {
+                "packages": {
+                    "cuda": {
+                        "externals": [
+                            {
+                                "spec": f"cuda@{self.cuda_version}",
+                                "prefix": f"/usr/local/cuda-{self.cuda_version}",
+                            },
+                        ],
+                    },
+                }    
+            }
+
+    def cuda_config_dgx(self):
+        cuda_version = self.cuda_version
+        nvhpc_version = self.nvhpc_version
+        if self.spec.satisfies("compiler=nvhpc"):
+            return {
+                "packages": {
+                #    "blas": {"require": [f"{self.spec.variants['blas'][0]}"]},
+                #    "lapack": {"require": [f"{self.spec.variants['lapack'][0]}"]},
+                    "cuda": {
+                        "externals": [
+                            {
+                                "spec": f"cuda@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/cuda/{cuda_version}",
+                                "modules" : [
+                                    "system/ng-dgx",
+                                    f"nvhpc/{self.nvhpc_version}",
+                                ]
+                            }
+                        ],
+                        "buildable": True,
+                    },
+                    "curand": {
+                        "externals": [
+                            {
+                                "spec": f"curand@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                    "cusparse": {
+                        "externals": [
+                            {
+                                "spec": f"cusparse@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                    "cublas": {
+                        "externals": [
+                            {
+                                "spec": f"cublas@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                    "cusolver": {
+                        "externals": [
+                            {
+                                "spec": f"cusolver@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                    "cufft": {
+                        "externals": [
+                            {
+                                "spec": f"cufft@{cuda_version}",
+                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                    "openmpi": {
+                        "buildable": True,
+                        "version": ["4.1.7"],
+                        "variants": "+cuda+cxx cuda_arch=90 fabrics=ucx schedulers=slurm",
+                    },
+                }
+            }
+        else:
+            if str(self.cuda_version) != "13.0" and str(self.cuda_version) != "13.2":
+                self.cuda_version = 13.2
             return {
                 "packages": {
                     "cuda": {
@@ -1289,6 +1680,55 @@ class RikenCloud(System):
             else:
                 cfg = gcc_cfg
 
+        elif cluster == "dgx":
+            gcc_cfg = compiler_section_for(
+                "gcc",
+                [
+                    compiler_def(
+                        "gcc@13.3.0 languages:=c,c++,fortran",
+                        "/usr/",
+                        {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
+                    )
+                ],
+            )
+            if self.spec.satisfies("compiler=cuda"):
+                if str(self.cuda_version) != "13.0" and str(self.cuda_version) != "13.2":
+                    print("--- Change Notice ---")
+                    print(" The CUDA version has been changed to 13.2 (Restrictions in DGX)")
+                    self.cuda_version = 13.2
+                cuda_cfg = compiler_section_for(
+                    "cuda",
+                    [
+                        compiler_def(
+                            f"cuda@{self.cuda_version}",
+                            f"/usr/local/cuda-{self.cuda_version}",
+                            {"c": "nvcc", "cxx": "nvcc"},
+                        )
+                    ],
+                )
+                cfg = merge_dicts(cuda_cfg, gcc_cfg)
+            elif self.spec.satisfies("compiler=nvhpc"):
+                nvhpc_cfg = compiler_section_for(
+                    "nvhpc",
+                    [
+                        compiler_def(
+                            f"nvhpc@{self.nvhpc_version}",
+                            f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers",
+                            {"c": "nvc", "cxx": "nvc++", "fortran": "nvfortran"},
+                            extra_rpaths=[
+                                f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/lib64",
+                            ],
+                            modules=[
+                                "system/ng-dgx",
+                                f"nvhpc/{self.nvhpc_version}",
+                            ]
+                        )
+                    ],
+                )
+                cfg = nvhpc_cfg
+            else:
+                cfg = gcc_cfg
+
         return cfg
 
     def system_specific_variables(self):
@@ -1296,6 +1736,13 @@ class RikenCloud(System):
             return {
                 "cuda_arch": "90",
                 "queue": "qc-gh200",
+                "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+                "extra_cmd_opts": "--gpus 0",
+            }
+        if self.spec.variants["cluster"][0] == "dgx":
+            return {
+                "cuda_arch": "100",
+                "queue": "ng-dgx-3h",
                 "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
                 "extra_cmd_opts": "--gpus 0",
             }
@@ -1330,6 +1777,20 @@ class RikenCloud(System):
                 }
             }
         if self.spec.variants["cluster"][0] == "gh200":
+            return {
+                "software": {
+                    "packages": {
+                        "default-compiler": {"pkg_spec": f"{default_comp}"},
+                        "default-mpi": {"pkg_spec": "openmpi"},
+                        "compiler-gcc": {"pkg_spec": "gcc"},
+                        "compiler-nvhpc": {"pkg_spec": "nvhpc"},
+                        "cublas-cuda": {"pkg_spec": f"cublas"},
+                        "blas": {"pkg_spec": "openblas"},
+                        "lapack": {"pkg_spec": "openblas"},
+                    }
+                }
+            }
+        if self.spec.variants["cluster"][0] == "dgx":
             return {
                 "software": {
                     "packages": {
