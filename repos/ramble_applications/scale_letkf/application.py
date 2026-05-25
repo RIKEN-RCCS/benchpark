@@ -12,7 +12,7 @@ class ScaleLetkf(ExecutableApplication):
 
     # set up
     executable(name='dir_setup',
-               template='cp -Lr {scale-letkf}/share/{benchmark_dir}/* . && chmod +x prep.sh && ./prep.sh',
+               template='cp -Lr {scale-letkf}/share/{benchmark_dir}/* . && bash ./prep.sh',
                use_mpi=False,
                index=0)
     executable(name='env_setup',
