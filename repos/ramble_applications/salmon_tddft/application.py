@@ -21,6 +21,7 @@ class SalmonTddft(ExecutableApplication):
 
         exec_gs = 'salmon < Si-1-1-1.nml'
         exec_rt = 'salmon < Si-1-1-1-tddft.nml'
+        
     else:
         url = 'file:///vol0003/rccs-sdt/data/a01010/benchmark_data/SALMON.tar.gz'
 
@@ -40,26 +41,25 @@ class SalmonTddft(ExecutableApplication):
 
     executable('rename-data', 'mv data_for_restart restart', use_mpi=False)
 
-    executable('start-timer-gs', 'date +%s.%N | tee gs_start_time.log > /dev/null', use_mpi=False)
+    executable('start-timer-gs', 'gs_start_time=$(date +%s.%N)', use_mpi=False)
     executable('execute_gs', exec_gs, use_mpi=True)
-    executable('stop-timer-gs', 'date +%s.%N | tee gs_end_time.log > /dev/null', use_mpi=False)
+    executable(
+        'stop-timer-gs', 
+        'gs_end_time=$(date +%s.%N) && gs_elapsed=$(echo "${gs_end_time} - ${gs_start_time}" | bc -l)', 
+        use_mpi=False
+    )
 
-    executable('start-timer-rt', 'date +%s.%N | tee rt_start_time.log > /dev/null', use_mpi=False)
+    executable('start-timer-rt', 'rt_start_time=$(date +%s.%N)', use_mpi=False)
     executable('execute_rt', exec_rt, use_mpi=True)
-    executable('stop-timer-rt', 'date +%s.%N | tee rt_end_time.log > /dev/null', use_mpi=False)
+    executable(
+        'stop-timer-rt', 
+        'rt_end_time=$(date +%s.%N) && rt_elapsed=$(echo "${rt_end_time} - ${rt_start_time}" | bc -l)', 
+        use_mpi=False
+    )
 
     executable(
-        'calc-total-time',
-        """awk '
-    FNR==1 && NR==1 {gs_start=$1}
-    FNR==1 && NR==2 {gs_end=$1}
-    FNR==1 && NR==3 {rt_start=$1}
-    FNR==1 && NR==4 {
-        rt_end=$1
-        total=(gs_end-gs_start)+(rt_end-rt_start)
-        print "total_elapsed_time," total
-    }
-    ' gs_start_time.log gs_end_time.log rt_start_time.log rt_end_time.log | tee total_time.log""",
+        'calc-total-time', 
+        'total_elapsed=$(echo "${gs_elapsed} + ${rt_elapsed}" | bc -l) && echo "total_elapsed_time: $total_elapsed"', 
         use_mpi=False
     )
 
@@ -102,8 +102,8 @@ class SalmonTddft(ExecutableApplication):
 
     figure_of_merit(
         'Figure of Merit (FOM)', 
-        log_file='{experiment_run_dir}/total_time.log', 
-        fom_regex=r'^total_elapsed_time,(?P<fom>[-+]?[0-9]*\.?[0-9]+)$', 
+        log_file='{experiment_run_dir}/{experiment_name}.out', 
+        fom_regex=r'^total_elapsed_time: (?P<fom>[-+]?[0-9]*\.?[0-9]+)$', 
         group_name='fom', 
         units='s'
     )
@@ -120,4 +120,3 @@ class SalmonTddft(ExecutableApplication):
             self.software_spec = "salmon-tddft %fj"
         else:
             self.software_spec = "salmon-tddft"
-
