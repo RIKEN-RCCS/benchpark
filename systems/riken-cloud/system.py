@@ -29,7 +29,7 @@ class RikenCloud(System):
             "system_site": "rccs",
             "queue": "qc-gh200",
             "hardware_key": str(hardware_descriptions)
-            + "/qc-gh200/hardware_description.yaml",
+            + "/NVIDIA-neoverse-GH200-Infiniband/hardware_description.yaml",
         },
         "dgx": {
             "sys_cores_per_node": 20,
@@ -38,7 +38,7 @@ class RikenCloud(System):
             "system_site": "rccs",
             "queue": "ng-dgx-3h",
             "hardware_key": str(hardware_descriptions)
-            + "/ng-dgx/hardware_description.yaml",
+            + "/NVIDIA-cortex-GB10-Ethernet/hardware_description.yaml",
         },
         "genoa": {
             "sys_cores_per_node": 96,
@@ -46,7 +46,7 @@ class RikenCloud(System):
             "system_site": "rccs",
             "queue": "genoa",
             "hardware_key": str(hardware_descriptions)
-            + "/AWS_PCluster-zen-EFA/hardware_description.yaml",
+            + "/AMD-zen4-EPYC-Ethernet/hardware_description.yaml",
         },
     }
 
