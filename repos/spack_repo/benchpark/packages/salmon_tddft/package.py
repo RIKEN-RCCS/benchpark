@@ -118,11 +118,11 @@ class SalmonTddft(CMakePackage):
                 args += [
                     self.define(
                         "CMAKE_Fortran_FLAGS", 
-                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc80,cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC -DUSE_CUDA",
+                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC -DUSE_CUDA",
                     ),
                     self.define(
                         "CMAKE_C_FLAGS", 
-                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc80,cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC -DUSE_CUDA",
+                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC -DUSE_CUDA",
                     ),
                     self.define(
                         "CMAKE_CUDA_FLAGS",
@@ -135,11 +135,11 @@ class SalmonTddft(CMakePackage):
                 args += [
                     self.define(
                         "CMAKE_Fortran_FLAGS", 
-                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc80,cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
+                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
                     ),
                     self.define(
                         "CMAKE_C_FLAGS", 
-                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc80,cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
+                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
                     ),
                 ]
 

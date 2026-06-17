@@ -49,6 +49,7 @@ class SalmonTddft(
             case 'dgx':
                 self.add_experiment_variable("processes_per_node", ["1"], True)
                 self.add_experiment_variable("preprocess", "", False)
+                self.add_experiment_variable("preprocess", "module purge && module load system/ng-dgx && module load nvhpc-hpcx-cuda13/26.3 && ", False)
 
             case 'fx700':
                 self.add_experiment_variable("processes_per_node", ["1"], True)

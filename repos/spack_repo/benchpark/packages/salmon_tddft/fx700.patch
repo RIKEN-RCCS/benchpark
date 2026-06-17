@@ -1,0 +1,108 @@
+diff --git a/src/gs/gram_schmidt_orth.f90 b/src/gs/gram_schmidt_orth.f90
+index 1e5dea3..0c2c75d 100644
+--- a/src/gs/gram_schmidt_orth.f90
++++ b/src/gs/gram_schmidt_orth.f90
+@@ -678,12 +678,19 @@ contains
+       integer :: numo0, numo1, numo1_0, numo1_1, numo2, numo2_0, numo2_1, numo3, numo3_0, numo3_1
+       real(8) :: coeff(wfi%numo), coeff_tmp(wfi%numo)
+       real(8) :: norm2, norm2_tmp
+-      real(8) :: wf_block(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo)
+-      real(8) :: wf_block1(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo)
+-      real(8) :: wf_block_send(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo_max)
++      real(8), allocatable :: wf_block(:,:,:,:)
++      real(8), allocatable :: wf_block1(:,:,:,:)
++      real(8), allocatable :: wf_block_send(:,:,:,:)
++!      real(8) :: wf_block(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo)
++!      real(8) :: wf_block1(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo)
++!      real(8) :: wf_block_send(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo_max)
+       real(8) :: umat(wfi%numo_max,wfi%numo), umat_tmp(wfi%numo_max,wfi%numo)
+       real(8) :: DDOT
+ 
++      allocate(wf_block(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo))
++      allocate(wf_block1(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo))
++      allocate(wf_block_send(rg%is(1):rg%ie(1), rg%is(2):rg%ie(2), rg%is(3):rg%ie(3), wfi%numo_max))
++
+       nsize_rg = (rg%ie(1)-rg%is(1)+1)*(rg%ie(2)-rg%is(2)+1)*(rg%ie(3)-rg%is(3)+1)
+ 
+       do im = wfi%im_s, wfi%im_e
+@@ -934,6 +941,10 @@ contains
+       end do !ik
+       end do !im
+ 
++      deallocate(wf_block)
++      deallocate(wf_block1)
++      deallocate(wf_block_send)
++
+       return
+ 
+     end subroutine gram_schmidt_col_rblas
+diff --git a/src/gs/mixing.f90 b/src/gs/mixing.f90
+index fd5bd8e..ae60c91 100644
+--- a/src/gs/mixing.f90
++++ b/src/gs/mixing.f90
+@@ -174,8 +174,13 @@ subroutine wrapper_broyden(comm,mg,system,rho_s,iter,mixing)
+   integer :: ix,iy,iz,is
+   integer :: i
+   real(8) :: vecr(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3))
+-  real(8) :: vecr_in(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1)
+-  real(8) :: vecr_out(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1)
++  real(8), allocatable :: vecr_in(:,:,:,:)
++  real(8), allocatable :: vecr_out(:,:,:,:)
++
++  allocate(vecr_in(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1))
++  allocate(vecr_out(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1))
++!  real(8) :: vecr_in(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1)
++!  real(8) :: vecr_out(mg%is(1):mg%ie(1),mg%is(2):mg%ie(2),mg%is(3):mg%ie(3),mixing%num_rho_stock+1)
+ 
+ #ifdef USE_OPENACC
+ !$acc data copyin(mixing)
+@@ -301,6 +306,9 @@ subroutine wrapper_broyden(comm,mg,system,rho_s,iter,mixing)
+ !$acc end data
+ #endif
+ 
++  deallocate(vecr_in)
++  deallocate(vecr_out)
++
+ end subroutine wrapper_broyden
+ 
+ !===================================================================================================================================
+diff --git a/src/gs/subspace_diagonalization.f90 b/src/gs/subspace_diagonalization.f90
+index 10f7281..d47e78c 100644
+--- a/src/gs/subspace_diagonalization.f90
++++ b/src/gs/subspace_diagonalization.f90
+@@ -426,14 +426,21 @@ subroutine ssdg_rwf_rblas(mg,system,info,stencil,spsi,shpsi,ppg,vlocal,srg)
+ real(8),parameter :: zero = 0d0, one = 1d0
+ integer :: im,ispin,ik,io,jo,io1,io2,nsize_rg,m
+ real(8),dimension(system%no,system%no) :: hmat,hmat_tmp,evec
+-real(8) :: wf1_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo)
+-real(8) :: wf2_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo)
+-real(8) :: wf_block_send(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo_max)
++real(8), allocatable :: wf1_block(:,:,:,:)
++real(8), allocatable :: wf2_block(:,:,:,:)
++real(8), allocatable :: wf_block_send(:,:,:,:)
++!real(8) :: wf1_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo)
++!real(8) :: wf2_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo)
++!real(8) :: wf_block_send(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo_max)
+ real(8) :: hmat_block(info%numo_max, info%numo)
+ real(8) :: hmat_block_tmp(info%numo_max, info%numo)
+ !complex(8),dimension(system%no,system%no) :: zhmat, zevec
+ real(8) :: eval(system%no)
+ 
++allocate(wf1_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo))
++allocate(wf2_block(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo))
++allocate(wf_block_send(mg%is(1):mg%ie(1), mg%is(2):mg%ie(2), mg%is(3):mg%ie(3), info%numo_max))
++
+ call timer_begin(LOG_SSDG_PERIODIC_HPSI)
+ call hpsi(spsi,shpsi,info,mg,vlocal,system,stencil,srg,ppg)
+ call timer_end(LOG_SSDG_PERIODIC_HPSI)
+@@ -568,6 +575,10 @@ enddo ! ispin
+ enddo ! ik
+ enddo ! im
+ 
++deallocate(wf1_block)
++deallocate(wf2_block)
++deallocate(wf_block_send)
++
+ return
+ end subroutine ssdg_rwf_rblas
+ 
