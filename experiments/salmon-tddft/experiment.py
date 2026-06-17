@@ -35,14 +35,33 @@ class SalmonTddft(
     def compute_applications_section(self):
         self.add_experiment_variable("n_nodes", ["1"], True)
 
-        if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
-            self.add_experiment_variable("processes_per_node", ["1"], True)
-        else:
-            self.add_experiment_variable("processes_per_node", ["4"], True)
+        match self.system_spec.variants['cluster'][0]:
+            case 'fugaku':
+                self.add_experiment_variable("processes_per_node", ["4"], True)
+                self.add_experiment_variable("preprocess", "", False)
+                if self.spec.satisfies("+openmp"):
+                    self.add_experiment_variable("omp_num_threads", ["12"], True)
 
-        if self.spec.satisfies("+openmp"):
-            self.add_experiment_variable("omp_num_threads", ["12"])
+            case 'gh200':
+                self.add_experiment_variable("processes_per_node", ["1"], True)
+                self.add_experiment_variable("preprocess", "module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && ", False)
 
+            case 'dgx':
+                self.add_experiment_variable("processes_per_node", ["1"], True)
+                self.add_experiment_variable("preprocess", "", False)
+
+            case 'fx700':
+                self.add_experiment_variable("processes_per_node", ["1"], True)
+                self.add_experiment_variable("preprocess", "", False)
+                if self.spec.satisfies("+openmp"):
+                    self.add_experiment_variable("omp_num_threads", ["48"], True)
+            
+            case 'genoa':
+                self.add_experiment_variable("processes_per_node", ["1"], True)
+                self.add_experiment_variable("preprocess", "module purge && module load system/genoa && module load mpi/mpich-x86_64 && ", False)
+                if self.spec.satisfies("+openmp"):
+                    self.add_experiment_variable("omp_num_threads", ["48"], True)
+        
         self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}", True)
         self.add_experiment_variable("size", 44051, True)   # Defined by rgrid in input files
         

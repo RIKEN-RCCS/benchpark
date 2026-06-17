@@ -17,7 +17,7 @@ class SalmonTddft(ExecutableApplication):
     if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
         url = 'file:///lvs0/dne1/rccs-nghpcadu/CX_input/SALMON/SALMON.tar.gz'
 
-        exec_pp = 'module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && cp {input_path}/* .'
+        exec_pp = '{preprocess} cp {input_path}/* .'
 
         exec_gs = 'salmon < Si-1-1-1.nml'
         exec_rt = 'salmon < Si-1-1-1-tddft.nml'
