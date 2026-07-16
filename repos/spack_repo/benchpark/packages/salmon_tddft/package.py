@@ -29,11 +29,14 @@ class SalmonTddft(CMakePackage):
     version('2.0.1', tag='v.2.0.1')
     version('2.0.0', tag='v.2.0.0')
 
+    version('develop', branch='develop')
+
     depends_on("c", type="build")
     depends_on("fortran", type="build")
 
     variant("build_type", default="Release", values=("Release", "Debug"))
-    variant("openmp", default=True, description="Enable OpenMP")
+    variant("openmp", default=False, description="Enable OpenMP")
+    variant("openacc", default=False, description="Enable OpenACC")
     variant("libxc", default=False, description="Enable libxc")
     variant("scalapack", default=False, description="Enable scalapack")
     variant("eigenexa", default=False, description="Enable eigenexa")
@@ -47,9 +50,11 @@ class SalmonTddft(CMakePackage):
     depends_on("lapack", type="link", when="%gcc")
 
     conflicts("+eigenexa", when="~scalapack")
+    conflicts("+openacc", when="+openmp")
 
     if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
-        patch("fx700.patch", when="%fj")
+        patch("fx700_v2.2.2.patch", when="@2.2.2 %fj")
+        patch("fx700_develop.patch", when="@develop %fj")
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -109,10 +114,12 @@ class SalmonTddft(CMakePackage):
                 self.define("CMAKE_Fortran_COMPILER", "mpif90"),
                 self.define("CMAKE_C_COMPILER", "mpicc"),
                 self.define("OPENMP_FLAGS", "-Mnoopenmp"),
-                self.define("USE_OPENACC", True),
                 self.define("USE_MPI_DEFAULT", True),
-                self.define("CMAKE_SYSTEM_PROCESSOR", "openacc"),
+                self.define("USE_OPENACC", True),
             ]
+
+            args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,muldefs')
+            args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,muldefs')
 
             if spec.satisfies('+cuda'):
                 args += [
@@ -135,11 +142,11 @@ class SalmonTddft(CMakePackage):
                 args += [
                     self.define(
                         "CMAKE_Fortran_FLAGS", 
-                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
+                        "-O3 -Wall -fstrict-aliasing -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -DUSE_OPENACC",
                     ),
                     self.define(
                         "CMAKE_C_FLAGS", 
-                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -Minfo=accel -DUSE_OPENACC",
+                        "-O3 -Wall -alias=ansi -acc=strict -gpu=cc90,cc100,cc120,managed,ptxinfo -cudalib=cublas -cuda -DUSE_OPENACC",
                     ),
                 ]
 

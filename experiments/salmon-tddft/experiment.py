@@ -48,14 +48,13 @@ class SalmonTddft(
 
             case 'dgx':
                 self.add_experiment_variable("processes_per_node", ["1"], True)
-                self.add_experiment_variable("preprocess", "", False)
                 self.add_experiment_variable("preprocess", "module purge && module load system/ng-dgx && module load nvhpc-hpcx-cuda13/26.3 && ", False)
 
             case 'fx700':
-                self.add_experiment_variable("processes_per_node", ["1"], True)
-                self.add_experiment_variable("preprocess", "", False)
+                self.add_experiment_variable("processes_per_node", ["4"], True)
+                self.add_experiment_variable("preprocess", "module purge && module load system/fx700 && module load FJSVstclanga/1.0.30.01 && ", False)
                 if self.spec.satisfies("+openmp"):
-                    self.add_experiment_variable("omp_num_threads", ["48"], True)
+                    self.add_experiment_variable("omp_num_threads", ["12"], True)
             
             case 'genoa':
                 self.add_experiment_variable("processes_per_node", ["1"], True)

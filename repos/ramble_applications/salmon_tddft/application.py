@@ -19,16 +19,16 @@ class SalmonTddft(ExecutableApplication):
 
         exec_pp = '{preprocess} cp {input_path}/* .'
 
-        exec_gs = 'salmon < Si-1-1-1.nml'
-        exec_rt = 'salmon < Si-1-1-1-tddft.nml'
+        exec_gs = 'mpiexec -n {n_ranks} salmon < Si-1-1-1.nml'
+        exec_rt = 'mpiexec -n {n_ranks} salmon < Si-1-1-1-tddft.nml'
         
     else:
         url = 'file:///vol0003/rccs-sdt/data/a01010/benchmark_data/SALMON.tar.gz'
 
         exec_pp = 'cp {input_path}/* .'
 
-        exec_gs = '-stdin Si-1-1-1.nml salmon'
-        exec_rt = '-stdin Si-1-1-1-tddft.nml salmon'
+        exec_gs = 'mpiexec -n {n_ranks} -stdin Si-1-1-1.nml salmon'
+        exec_rt = 'mpiexec -n {n_ranks} -stdin Si-1-1-1-tddft.nml salmon'
 
     input_file(
         'benchmark-input',
@@ -42,7 +42,7 @@ class SalmonTddft(ExecutableApplication):
     executable('rename-data', 'mv data_for_restart restart', use_mpi=False)
 
     executable('start-timer-gs', 'gs_start_time=$(date +%s.%N)', use_mpi=False)
-    executable('execute_gs', exec_gs, use_mpi=True)
+    executable('execute_gs', exec_gs, use_mpi=False)
     executable(
         'stop-timer-gs', 
         'gs_end_time=$(date +%s.%N) && gs_elapsed=$(echo "${gs_end_time} - ${gs_start_time}" | bc -l)', 
@@ -50,7 +50,7 @@ class SalmonTddft(ExecutableApplication):
     )
 
     executable('start-timer-rt', 'rt_start_time=$(date +%s.%N)', use_mpi=False)
-    executable('execute_rt', exec_rt, use_mpi=True)
+    executable('execute_rt', exec_rt, use_mpi=False)
     executable(
         'stop-timer-rt', 
         'rt_end_time=$(date +%s.%N) && rt_elapsed=$(echo "${rt_end_time} - ${rt_start_time}" | bc -l)', 
