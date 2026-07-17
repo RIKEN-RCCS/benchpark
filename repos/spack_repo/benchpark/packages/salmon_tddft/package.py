@@ -84,7 +84,7 @@ class SalmonTddft(CMakePackage):
         ]
 
         if spec.satisfies("build_type=Release"):
-            args.append(self.define("CMAKE_BUILD_TYPE", "None"))
+            pass
         else:
             args.append(self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"))
 
