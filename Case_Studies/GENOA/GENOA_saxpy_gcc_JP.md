@@ -24,16 +24,13 @@ exit
 # 上記のvenv作成は、git clone 後、1回だけ実行すればよい
 # venv作成後は、以下を繰り返すことができる
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=genoa riken-cloud cluster=genoa compiler=gcc
-benchpark experiment init genoa saxpy
-benchpark setup genoa/saxpy workspace
-deactivate
 srun -N 1 -p genoa --time=06:00:00 --pty bash
 source .venv_genoa/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=genoa riken-genoa compiler=gcc
+benchpark experiment init genoa saxpy
+benchpark setup genoa/saxpy workspace
 ramble --workspace-dir ./workspace/genoa/saxpy/workspace workspace setup
 deactivate
 exit

@@ -24,16 +24,13 @@ exit
 # The above 'venv' setup only needs to be performed once after running 'git clone'.
 # Once the 'venv' has been created, the following steps can be repeated as needed.
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=fugaku riken-fugaku compiler=fj
-benchpark experiment init fugaku saxpy
-benchpark setup fugaku/saxpy workspace
-deactivate
 pjsub --interact -L "node=1" -L "rscgrp=int" -L "elapse=6:00:00" --sparam "wait-time=300" --all-mount-gfscache
 source .venv_fugaku/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=fugaku riken-fugaku compiler=fj
+benchpark experiment init fugaku saxpy
+benchpark setup fugaku/saxpy workspace
 ramble --workspace-dir ./workspace/fugaku/saxpy/workspace workspace setup
 deactivate
 exit

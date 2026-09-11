@@ -24,16 +24,13 @@ exit
 # 上記のvenv作成は、git clone 後、1回だけ実行すればよい
 # venv作成後は、以下を繰り返すことができる
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=dgx riken-cloud cluster=dgx compiler=gcc
-benchpark experiment init dgx saxpy
-benchpark setup dgx/saxpy workspace
-deactivate
 srun -N 1 -p ng-dgx-3h --time=06:00:00 --pty bash
 source .venv_dgx/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=dgx riken-dgx compiler=gcc
+benchpark experiment init dgx saxpy
+benchpark setup dgx/saxpy workspace
 ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace setup
 deactivate
 exit
@@ -45,9 +42,10 @@ ramble --workspace-dir ./workspace/dgx/saxpy/workspace on
 ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace analyze
 ```
 ---
-DGX では、nvhpcを利用することができる。（バージョンは、26.3 のみ使用可能）
+DGX では、nvhpcを利用することができる。（バージョンは、26.5, 26.3 から選択できる）
 ```bash
-benchpark system init --dest=dgx riken-cloud cluster=dgx compiler=nvhpc  ← デフォルトで nvhpc@26.3 が設定される
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← デフォルトで nvhpc@26.5 が設定される
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc nvhpc=26.3  ← nvhpc@26.3 に変更する
 ```
 ---
 cloneおよびvenv作成は初回の1回のみ。venv作成後は、benchparkコマンドとrambleコマンドを繰り返し実行できる。\

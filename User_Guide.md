@@ -83,11 +83,10 @@ By replacing saxpy with your own application name, this procedure can be reused.
 ### 4.1 system init
 * Example for compiling with GCC on GH200 \
 Specify in 'dest' the directory name where the settings will be stored (the directory name can be arbitrary). \
-'riken-cloud' refers to the directory containing system.py (for Fugaku, this becomes riken-fugaku). \
-In 'cluster', specify the machine type (e.g., gh200). Change the cluster name according to the system being used. \
+'riken-gh200' refers to the directory containing system.py (for Fugaku, this becomes riken-fugaku). \
 In 'compiler', specify the compiler to be used (e.g., gcc, cuda, nvhpc, etc.).
 ```bash
-benchpark system init --dest=gh200 riken-cloud cluster=gh200 compiler=gcc
+benchpark system init --dest=gh200 riken-gh200 compiler=gcc
 ```
 ### 4.2 experiment init
 * Example of 'init' for the SAXPY case \

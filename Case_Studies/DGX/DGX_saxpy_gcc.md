@@ -24,16 +24,13 @@ exit
 # The above 'venv' setup only needs to be performed once after running 'git clone'.
 # Once the 'venv' has been created, the following steps can be repeated as needed.
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=dgx riken-cloud cluster=dgx compiler=gcc
-benchpark experiment init dgx saxpy
-benchpark setup dgx/saxpy workspace
-deactivate
 srun -N 1 -p ng-dgx-3h --time=06:00:00 --pty bash
 source .venv_dgx/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=dgx riken-dgx compiler=gcc
+benchpark experiment init dgx saxpy
+benchpark setup dgx/saxpy workspace
 ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace setup
 deactivate
 exit
@@ -46,9 +43,10 @@ ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace analyze
 ```
 ---
 On the DGX environment, NVHPC is available for use.
-(available versions: 26.3)
+(available versions: 26.5 and 26.3)
 ```bash
-benchpark system init --dest=dgx riken-cloud cluster=dgx compiler=nvhpc  ← default is nvhpc@26.3
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← default is nvhpc@26.5
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  nvhpc=26.3← default is nvhpc@26.3
 ```
 ---
 __Additional Information__ \

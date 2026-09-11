@@ -3,7 +3,7 @@
 ## 1. python環境の確認
 
 pythonはV3.10以上が必要。以下でバージョンを確認し、
-V3.10よりも低いバージョンの場合は、新たにpythonをインストールする。
+V3.10よりも古いバージョンの場合は、新たにpythonをインストールする。
 ```bash
 python --version
 ```
@@ -83,11 +83,10 @@ benchpark/experiments/[apps]/experiment.py
 ### 4.1 system init
 * gh200上で、gccでコンパイルする場合の事例 \
 'dest' に、設定を格納するディレクトリ名を指定する（ディレクトリ名は任意）\
-'riken-cloud' は、system.py を格納しているディレクトリ名（富岳の場合は、riken-fugaku になる）\
-'cluster' に、機種名(gh200)を指定する。（使用する機種に応じてクラスタ名を変更する）\
+'riken-gh200' は、system.py を格納しているディレクトリ名（富岳の場合は、riken-fugaku になる）\
 'compiler' に、使用するコンパイラを指定する。（gcc, cuda, nvhpc などが指定できる）
 ```bash
-benchpark system init --dest=gh200 riken-cloud cluster=gh200 compiler=gcc
+benchpark system init --dest=gh200 riken-gh200 compiler=gcc
 ```
 ### 4.2 experiment init
 * saxpyを対象にinitする事例 \

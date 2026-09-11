@@ -24,16 +24,13 @@ exit
 # 上記のvenv作成は、git clone 後、1回だけ実行すればよい
 # venv作成後は、以下を繰り返すことができる
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=fx700 riken-cloud cluster=fx700 compiler=fj
-benchpark experiment init fx700 saxpy
-benchpark setup fx700/saxpy workspace
-deactivate
 srun -N 1 -p fx700 --time=6:00:00 --pty bash
 source .venv_fx700/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=fx700 riken-fx700 compiler=fj
+benchpark experiment init fx700 saxpy
+benchpark setup fx700/saxpy workspace
 ramble --workspace-dir ./workspace/fx700/saxpy/workspace workspace setup
 deactivate
 exit

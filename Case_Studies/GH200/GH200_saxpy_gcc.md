@@ -24,16 +24,13 @@ exit
 # The above 'venv' setup only needs to be performed once after running 'git clone'.
 # Once the 'venv' has been created, the following steps can be repeated as needed.
 
-source .venv_login/bin/activate
-source ./setup-env.sh
-benchpark system init --dest=gh200 riken-cloud cluster=gh200 compiler=gcc
-benchpark experiment init gh200 saxpy
-benchpark setup gh200/saxpy workspace
-deactivate
 srun -N 1 -p qc-gh200 --time=06:00:00 --pty bash
 source .venv_gh200/bin/activate
 source ./setup-env.sh
 source ./workspace/setup.sh
+benchpark system init --dest=gh200 riken-gh200 compiler=gcc
+benchpark experiment init gh200 saxpy
+benchpark setup gh200/saxpy workspace
 ramble --workspace-dir ./workspace/gh200/saxpy/workspace workspace setup
 deactivate
 exit
@@ -46,10 +43,10 @@ ramble --workspace-dir ./workspace/gh200/saxpy/workspace workspace analyze
 ```
 ---
 On the GH200 environment, NVHPC is available for use.
-(available versions: 25.9, 25.7, 24.9, and 24.3)
+(available versions: 26.5, 26.3, 25.9, 25.7, 24.9, and 24.3)
 ```bash
-benchpark system init --dest=gh200 riken-cloud cluster=gh200 compiler=nvhpc  ← default is nvhpc@25.7
-benchpark system init --dest=gh200 riken-cloud cluster=gh200 compiler=nvhpc nvhpc=25.9  ← For switching to nvhpc@25.9
+benchpark system init --dest=gh200 riken-gh200 compiler=nvhpc  ← default is nvhpc@26.3
+benchpark system init --dest=gh200 riken-gh200 compiler=nvhpc nvhpc=25.9  ← For switching to nvhpc@25.9
 ```
 ---
 __Additional Information__ \
