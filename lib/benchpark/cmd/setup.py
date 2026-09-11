@@ -238,6 +238,7 @@ def command(args):
         # If the following files do not exist, nothing will happen.
         # 
         spack_env = ["/lvs0/rccs-nghpcadu/share/spack_env/env/mirror.sh", \
+                     "/data1/rkp00015/share/spack_env/env/mirror.sh", \
                      "/vol0500/share/ra250029/spack_env/env/mirror.sh"]
         for src in spack_env:
             if os.path.exists(src):

@@ -19,9 +19,9 @@ system_definition:
     uArch: sm_90
   interconnect:
     vendor: NVIDIA
-    name: Infiniband
+    name: HDR200Infiniband
   systems-tested:
-    qc-gh200:
+    riken-gh200:
       os: Rockey
       scheduler: slurm
       compiler: nvhpc
