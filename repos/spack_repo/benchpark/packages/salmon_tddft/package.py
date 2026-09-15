@@ -52,7 +52,7 @@ class SalmonTddft(CMakePackage):
     conflicts("+eigenexa", when="~scalapack")
     conflicts("+openacc", when="+openmp")
 
-    if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
+    if 'cloud.r-ccs.riken.jp' in os.environ.get('HOSTNAME', ''):
         patch("fx700_v2.2.2.patch", when="@2.2.2 %fj")
         patch("fx700_develop.patch", when="@develop %fj")
 
