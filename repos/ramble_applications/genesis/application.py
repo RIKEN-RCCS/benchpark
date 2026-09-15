@@ -121,6 +121,6 @@ class Genesis(ExecutableApplication):
     success_criteria(
         'pass',
         mode='string',
-        match=r'Figure of Merit \(FOM\)',
+        match=r'Output_Time> Averaged timer profile',
         file='{experiment_run_dir}/{experiment_name}.out'
     )

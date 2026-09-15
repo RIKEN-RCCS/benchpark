@@ -77,6 +77,6 @@ class Genesis(
         precision = self.spec.variants["precision"][0]
         spec = f"genesis{self.determine_version()} precision={precision} "
         if self.spec.variants["backend"][0] == "gpu":
-            spec += " +gpu "
+            spec += " +gpu cuda_arch={cuda_arch} "
 
         self.add_package_spec(self.name, [spec])
