@@ -16,7 +16,7 @@ system_definition:
     vendor: NVIDIA
     name: GB10
     ISA: PTX
-    uArch: sm_100
+    uArch: sm_121
   interconnect:
     vendor: NVIDIA
     name: Ethernet

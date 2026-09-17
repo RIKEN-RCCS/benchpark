@@ -27,7 +27,7 @@ class RikenDgx(System):
             "sys_gpus_per_node": 1,
             "sys_mem_per_node_GB": 128,
             "system_site": "rccs",
-            "queue": "ng-dgx-3h",
+            "queue": "ng-dgx-s",
             "hardware_key": str(hardware_descriptions)
             + "/NVIDIA-cortex-GB10-Ethernet/hardware_description.yaml",
         },
@@ -413,7 +413,7 @@ class RikenDgx(System):
                     "openmpi": {
                         "buildable": True,
                         "version": ["4.1.7"],
-                        "variants": "+cuda+cxx cuda_arch=100 fabrics=ucx schedulers=slurm",
+                        "variants": "+cuda+cxx cuda_arch=121 fabrics=ucx schedulers=slurm",
                     },
                 }
             }
@@ -483,8 +483,8 @@ class RikenDgx(System):
 
     def system_specific_variables(self):
         return {
-            "cuda_arch": "100",
-            "queue": "ng-dgx-3h",
+            "cuda_arch": "121",
+            "queue": "ng-dgx-s",
             "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
         }
 
