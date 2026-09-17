@@ -16,10 +16,10 @@ class ScaleLetkf(
     )
 
     variant(
-        "cluster",
+        "system",
         default="unknown",
-        values=("fugaku", "fx700", "gh200", "dgx", "genoa", "unknown"),
-        description="Target cluster system"
+        values=("riken-fugaku", "riken-fx700", "riken-genoa", "riken-gh200", "riken-dgx", "riken-rikyu", "unknown"),
+        description="Target computing system"
     )
 
     variant(
@@ -30,31 +30,38 @@ class ScaleLetkf(
     )
 
     def compute_applications_section(self):
-        cluster = self.spec.variants["cluster"][0]
+        system = self.spec.variants["system"][0]
         tuning_cmds = "export OMP_WAIT_POLICY=active; ulimit -s unlimited"
 
-        if cluster =="fugaku":
+        if system =="riken-fugaku":
             self.add_experiment_variable("n_nodes", ["3"], True)
             self.add_experiment_variable("processes_per_node", ["4"], True)
             self.add_experiment_variable("omp_num_threads", ["10"], True)
             self.add_experiment_variable("archives_path", "/vol0500/share/ra250029/CX_input/SCALE-LETKF", False)
             self.add_experiment_variable("extra_batch_opts", "-g ra250029 -x PJM_LLIO_GFSCACHE=/vol0004:/vol0005", False)
             tuning_cmds += "; export FORT90L=-Wl,-T; export PLE_MPI_STD_EMPTYFILE=off"
-        elif cluster == "fx700":
+        elif system == "riken-fx700":
             self.add_experiment_variable("n_nodes", ["3"], True)
             self.add_experiment_variable("processes_per_node", ["4"], True)
             self.add_experiment_variable("omp_num_threads", ["10"], True)
             self.add_experiment_variable("archives_path", "/lvs0/rccs-nghpcadu/CX_input/SCALE-LETKF", False)
             self.add_experiment_variable("extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False)
             tuning_cmds += "; export FORT90L=-Wl,-T; export PLE_MPI_STD_EMPTYFILE=off"
-        elif cluster == "gh200":
+        elif system == "riken-gh200":
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
             self.add_experiment_variable("omp_num_threads", ["1"], True)
             self.add_experiment_variable("archives_path", "/lvs0/rccs-nghpcadu/CX_input/SCALE-LETKF", False)
             self.add_experiment_variable("extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False)
             self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
-        elif cluster == "dgx":
+        elif system == "riken-dgx":
+            self.add_experiment_variable("n_nodes", ["1"], True)
+            self.add_experiment_variable("processes_per_node", ["12"], True)
+            self.add_experiment_variable("omp_num_threads", ["1"], True)
+            self.add_experiment_variable("archives_path", "/lvs0/rccs-nghpcadu/CX_input/SCALE-LETKF", False)
+            self.add_experiment_variable("extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False)
+            self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
+        elif system == "riken-rikyu":
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
             self.add_experiment_variable("omp_num_threads", ["1"], True)
