@@ -51,16 +51,18 @@ class Genesis(AutotoolsPackage):
 
     variant("gpu", default=False, description="Build with GPGPU enabled.")
     variant("cuda", default=False, description="Enable CUDA support")
-    variant("cuda_arch", default="none", description="CUDA architecture", values=("none", "90", "100", "120"), multi=False)
+    variant("cuda_arch", default="none", description="CUDA architecture", values=("none", "90", "100", "120", "121"), multi=False)
 
     depends_on("cuda", when="+cuda")
     depends_on("cuda", when="+gpu")
     depends_on("cuda@12:", when="cuda_arch=90")
     depends_on("cuda@12.8:", when="cuda_arch=100")
     depends_on("cuda@12.8:", when="cuda_arch=120")
+    depends_on("cuda@12.8:", when="cuda_arch=121")
     conflicts("cuda_arch=90", when="~cuda ~gpu")
     conflicts("cuda_arch=100", when="~cuda ~gpu")
     conflicts("cuda_arch=120", when="~cuda ~gpu")
+    conflicts("cuda_arch=121", when="~cuda ~gpu")
 
     # Has Fortran but I didn't see c/c++ code
     depends_on("c", type="build")
@@ -115,7 +117,7 @@ class Genesis(AutotoolsPackage):
             # fails outright with "nvcc fatal: Unsupported gpu architecture
             # 'compute_60'" regardless of which GPU we actually target.
             # Pin it to exactly the architecture we're building for instead.
-            gpuarch_for_cuda_arch = {"90": "sm_90", "100": "sm_100", "120": "sm_120"}
+            gpuarch_for_cuda_arch = {"90": "sm_90", "100": "sm_100", "120": "sm_120", "121": "sm_121"}
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch in gpuarch_for_cuda_arch:
                 args.append(f"--with-gpuarch={gpuarch_for_cuda_arch[cuda_arch]}")
