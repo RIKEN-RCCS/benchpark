@@ -17,17 +17,31 @@ class Ffb(ExecutableApplication):
 
     tags('fluid-dynamics')
 
-    if '/lvs' in os.environ["RAMBLE_ROOT"]:
-        if 'qc-gh200' in os.environ["SLURM_JOB_PARTITION"]:
-            cmd = "module purge && module load system/qc-gh200 nvhpc/24.3 && mpiexec -np {n_ranks} les3x.mpi"
-            chksum = '2db68022eb463a328ca69dc949f6abf53126d2f177281d6b3533d7c85c6da5f3'
-            url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-7.8M.tar.gz'
-            executables = ["cpdata", "execute"]
-        elif 'genoa' in os.environ["SLURM_JOB_PARTITION"]:
-            cmd = "ulimit -s unlimited && module purge && module load system/genoa mpi/openmpi-x86_64 && mpiexec -np {n_ranks} les3x.mpi"
-            chksum = 'ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501'
-            url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-2.0M.tar.gz'
-            executables = ["cpdata", "execute", "replace_cpu"]
+    # Machine identification, taken from the partition rather than from
+    # RAMBLE_ROOT.
+    #
+    # RAMBLE_ROOT is the location of the workspace, which is independent of
+    # the machine. Testing it for '/lvs' selects the Fugaku branch whenever
+    # a workspace is created on another filesystem, and the input fetch
+    # then fails with "All fetchers failed".
+    #
+    # SLURM_JOB_PARTITION is defined in the job that fetches the input and
+    # generates the run script, and undefined on a login node, where this
+    # module is also imported. It is read with .get() so that the import
+    # succeeds there, falling back to the Fugaku branch.
+    partition = os.environ.get("SLURM_JOB_PARTITION", "")
+
+    if 'qc-gh200' in partition:
+        cmd = "module purge && module load system/qc-gh200 nvhpc/24.3 && mpiexec -np {n_ranks} les3x.mpi"
+        chksum = '2db68022eb463a328ca69dc949f6abf53126d2f177281d6b3533d7c85c6da5f3'
+        url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-7.8M.tar.gz'
+        executables = ["cpdata", "execute"]
+        use_mpi = False
+    elif 'genoa' in partition:
+        cmd = "ulimit -s unlimited && module purge && module load system/genoa mpi/openmpi-x86_64 && mpiexec -np {n_ranks} les3x.mpi"
+        chksum = 'ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501'
+        url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-2.0M.tar.gz'
+        executables = ["cpdata", "execute", "replace_cpu"]
         use_mpi = False
     else:
         cmd = "les3x.mpi"
