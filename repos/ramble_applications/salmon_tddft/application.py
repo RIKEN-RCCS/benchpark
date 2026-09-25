@@ -19,8 +19,8 @@ class SalmonTddft(ExecutableApplication):
 
         exec_pp = '{preprocess} cp {input_path}/* .'
 
-        exec_gs = 'mpiexec -n {n_ranks} {salmon-tddft}/bin/salmon < Si-1-1-1.nml'
-        exec_rt = 'mpiexec -n {n_ranks} {salmon-tddft}/bin/salmon < Si-1-1-1-tddft.nml'
+        exec_gs = '{mpi_command} {salmon-tddft}/bin/salmon < Si-1-1-1.nml'
+        exec_rt = '{mpi_command} {salmon-tddft}/bin/salmon < Si-1-1-1-tddft.nml'
         
     else:
         url = 'file:///vol0003/rccs-sdt/data/a01010/benchmark_data/SALMON.tar.gz'
