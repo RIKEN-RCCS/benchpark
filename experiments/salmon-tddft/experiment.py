@@ -32,17 +32,42 @@ class SalmonTddft(
         description="app version",
     )
 
+    def cluster_name(self):
+        # Machine identification.
+        #
+        # The RIKEN cloud machines were formerly a single system,
+        # riken-cloud, distinguished by its `cluster` variant; each is now
+        # its own system (riken-dgx, riken-gh200, riken-genoa,
+        # riken-fx700). Both forms are accepted, since riken-cloud remains
+        # selectable.
+        #
+        # Without this, none of the branches below is reached for a
+        # per-machine system, processes_per_node is never set, and n_ranks
+        # resolves to None. The failure is reported in the allocation
+        # modifier rather than here:
+        #
+        #     modifiers/allocation/modifier.py:300, in determine_allocation
+        #       v.n_ranks_per_node = v.n_ranks // v.n_nodes
+        #     TypeError: unsupported operand type(s) for //: 'NoneType' and 'int'
+        name = self.system_spec.name
+        if name == 'riken-cloud':
+            return self.system_spec.variants['cluster'][0]
+        if name.startswith('riken-'):
+            return name[len('riken-'):]
+        return name
+
     def compute_applications_section(self):
         self.add_experiment_variable("n_nodes", ["1"], True)
+        cluster = self.cluster_name()
 
-        if self.system_spec.name == 'riken-fugaku':
+        if cluster == 'fugaku':
             self.add_experiment_variable("processes_per_node", ["4"], True)
             self.add_experiment_variable("preprocess", "", False)
             if self.spec.satisfies("+openmp"):
                 self.add_experiment_variable("omp_num_threads", ["12"], True)
 
-        elif self.system_spec.name == 'riken-cloud':
-            match self.system_spec.variants['cluster'][0]:
+        else:
+            match cluster:
                 case 'gh200':
                     self.add_experiment_variable("processes_per_node", ["1"], True)
                     self.add_experiment_variable("preprocess", "module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && ", False)
