@@ -78,7 +78,7 @@ class RikenFugaku(System):
                         "externals": [
                             {
                                 "spec": "python@3.13.5 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/python-3.13.5-mwbonb5r4yggympabuumfxtsggv334jt",
+                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/python-3.13.5-i4a7ezlzx4tlrfsax7cdyhkosjvtieui",
                             }
                         ]
                     },
