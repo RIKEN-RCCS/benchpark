@@ -30,19 +30,33 @@ class Ffb(
     def compute_applications_section(self):
         has_cuda = self.system_spec.satisfies("compiler=cuda")
 
+        # `-N` is scheduler-specific: in Slurm it requests nodes, in PJM
+        # it names the job, and pjsub rejects the resulting script:
+        #
+        #     ERR line= 7 .../execute_experiment
+        #     ==> Error: Command exited with status 1: pjsub ...
+        #
+        # Assigning extra_batch_opts here also overwrites the value set by
+        # the system definition, which on riken-fugaku carries the LLIO
+        # cache option required by every job on that machine. The node
+        # count reaches the batch script from n_nodes in either case.
+        set_batch_opts = self.system_spec.name != "riken-fugaku"
+
         if has_cuda: # GPU
             self.add_experiment_variable("n_nodes", 4, True)
             self.add_experiment_variable("processes_per_node", 1)
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
             self.add_experiment_variable("size", 31255875, True)
-            self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
+            if set_batch_opts:
+                self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
         else: # CPU
             self.add_experiment_variable("n_nodes", ["4"], True)
             self.add_experiment_variable("processes_per_node", ["4"])
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
             self.add_experiment_variable("omp_num_threads", ["12"])
             self.add_experiment_variable("size", 8493380, True)
-            self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
+            if set_batch_opts:
+                self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
 
         self.set_required_variables(
             n_resources="{n_ranks}",
