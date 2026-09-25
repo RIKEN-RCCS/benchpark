@@ -672,7 +672,28 @@ class RikenFugaku(System):
             "queue": "small",
             "extra_cmd_opts": "-std-proc fjmpioutdir/bmexe\n",
             "extra_batch_opts": '-x PJM_LLIO_GFSCACHE="/vol0002:/vol0003:/vol0004:/vol0005:/vol0006"\n',
-            "post_exec_cmds": "for F in $(ls -1v fjmpioutdir/bmexe.*); do cat $F >> {log_file}; done\n",
+            # Standard output of a run reaches one of two locations,
+            # depending on whether ramble constructs the launch line.
+            #
+            # `extra_cmd_opts` adds `-std-proc fjmpioutdir/bmexe`, which
+            # ramble appends only to executables declared `use_mpi=True`.
+            # For those, output is written under fjmpioutdir/. An
+            # application that builds its own launch line with
+            # `use_mpi=False` does not receive the option, and the Fujitsu
+            # MPI launcher then uses its default location,
+            # output.<jobid>/<node>/<rank>/stdout.<n>.
+            #
+            # Collecting only the first location leaves the log empty for
+            # the second case, so a success criterion matching text that
+            # the application did print is not satisfied, and the run is
+            # recorded as failed despite every exit code being zero.
+            #
+            # Both loops tolerate a missing directory, since an experiment
+            # uses one location or the other.
+            "post_exec_cmds": (
+                "for F in $(ls -1v fjmpioutdir/bmexe.* 2>/dev/null); do cat $F >> {log_file}; done\n"
+                "for F in $(ls -1v output.*/*/*/stdout.* 2>/dev/null); do cat $F >> {log_file}; done\n"
+            ),
         }
 
     def compute_software_section(self):
