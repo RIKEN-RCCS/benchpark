@@ -58,7 +58,24 @@ class Ffb(
         else:
             cluster = ""
 
+        # The package declares Fugaku's archive without a machine suffix
+        # (67.01-cpu, url ffb-frt_cpu.fugaku.tar.gz), alongside
+        # 67.01-cpu-genoa and 67.01-gpu-gh200. Appending the machine name
+        # for riken-fugaku therefore requests an undeclared version.
+        if cluster == "-fugaku":
+            cluster = ""
+
         suffix = "-gpu" if self.system_spec.satisfies("compiler=cuda") else "-cpu"
-        spec_str = f"ffb@{base_version}{suffix}{cluster}"
+        # `@=` denotes an exact version; a bare `@` denotes a range.
+        # These version names nest, so `ffb@67.01-cpu` also matches
+        # `67.01-cpu-genoa`, which spack then selects. The fetch fails on
+        # a machine where that archive is not present:
+        #
+        #     Error: FetchError: All fetchers failed for
+        #       spack-stage-ffb-67.01-cpu-genoa-...
+        #
+        # The same ambiguity reports an undeclared version as
+        # "Cannot satisfy 'ffb@67.01-cpu-fugaku' 1(67.01-gpu-gh200)".
+        spec_str = f"ffb@={base_version}{suffix}{cluster}"
         self.add_package_spec(self.name, [spec_str])
 
