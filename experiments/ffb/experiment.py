@@ -25,10 +25,17 @@ class Ffb(
         description="Which benchmark version to use.",
     )
 
+    variant(
+        "backend",
+        default="cpu",
+        values=("cpu", "gpu"),
+        description="ffb backend (cpu or gpu)",
+    )
+
     maintainers("ando")
 
     def compute_applications_section(self):
-        has_cuda = self.system_spec.satisfies("compiler=cuda")
+        has_cuda = self.spec.satisfies("backend=gpu")
 
         # `-N` is scheduler-specific: in Slurm it requests nodes, in PJM
         # it names the job, and pjsub rejects the resulting script:
@@ -91,7 +98,13 @@ class Ffb(
         if cluster == "-fugaku":
             cluster = ""
 
-        suffix = "-gpu" if self.system_spec.satisfies("compiler=cuda") else "-cpu"
+        # The GPU archive is selected by the experiment's own `backend`
+        # variant, as in the genesis experiment, rather than by the system's
+        # compiler. The two are not the same choice: riken-gh200's
+        # `compiler=cuda` is gcc with CUDA, while the GPU archive compiles
+        # with nvfortran-only flags (-Mpreprocess, -acc, -gpu=managed,
+        # -cuda) and links nvc++ objects, so it needs compiler=nvhpc.
+        suffix = "-gpu" if self.spec.satisfies("backend=gpu") else "-cpu"
         # `@=` denotes an exact version; a bare `@` denotes a range.
         # These version names nest, so `ffb@67.01-cpu` also matches
         # `67.01-cpu-genoa`, which spack then selects. The fetch fails on
@@ -103,5 +116,22 @@ class Ffb(
         # The same ambiguity reports an undeclared version as
         # "Cannot satisfy 'ffb@67.01-cpu-fugaku' 1(67.01-gpu-gh200)".
         spec_str = f"ffb@={base_version}{suffix}{cluster}"
+
+        if self.spec.satisfies("backend=gpu"):
+            # The GPU archive compiles with `-gpu=managed` and defines
+            # -Dgpudirect, so it hands device pointers to MPI and needs a
+            # CUDA-aware MPI, as the scale_letkf OpenACC build does. ucx
+            # needs +cuda as well, since openmpi is built fabrics=ucx and
+            # the ucx pml takes the send. cuda_arch is the compute
+            # capability of the machine's GPU.
+            cuda_arch = {"riken-gh200": "90", "riken-dgx": "121"}.get(
+                self.system_spec.name
+            )
+            if cuda_arch:
+                spec_str += (
+                    f" %nvhpc ^openmpi+cuda cuda_arch={cuda_arch} %nvhpc"
+                    f" ^ucx+cuda cuda_arch={cuda_arch}"
+                )
+
         self.add_package_spec(self.name, [spec_str])
 
