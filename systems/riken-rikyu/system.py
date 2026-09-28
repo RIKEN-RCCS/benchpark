@@ -52,8 +52,8 @@ class RikenRikyu(System):
     )
     variant(
         "nvhpc",
-        default="26.5",
-        values=("26.5", "26.3", "25.11", "25.7", "24.9"),
+        default="26.9",
+        values=("26.9", "26.5", "26.3", "25.11", "25.7", "24.9"),
         description="NVHPC version",
     )
     variant(
@@ -84,6 +84,8 @@ class RikenRikyu(System):
             print("\n Change the CUDA version to 13.3.1\n")
         if str(self.cuda_version) == "12.6" and self.spec.satisfies("compiler=cuda"):
             self.cuda_version = "12.6.3"
+        if str(self.nvhpc_version) == "26.9" and self.spec.satisfies("compiler=nvhpc"):
+            self.cuda_version = "13.3"
         if str(self.nvhpc_version) == "26.5" and self.spec.satisfies("compiler=nvhpc"):
             self.cuda_version = "13.2"
         if str(self.nvhpc_version) == "26.3" and self.spec.satisfies("compiler=nvhpc"):
@@ -394,13 +396,13 @@ class RikenRikyu(System):
         else:
             cuda_version = self.cuda_version
             nvhpc_version = self.nvhpc_version
-            if str(nvhpc_version) == "26.5":
+            if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5":
                 ompi_version = "5.0.10"
             if str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
                 ompi_version = "4.1.9"
 
         if self.spec.satisfies("compiler=nvhpc"):
-            if str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+            if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
                 selections["packages"] |= {
                     "openmpi": {
                         "externals": [
@@ -430,7 +432,7 @@ class RikenRikyu(System):
     def cuda_config(self):
         nvhpc_version = self.nvhpc_version
         cuda_version = self.cuda_version
-        if str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+        if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
             return {
                 "packages": {
                     "cuda": {
@@ -508,7 +510,7 @@ class RikenRikyu(System):
             return merge_dicts(cuda_cfg, gcc_cfg)
         if self.spec.satisfies("compiler=nvhpc"):
             nvhpc_version = self.nvhpc_version
-            if str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+            if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
                 return compiler_section_for(
                     "nvhpc",
                     [
