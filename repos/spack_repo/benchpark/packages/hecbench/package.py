@@ -63,6 +63,24 @@ UNIT_PATTERNS = (
 )
 
 
+# Benchmarks whose output names no unit. HeCBench's metadata gives the
+# pattern that finds the number, not what the number means, and a few
+# benchmarks print a bare figure:
+#
+#   adv          "elapsed time=421538"               nanoseconds
+#   ccsd-trpdrv  "Kernel timing: ... avg=0.000047"   seconds
+#
+# adv's unit follows from the GDOF/s it prints on the same line: 5488
+# degrees of freedom over 421538 ns is 0.0130 GDOF/s, which is the figure
+# it reports. Without a unit there is no conversion to seconds, so these
+# benchmarks passed while reporting no kernel time at all - they counted
+# towards the pass rate and produced no measurement.
+UNITLESS_SCALE = {
+    "adv": 1.0e-9,
+    "ccsd-trpdrv": 1.0,
+}
+
+
 def detect_scale(text):
     """Return the multiplier that converts `text`'s unit into seconds."""
     for pattern, scale in UNIT_PATTERNS:
@@ -155,7 +173,7 @@ def run_one(name, info, model, repeat, timeout_scale):
             status, reason = "FAIL", "result is not a number"
             break
         status, reason = "PASS", ""
-        scale = detect_scale(match.group(0))
+        scale = detect_scale(match.group(0)) or UNITLESS_SCALE.get(name)
         if best_metric is None or metric < best_metric:
             best_metric, best_scale = metric, scale
 
