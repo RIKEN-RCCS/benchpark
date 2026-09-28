@@ -241,11 +241,27 @@ class RikenRikyu(System):
                         }
                     ]
                 },
+                "libevent": {
+                    "externals": [
+                        {
+                            "spec": "libevent@2.1.12",
+                            "prefix": "/data1/rkp00015/share/spack/opt/spack/neoverse_v2/libevent-2.1.12",
+                        }
+                    ]
+                },
+                "libiconv": {
+                    "externals": [
+                        {
+                            "spec": "libiconv@1.18",
+                            "prefix": "/data1/rkp00015/share/spack/opt/spack/neoverse_v2/libiconv-1.18",
+                        }
+                    ]
+                },
                 "libtool": {
                     "externals": [
                         {
                             "spec": "libtool@2.4.7",
-                            "prefix": "/usr",
+                            "prefix": "/data1/rkp00015/share/spack/opt/spack/neoverse_v2/libtool-2.4.7",
                         }
                     ]
                 },

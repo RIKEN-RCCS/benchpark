@@ -230,11 +230,11 @@ class RikenGh200(System):
                         }
                     ]
                 },
-                "libtool": {
+                "libevent": {
                     "externals": [
                         {
-                            "spec": "libtool@2.4.6",
-                            "prefix": "/usr",
+                            "spec": "libevent@2.1.12",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libevent-2.1.12",
                         }
                     ]
                 },
@@ -242,7 +242,15 @@ class RikenGh200(System):
                     "externals": [
                         {
                             "spec": "libiconv@1.18",
-                            "prefix": "/usr",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libiconv-1.18",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                            "spec": "libtool@2.4.7",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libtool-2.4.7",
                         }
                     ]
                 },

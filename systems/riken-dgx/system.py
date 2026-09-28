@@ -214,19 +214,27 @@ class RikenDgx(System):
                         }
                     ]
                 },
-                "libtool": {
+                "libevent": {
                     "externals": [
                         {
-                            "spec": "libtool@2.4.7",
-                            "prefix": "/usr",
+                            "spec": "libevent@2.1.12",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libevent-2.1.12",
                         }
                     ]
                 },
                 "libiconv": {
                     "externals": [
                         {
-                            "spec": "libiconv@2.39",
-                            "prefix": "/usr",
+                            "spec": "libiconv@1.18",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libiconv-1.18",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                            "spec": "libtool@2.4.7",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libtool-2.4.7",
                         }
                     ]
                 },
