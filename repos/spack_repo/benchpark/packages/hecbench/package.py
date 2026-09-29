@@ -10,7 +10,6 @@ import re
 import shutil
 
 import llnl.util.tty as tty
-
 from spack.package import *
 from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage

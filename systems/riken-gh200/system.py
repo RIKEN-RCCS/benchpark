@@ -72,11 +72,18 @@ class RikenGh200(System):
         self.cuda_flag = self.spec.variants["cuda12"][0]
         self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
         nvhpc_cuda_version = {
-            "26.5": "13.2", "26.3": "13.1", "25.9": "13.0", "25.7": "12.9",
-            "25.1": "12.6", "24.9": "12.6", "24.3": "12.3"
+            "26.5": "13.2",
+            "26.3": "13.1",
+            "25.9": "13.0",
+            "25.7": "12.9",
+            "25.1": "12.6",
+            "24.9": "12.6",
+            "24.3": "12.3",
         }
         if self.spec.satisfies("compiler=nvhpc"):
-            self.cuda_version = nvhpc_cuda_version.get(str(self.nvhpc_version), self.cuda_version)
+            self.cuda_version = nvhpc_cuda_version.get(
+                str(self.nvhpc_version), self.cuda_version
+            )
         else:
             if str(self.cuda_version).split(".")[0] == "12":
                 if str(self.cuda_flag) == "False":

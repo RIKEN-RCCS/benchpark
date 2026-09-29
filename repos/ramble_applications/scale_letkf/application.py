@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
+
 from ramble.appkit import *
+
 
 class ScaleLetkf(ExecutableApplication):
     """SCALE-LETKF benchmark execution"""

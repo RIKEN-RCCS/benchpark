@@ -3,12 +3,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from benchpark.system import System, JobQueue, compiler_def, compiler_section_for, merge_dicts
-from benchpark.directives import variant, maintainers
-from benchpark.openmpsystem import OpenMPCPUOnlySystem
-from benchpark.cudasystem import CudaSystem
 from packaging.version import Version
+
+from benchpark.cudasystem import CudaSystem
+from benchpark.directives import maintainers, variant
+from benchpark.openmpsystem import OpenMPCPUOnlySystem
 from benchpark.paths import hardware_descriptions
+from benchpark.system import (
+    System,
+    compiler_def,
+    compiler_section_for,
+    merge_dicts,
+)
+
 
 class RikenCloud(System):
 
@@ -137,7 +144,7 @@ class RikenCloud(System):
                 },
             }
         }
-        
+
         cluster = self.spec.variants["cluster"][0]
         if cluster == "fx700":
             selections["packages"] |= self.fx700_packages()["packages"]
@@ -147,11 +154,11 @@ class RikenCloud(System):
             selections["packages"] |= self.dgx_packages()["packages"]
         if cluster == "genoa":
             selections["packages"] |= self.genoa_packages()["packages"]
-            
+
         return selections
 
     def fx700_packages(self):
-        selections = { 
+        selections = {
             "packages": {
                 "htslib": {"version": [1.12]},
                 "python": {
@@ -258,11 +265,11 @@ class RikenCloud(System):
                         {"spec": "gmake@4.2.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
                     ]
                 },
-               # "gdbm": {
-               #     "externals": [
-               #         {"spec": "gdbm@1.18 arch=linux-rhel8-a64fx", "prefix": "/usr"}
-               #     ]
-               # },
+                # "gdbm": {
+                #     "externals": [
+                #         {"spec": "gdbm@1.18 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                #     ]
+                # },
                 "gettext": {
                     "externals": [
                         {
@@ -288,11 +295,11 @@ class RikenCloud(System):
                         },
                     ]
                 },
-                #"hwloc": {
+                # "hwloc": {
                 #    "externals": [
                 #        {"spec": "hwloc@2.2.0 arch=linux-rhel8-a64fx", "prefix": "/usr"}
                 #    ]
-                #},
+                # },
                 "jansson": {
                     "externals": [
                         {
@@ -326,14 +333,14 @@ class RikenCloud(System):
                         {"spec": "libedit@3.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
                     ]
                 },
-                #"libevent": {
+                # "libevent": {
                 #    "externals": [
                 #        {
                 #            "spec": "libevent@2.1.8 arch=linux-rhel8-a64fx",
                 #            "prefix": "/usr",
                 #        }
                 #    ]
-                #},
+                # },
                 "libfabric": {
                     "externals": [
                         {
@@ -600,28 +607,27 @@ class RikenCloud(System):
                 "singularity": {
                     "externals": [
                         {
-                            "spec": f"singularity@4.3.2",
-                            "prefix": f"/usr",
+                            "spec": "singularity@4.3.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
             }
         }
-        if (self.spec.satisfies("compiler=gcc") or
-            self.spec.satisfies("compiler=cuda")):
+        if self.spec.satisfies("compiler=gcc") or self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= {
-               "openmpi": {
-                   "externals": [
-                       {
-                           "spec": f"openmpi@4.1.7",
-                           "prefix": f"/usr/mpi/gcc/openmpi-4.1.7rc1",
-                           "extra_attributes": {
-                               "ldflags": "-L/usr/mpi/gcc/openmpi-4.1.7rc1/lib64 -lmpi"
-                           },
-                       },
-                   ],
-               },
-           }
+                "openmpi": {
+                    "externals": [
+                        {
+                            "spec": "openmpi@4.1.7",
+                            "prefix": "/usr/mpi/gcc/openmpi-4.1.7rc1",
+                            "extra_attributes": {
+                                "ldflags": "-L/usr/mpi/gcc/openmpi-4.1.7rc1/lib64 -lmpi"
+                            },
+                        },
+                    ],
+                },
+            }
         else:
             selections["packages"] |= {
                 "fujitsu-mpi": {
@@ -631,7 +637,7 @@ class RikenCloud(System):
                             "spec": "fujitsu-mpi@4.11.1 arch=linux-rhel8-a64fx %fj@4.11.1",
                             "prefix": "/opt/FJSVstclanga/cp-1.0.30.01",
                         }
-                    ]
+                    ],
                 },
                 "fujitsu-ssl2": {
                     "buildable": False,
@@ -640,7 +646,7 @@ class RikenCloud(System):
                             "spec": "fujitsu-ssl2@4.11.1 arch=linux-rhel8-a64fx %fj@4.11.1",
                             "prefix": "/opt/FJSVstclanga/cp-1.0.30.01",
                         }
-                    ]
+                    ],
                 },
             }
         return selections
@@ -651,216 +657,216 @@ class RikenCloud(System):
                 "autoconf": {
                     "externals": [
                         {
-                        "spec": "autoconf@2.69",
-                        "prefix": "/usr",
+                            "spec": "autoconf@2.69",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "automake": {
                     "externals": [
                         {
-                        "spec": "automake@1.16.2",
-                        "prefix": "/usr",
+                            "spec": "automake@1.16.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "binutils": {
                     "externals": [
                         {
-                        "spec": "binutils@2.35.2~gold~headers",
-                        "prefix": "/usr",
+                            "spec": "binutils@2.35.2~gold~headers",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bzip2": {
                     "externals": [
                         {
-                        "spec": "bzip2@1.0.8",
-                        "prefix": "/usr",
+                            "spec": "bzip2@1.0.8",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bison": {
                     "externals": [
                         {
-                        "spec": "bison@3.7.4",
-                        "prefix": "/usr",
+                            "spec": "bison@3.7.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bzip2": {
                     "externals": [
                         {
-                        "spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx",
-                        "prefix": "/usr",
+                            "spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "cmake": {
                     "externals": [
                         {
-                        "spec": "cmake@3.26.5",
-                        "prefix": "/usr",
+                            "spec": "cmake@3.26.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "coreutils": {
                     "externals": [
                         {
-                        "spec": "coreutils@8.32",
-                        "prefix": "/usr",
+                            "spec": "coreutils@8.32",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "curl": {
                     "externals": [
                         {
-                        "spec": "curl@7.76.1+gssapi+ldap+nghttp2",
-                        "prefix": "/usr",
+                            "spec": "curl@7.76.1+gssapi+ldap+nghttp2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "diffutils": {
                     "externals": [
                         {
-                        "spec": "diffutils@3.7",
-                        "prefix": "/usr",
+                            "spec": "diffutils@3.7",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "findutils": {
                     "externals": [
                         {
-                        "spec": "findutils@4.8.0",
-                        "prefix": "/usr",
+                            "spec": "findutils@4.8.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "flex": {
                     "externals": [
                         {
-                        "spec": "flex@2.6.4+lex",
-                        "prefix": "/usr",
+                            "spec": "flex@2.6.4+lex",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gawk": {
                     "externals": [
                         {
-                        "spec": "gawk@5.1.0",
-                        "prefix": "/usr",
+                            "spec": "gawk@5.1.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gettext": {
                     "externals": [
                         {
-                        "spec": "gettext@0.21",
-                        "prefix": "/usr",
+                            "spec": "gettext@0.21",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "git": {
                     "externals": [
                         {
-                        "spec": "git@2.47.3~tcltk",
-                        "prefix": "/usr",
+                            "spec": "git@2.47.3~tcltk",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gmake": {
                     "externals": [
                         {
-                        "spec": "gmake@4.3",
-                        "prefix": "/usr",
+                            "spec": "gmake@4.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "groff": {
                     "externals": [
                         {
-                        "spec": "groff@1.22.4",
-                        "prefix": "/usr",
+                            "spec": "groff@1.22.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "libtool": {
                     "externals": [
                         {
-                        "spec": "libtool@2.4.6",
-                        "prefix": "/usr",
+                            "spec": "libtool@2.4.6",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "libiconv": {
                     "externals": [
                         {
-                        "spec": "libiconv@1.18",
-                        "prefix": "/usr",
+                            "spec": "libiconv@1.18",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "m4": {
                     "externals": [
                         {
-                        "spec": "m4@1.4.19",
-                        "prefix": "/usr",
+                            "spec": "m4@1.4.19",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "openssh": {
                     "externals": [
                         {
-                        "spec": "openssh@8.7p1",
-                        "prefix": "/usr",
+                            "spec": "openssh@8.7p1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "openssl": {
                     "externals": [
                         {
-                        "spec": "openssl@3.2.2",
-                        "prefix": "/usr",
+                            "spec": "openssl@3.2.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "perl": {
                     "externals": [
                         {
-                        "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
-                        "prefix": "/usr",
+                            "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "pigz": {
                     "externals": [
                         {
-                        "spec": "pigz@2.8",
-                        "prefix": "/usr",
+                            "spec": "pigz@2.8",
+                            "prefix": "/usr",
                         }
                     ],
                 },
                 "pkgconf": {
                     "externals": [
                         {
-                        "spec": "pkgconf@1.7.3",
-                        "prefix": "/usr",
+                            "spec": "pkgconf@1.7.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "python": {
                     "externals": [
                         {
-                        "spec": "python@3.9.21+bz2+crypt+ctypes+dbm+lzma+pyexpat+pythoncmd+readline+sqlite3+ssl+tix+tkinter+uuid+zlib",
-                        "prefix": "/usr",
+                            "spec": "python@3.9.21+bz2+crypt+ctypes+dbm+lzma+pyexpat+pythoncmd+readline+sqlite3+ssl+tix+tkinter+uuid+zlib",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "sed": {
                     "externals": [
                         {
-                        "spec": "sed@4.8",
-                        "prefix": "/usr",
+                            "spec": "sed@4.8",
+                            "prefix": "/usr",
                         }
                     ]
                 },
@@ -883,55 +889,54 @@ class RikenCloud(System):
                 "tar": {
                     "externals": [
                         {
-                        "spec": "tar@1.34",
-                        "prefix": "/usr",
+                            "spec": "tar@1.34",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "xz": {
                     "externals": [
                         {
-                        "spec": "xz@5.2.5",
-                        "prefix": "/usr",
+                            "spec": "xz@5.2.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "zlib": {
                     "externals": [
                         {
-                        "spec": "zlib@1.2.11",
-                        "prefix": "/usr",
+                            "spec": "zlib@1.2.11",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "zstd": {
                     "externals": [
                         {
-                        "spec": "zstd@5.2.5",
-                        "prefix": "/usr",
+                            "spec": "zstd@5.2.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
             }
         }
-        if (self.spec.satisfies("compiler=gcc") or
-            self.spec.satisfies("compiler=cuda")):
+        if self.spec.satisfies("compiler=gcc") or self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= {
-               "openmpi": {
-                   "externals": [
-                       {
-                           "spec": f"openmpi@4.1.7",
-                           "prefix": f"/usr/mpi/gcc/openmpi-4.1.7rc1",
-                           "extra_attributes": {
-                               "ldflags": "-L/usr/mpi/gcc/openmpi-4.1.7rc1/lib64 -lmpi"
-                           },
-                       },
-                   ],
-               },
-           }
+                "openmpi": {
+                    "externals": [
+                        {
+                            "spec": "openmpi@4.1.7",
+                            "prefix": "/usr/mpi/gcc/openmpi-4.1.7rc1",
+                            "extra_attributes": {
+                                "ldflags": "-L/usr/mpi/gcc/openmpi-4.1.7rc1/lib64 -lmpi"
+                            },
+                        },
+                    ],
+                },
+            }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config_gh200()["packages"]
-        
+
         return selections
 
     def dgx_packages(self):
@@ -940,200 +945,200 @@ class RikenCloud(System):
                 "autoconf": {
                     "externals": [
                         {
-                        "spec": "autoconf@2.71",
-                        "prefix": "/usr",
+                            "spec": "autoconf@2.71",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "automake": {
                     "externals": [
                         {
-                        "spec": "automake@1.16.5",
-                        "prefix": "/usr",
+                            "spec": "automake@1.16.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "binutils": {
                     "externals": [
                         {
-                        "spec": "binutils@2.42",
-                        "prefix": "/usr",
+                            "spec": "binutils@2.42",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bzip2": {
                     "externals": [
                         {
-                        "spec": "bzip2@1.0.8",
-                        "prefix": "/usr",
+                            "spec": "bzip2@1.0.8",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bison": {
                     "externals": [
                         {
-                        "spec": "bison@3.8.2",
-                        "prefix": "/usr",
+                            "spec": "bison@3.8.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "cmake": {
                     "externals": [
                         {
-                        "spec": "cmake@3.28.3",
-                        "prefix": "/usr",
+                            "spec": "cmake@3.28.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "coreutils": {
                     "externals": [
                         {
-                        "spec": "coreutils@9.4",
-                        "prefix": "/usr",
+                            "spec": "coreutils@9.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "curl": {
                     "externals": [
                         {
-                        "spec": "curl@8.5.0",
-                        "prefix": "/usr",
+                            "spec": "curl@8.5.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "diffutils": {
                     "externals": [
                         {
-                        "spec": "diffutils@3.10",
-                        "prefix": "/usr",
+                            "spec": "diffutils@3.10",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "findutils": {
                     "externals": [
                         {
-                        "spec": "findutils@4.9.0",
-                        "prefix": "/usr",
+                            "spec": "findutils@4.9.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "flex": {
                     "externals": [
                         {
-                        "spec": "flex@2.6.4",
-                        "prefix": "/usr",
+                            "spec": "flex@2.6.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gawk": {
                     "externals": [
                         {
-                        "spec": "gawk@5.2.1",
-                        "prefix": "/usr",
+                            "spec": "gawk@5.2.1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gettext": {
                     "externals": [
                         {
-                        "spec": "gettext@0.21",
-                        "prefix": "/usr",
+                            "spec": "gettext@0.21",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "git": {
                     "externals": [
                         {
-                        "spec": "git@2.43.0",
-                        "prefix": "/usr",
+                            "spec": "git@2.43.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gmake": {
                     "externals": [
                         {
-                        "spec": "gmake@4.3",
-                        "prefix": "/usr",
+                            "spec": "gmake@4.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "groff": {
                     "externals": [
                         {
-                        "spec": "groff@1.23.0",
-                        "prefix": "/usr",
+                            "spec": "groff@1.23.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "libtool": {
                     "externals": [
                         {
-                        "spec": "libtool@2.4.7",
-                        "prefix": "/usr",
+                            "spec": "libtool@2.4.7",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "libiconv": {
                     "externals": [
                         {
-                        "spec": "libiconv@2.39",
-                        "prefix": "/usr",
+                            "spec": "libiconv@2.39",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "m4": {
                     "externals": [
                         {
-                        "spec": "m4@1.4.19",
-                        "prefix": "/usr",
+                            "spec": "m4@1.4.19",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "openssh": {
                     "externals": [
                         {
-                        "spec": "openssh@9.6p1",
-                        "prefix": "/usr",
+                            "spec": "openssh@9.6p1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "openssl": {
                     "externals": [
                         {
-                        "spec": "openssl@3.0.13",
-                        "prefix": "/usr",
+                            "spec": "openssl@3.0.13",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "perl": {
                     "externals": [
                         {
-                        "spec": "perl@5.38.2",
-                        "prefix": "/usr",
+                            "spec": "perl@5.38.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "pkgconf": {
                     "externals": [
                         {
-                        "spec": "pkgconf@1.8.1",
-                        "prefix": "/usr",
+                            "spec": "pkgconf@1.8.1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "python": {
                     "externals": [
                         {
-                        "spec": "python@3.12.3",
-                        "prefix": "/usr",
+                            "spec": "python@3.12.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "sed": {
                     "externals": [
                         {
-                        "spec": "sed@4.9",
-                        "prefix": "/usr",
+                            "spec": "sed@4.9",
+                            "prefix": "/usr",
                         }
                     ]
                 },
@@ -1156,54 +1161,54 @@ class RikenCloud(System):
                 "tar": {
                     "externals": [
                         {
-                        "spec": "tar@1.35",
-                        "prefix": "/usr",
+                            "spec": "tar@1.35",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "xz": {
                     "externals": [
                         {
-                        "spec": "xz@5.4.5",
-                        "prefix": "/usr",
+                            "spec": "xz@5.4.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
-#                "zlib": {
-#                    "externals": [
-#                        {
-#                        "spec": "zlib@1.12",
-#                        "prefix": "/usr",
-#                        }
-#                    ]
-#                },
+                #                "zlib": {
+                #                    "externals": [
+                #                        {
+                #                        "spec": "zlib@1.12",
+                #                        "prefix": "/usr",
+                #                        }
+                #                    ]
+                #                },
                 "zstd": {
                     "externals": [
                         {
-                        "spec": "zstd@1.5.5",
-                        "prefix": "/usr",
+                            "spec": "zstd@1.5.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
             }
         }
-        if (self.spec.satisfies("compiler=nvhpc")):
+        if self.spec.satisfies("compiler=nvhpc"):
             selections["packages"] |= {
-               "openmpi": {
-                   "externals": [
-                       {
-                           "spec": f"openmpi@4.1.9",
-                           "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi",
-                           "extra_attributes": {
-                               "ldflags": "-L/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi -lmpi"
-                           },
-                       },
-                   ],
-               },
-           }
+                "openmpi": {
+                    "externals": [
+                        {
+                            "spec": "openmpi@4.1.9",
+                            "prefix": "/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi",
+                            "extra_attributes": {
+                                "ldflags": "-L/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi -lmpi"
+                            },
+                        },
+                    ],
+                },
+            }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config_dgx()["packages"]
-        
+
         return selections
 
     def genoa_packages(self):
@@ -1212,8 +1217,8 @@ class RikenCloud(System):
                 "mpi": {
                     "externals": [
                         {
-                            "spec": f"openmpi@4.1.1",
-                            "prefix": f"/usr/lib64/openmpi",
+                            "spec": "openmpi@4.1.1",
+                            "prefix": "/usr/lib64/openmpi",
                             "extra_attributes": {
                                 "ldflags": "-L/usr/lib64/openmpi/lib -lmpi"
                             },
@@ -1223,185 +1228,184 @@ class RikenCloud(System):
                 "pkgconf": {
                     "externals": [
                         {
-                        "spec": "pkgconf@1.7.3",
-                        "prefix": "/usr",
+                            "spec": "pkgconf@1.7.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "git": {
                     "externals": [
                         {
-                        "spec": "git@2.47.3",
-                        "prefix": "/usr",
+                            "spec": "git@2.47.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "cmake": {
                     "externals": [
                         {
-                        "spec": "cmake@3.26.5",
-                        "prefix": "/usr",
+                            "spec": "cmake@3.26.5",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "python": {
                     "externals": [
                         {
-                        "spec": "python@3.9.25",
-                        "prefix": "/usr",
+                            "spec": "python@3.9.25",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "m4": {
                     "externals": [
                         {
-                        "spec": "m4@1.4.19",
-                        "prefix": "/usr",
+                            "spec": "m4@1.4.19",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gettext": {
                     "externals": [
                         {
-                        "spec": "gettext@0.21",
-                        "prefix": "/usr",
+                            "spec": "gettext@0.21",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gawk": {
                     "externals": [
                         {
-                        "spec": "gawk@5.1.0",
-                        "prefix": "/usr",
+                            "spec": "gawk@5.1.0",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "openssl": {
                     "externals": [
                         {
-                        "spec": "openssl@3.5.1",
-                        "prefix": "/usr",
+                            "spec": "openssl@3.5.1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "bison": {
                     "externals": [
                         {
-                        "spec": "bison@3.7.4",
-                        "prefix": "/usr",
+                            "spec": "bison@3.7.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "groff": {
                     "externals": [
                         {
-                        "spec": "groff@1.22.4",
-                        "prefix": "/usr",
+                            "spec": "groff@1.22.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "tar": {
                     "externals": [
                         {
-                        "spec": "tar@1.34",
-                        "prefix": "/usr",
+                            "spec": "tar@1.34",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "automake": {
                     "externals": [
                         {
-                        "spec": "automake@1.16.2",
-                        "prefix": "/usr",
+                            "spec": "automake@1.16.2",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "flex": {
                     "externals": [
                         {
-                        "spec": "flex@2.6.4",
-                        "prefix": "/usr",
+                            "spec": "flex@2.6.4",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "gmake": {
                     "externals": [
                         {
-                        "spec": "gmake@4.3",
-                        "prefix": "/usr",
+                            "spec": "gmake@4.3",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "sed": {
                     "externals": [
                         {
-                        "spec": "sed@4.8",
-                        "prefix": "/usr",
+                            "spec": "sed@4.8",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "autoconf": {
                     "externals": [
                         {
-                        "spec": "autoconf@2.69",
-                        "prefix": "/usr",
+                            "spec": "autoconf@2.69",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "perl": {
                     "externals": [
                         {
-                        "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
-                        "prefix": "/usr",
+                            "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "curl": {
                     "externals": [
                         {
-                        "spec": "curl@7.76.1",
-                        "prefix": "/usr",
+                            "spec": "curl@7.76.1",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "libtool": {
                     "externals": [
                         {
-                        "spec": "libtool@2.4.6",
-                        "prefix": "/usr",
+                            "spec": "libtool@2.4.6",
+                            "prefix": "/usr",
                         }
                     ]
                 },
                 "singularity": {
                     "externals": [
                         {
-                            "spec": f"singularity@4.3.7",
-                            "prefix": f"/usr",
+                            "spec": "singularity@4.3.7",
+                            "prefix": "/usr",
                         }
                     ]
                 },
             }
         }
-        
+
         return selections
 
     def cuda_config_gh200(self):
         cuda_version = self.cuda_version
-        nvhpc_version = self.nvhpc_version
         if self.spec.satisfies("compiler=nvhpc"):
             return {
                 "packages": {
-                #    "blas": {"require": [f"{self.spec.variants['blas'][0]}"]},
-                #    "lapack": {"require": [f"{self.spec.variants['lapack'][0]}"]},
+                    #    "blas": {"require": [f"{self.spec.variants['blas'][0]}"]},
+                    #    "lapack": {"require": [f"{self.spec.variants['lapack'][0]}"]},
                     "cuda": {
                         "externals": [
                             {
                                 "spec": f"cuda@{cuda_version}",
                                 "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/cuda/{cuda_version}",
-                                "modules" : [
+                                "modules": [
                                     "system/qc-gh200",
                                     f"nvhpc/{self.nvhpc_version}",
-                                ]
+                                ],
                             }
                         ],
                         "buildable": False,
@@ -1469,26 +1473,25 @@ class RikenCloud(System):
                             },
                         ],
                     },
-                }    
+                }
             }
 
     def cuda_config_dgx(self):
         cuda_version = self.cuda_version
-        nvhpc_version = self.nvhpc_version
         if self.spec.satisfies("compiler=nvhpc"):
             return {
                 "packages": {
-                #    "blas": {"require": [f"{self.spec.variants['blas'][0]}"]},
-                #    "lapack": {"require": [f"{self.spec.variants['lapack'][0]}"]},
+                    #    "blas": {"require": [f"{self.spec.variants['blas'][0]}"]},
+                    #    "lapack": {"require": [f"{self.spec.variants['lapack'][0]}"]},
                     "cuda": {
                         "externals": [
                             {
                                 "spec": f"cuda@{cuda_version}",
                                 "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/cuda/{cuda_version}",
-                                "modules" : [
+                                "modules": [
                                     "system/ng-dgx",
                                     f"nvhpc/{self.nvhpc_version}",
-                                ]
+                                ],
                             }
                         ],
                         "buildable": True,
@@ -1558,7 +1561,7 @@ class RikenCloud(System):
                             },
                         ],
                     },
-                }    
+                }
             }
 
     def compute_compilers_section(self):
@@ -1672,7 +1675,7 @@ class RikenCloud(System):
                             modules=[
                                 "system/qc-gh200",
                                 f"nvhpc/{self.nvhpc_version}",
-                            ]
+                            ],
                         )
                     ],
                 )
@@ -1692,9 +1695,14 @@ class RikenCloud(System):
                 ],
             )
             if self.spec.satisfies("compiler=cuda"):
-                if str(self.cuda_version) != "13.0" and str(self.cuda_version) != "13.2":
+                if (
+                    str(self.cuda_version) != "13.0"
+                    and str(self.cuda_version) != "13.2"
+                ):
                     print("--- Change Notice ---")
-                    print(" The CUDA version has been changed to 13.2 (Restrictions in DGX)")
+                    print(
+                        " The CUDA version has been changed to 13.2 (Restrictions in DGX)"
+                    )
                     self.cuda_version = 13.2
                 cuda_cfg = compiler_section_for(
                     "cuda",
@@ -1721,7 +1729,7 @@ class RikenCloud(System):
                             modules=[
                                 "system/ng-dgx",
                                 f"nvhpc/{self.nvhpc_version}",
-                            ]
+                            ],
                         )
                     ],
                 )
@@ -1761,7 +1769,7 @@ class RikenCloud(System):
         default_comp = self.spec.variants["compiler"][0]
         if default_comp == "clang":
             default_comp = "llvm"
-        
+
         if self.spec.variants["cluster"][0] == "fx700":
             return {
                 "software": {
@@ -1784,7 +1792,7 @@ class RikenCloud(System):
                         "default-mpi": {"pkg_spec": "openmpi"},
                         "compiler-gcc": {"pkg_spec": "gcc"},
                         "compiler-nvhpc": {"pkg_spec": "nvhpc"},
-                        "cublas-cuda": {"pkg_spec": f"cublas"},
+                        "cublas-cuda": {"pkg_spec": "cublas"},
                         "blas": {"pkg_spec": "openblas"},
                         "lapack": {"pkg_spec": "openblas"},
                     }
@@ -1798,7 +1806,7 @@ class RikenCloud(System):
                         "default-mpi": {"pkg_spec": "openmpi"},
                         "compiler-gcc": {"pkg_spec": "gcc"},
                         "compiler-nvhpc": {"pkg_spec": "nvhpc"},
-                        "cublas-cuda": {"pkg_spec": f"cublas"},
+                        "cublas-cuda": {"pkg_spec": "cublas"},
                         "blas": {"pkg_spec": "openblas"},
                         "lapack": {"pkg_spec": "openblas"},
                     }

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 
 from benchpark.directives import variant
 from benchpark.experiment import Experiment
@@ -13,7 +12,7 @@ from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 class SalmonTddft(
     Experiment,
     ProgrammingModel(
-        ProgrammingModelType.Mpionly, 
+        ProgrammingModelType.Mpionly,
         ProgrammingModelType.Openmp,
     ),
 ):
@@ -50,17 +49,17 @@ class SalmonTddft(
         #       v.n_ranks_per_node = v.n_ranks // v.n_nodes
         #     TypeError: unsupported operand type(s) for //: 'NoneType' and 'int'
         name = self.system_spec.name
-        if name == 'riken-cloud':
-            return self.system_spec.variants['cluster'][0]
-        if name.startswith('riken-'):
-            return name[len('riken-'):]
+        if name == "riken-cloud":
+            return self.system_spec.variants["cluster"][0]
+        if name.startswith("riken-"):
+            return name[len("riken-") :]
         return name
 
     def compute_applications_section(self):
         self.add_experiment_variable("n_nodes", ["1"], True)
         cluster = self.cluster_name()
 
-        if cluster == 'fugaku':
+        if cluster == "fugaku":
             self.add_experiment_variable("processes_per_node", ["4"], True)
             self.add_experiment_variable("preprocess", "", False)
             if self.spec.satisfies("+openmp"):
@@ -68,36 +67,51 @@ class SalmonTddft(
 
         else:
             match cluster:
-                case 'gh200':
+                case "gh200":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
-                    self.add_experiment_variable("preprocess", "module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && ", False)
+                    self.add_experiment_variable(
+                        "preprocess",
+                        "module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && ",
+                        False,
+                    )
 
-                case 'dgx':
+                case "dgx":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
                     # self.add_experiment_variable("preprocess", "module purge && module load system/ng-dgx && module load nvhpc-hpcx-cuda13/26.3 && ", False)
                     self.add_experiment_variable("preprocess", "", False)
 
-                case 'fx700':
+                case "fx700":
                     self.add_experiment_variable("processes_per_node", ["4"], True)
-                    self.add_experiment_variable("preprocess", "module purge && module load system/fx700 && module load FJSVstclanga/1.0.30.01 && ", False)
+                    self.add_experiment_variable(
+                        "preprocess",
+                        "module purge && module load system/fx700 && module load FJSVstclanga/1.0.30.01 && ",
+                        False,
+                    )
                     if self.spec.satisfies("+openmp"):
                         self.add_experiment_variable("omp_num_threads", ["12"], True)
-                
-                case 'genoa':
+
+                case "genoa":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
-                    self.add_experiment_variable("preprocess", "module purge && module load system/genoa && module load mpi/mpich-x86_64 && ", False)
+                    self.add_experiment_variable(
+                        "preprocess",
+                        "module purge && module load system/genoa && module load mpi/mpich-x86_64 && ",
+                        False,
+                    )
                     if self.spec.satisfies("+openmp"):
                         self.add_experiment_variable("omp_num_threads", ["48"], True)
-        
-        self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}", True)
-        self.add_experiment_variable("size", 44051, True)   # Defined by rgrid in input files
-        
+
+        self.add_experiment_variable(
+            "n_ranks", "{processes_per_node} * {n_nodes}", True
+        )
+        self.add_experiment_variable(
+            "size", 44051, True
+        )  # Defined by rgrid in input files
+
         self.set_required_variables(
-            n_resources="{n_ranks}", 
-            process_problem_size="{size}/{n_ranks}", 
-            total_problem_size="{size}"
+            n_resources="{n_ranks}",
+            process_problem_size="{size}/{n_ranks}",
+            total_problem_size="{size}",
         )
 
     def compute_package_section(self):
         self.add_package_spec(self.name, [f"salmon-tddft{self.determine_version()}"])
-

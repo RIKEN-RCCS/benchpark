@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
-
 from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
 
 class Numactl(AutotoolsPackage):
@@ -40,7 +39,7 @@ class Numactl(AutotoolsPackage):
     depends_on("m4", type="build")
 
     # Numactl has hardcoded minimum versions for libtool,
-    # libtool@develop returns UNKOWN as a version tag and fails
+    # libtool@develop returns UNKNOWN as a version tag and fails
     conflicts("^libtool@develop")
 
     # Numerous errors when trying to build on darwin

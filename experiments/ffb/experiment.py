@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from benchpark.directives import maintainers, variant
 from benchpark.experiment import Experiment
 from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
-from benchpark.directives import variant, maintainers
+
 
 class Ffb(
     Experiment,
@@ -49,14 +50,14 @@ class Ffb(
         # count reaches the batch script from n_nodes in either case.
         set_batch_opts = self.system_spec.name != "riken-fugaku"
 
-        if has_cuda: # GPU
+        if has_cuda:  # GPU
             self.add_experiment_variable("n_nodes", 4, True)
             self.add_experiment_variable("processes_per_node", 1)
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
             self.add_experiment_variable("size", 31255875, True)
             if set_batch_opts:
                 self.add_experiment_variable("extra_batch_opts", "-N 4", named=False)
-        else: # CPU
+        else:  # CPU
             self.add_experiment_variable("n_nodes", ["4"], True)
             self.add_experiment_variable("processes_per_node", ["4"])
             self.add_experiment_variable("n_ranks", "{processes_per_node} * {n_nodes}")
@@ -72,7 +73,7 @@ class Ffb(
         )
 
     def compute_package_section(self):
-        base_version = self.spec.variants['version'][0]
+        base_version = self.spec.variants["version"][0]
         # Machine identification.
         #
         # riken-cloud distinguished its machines with a `cluster` variant.
@@ -83,10 +84,10 @@ class Ffb(
         #
         # Accept both forms; a system with neither retains the empty suffix.
         name = self.system_spec.name
-        if 'cluster' in self.system_spec.variants:
-            ret = self.system_spec.variants['cluster']
+        if "cluster" in self.system_spec.variants:
+            ret = self.system_spec.variants["cluster"]
             cluster = f"-{ret[0]}" if ret else ""
-        elif name.startswith('riken-') and name != 'riken-cloud':
+        elif name.startswith("riken-") and name != "riken-cloud":
             cluster = f"-{name[len('riken-'):]}"
         else:
             cluster = ""
@@ -134,4 +135,3 @@ class Ffb(
                 )
 
         self.add_package_spec(self.name, [spec_str])
-

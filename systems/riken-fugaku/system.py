@@ -190,14 +190,14 @@ class RikenFugaku(System):
                             }
                         ]
                     },
-#                    "automake": {
-#                        "externals": [
-#                            {
-#                                "spec": "automake@1.16.1 arch=linux-rhel8-a64fx",
-#                                "prefix": "/usr",
-#                            }
-#                        ]
-#                    },
+                    #                    "automake": {
+                    #                        "externals": [
+                    #                            {
+                    #                                "spec": "automake@1.16.1 arch=linux-rhel8-a64fx",
+                    #                                "prefix": "/usr",
+                    #                            }
+                    #                        ]
+                    #                    },
                     "binutils": {
                         "externals": [
                             {
@@ -208,7 +208,10 @@ class RikenFugaku(System):
                     },
                     "bzip2": {
                         "externals": [
-                            {"spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "cmake": {
@@ -225,12 +228,18 @@ class RikenFugaku(System):
                     },
                     "curl": {
                         "externals": [
-                            {"spec": "curl@7.61.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "curl@7.61.1 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "dbus": {
                         "externals": [
-                            {"spec": "dbus@1.12.8 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "dbus@1.12.8 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "elfutils": {
@@ -243,7 +252,10 @@ class RikenFugaku(System):
                     },
                     "expat": {
                         "externals": [
-                            {"spec": "expat@2.5.0 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "expat@2.5.0 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "findutils": {
@@ -272,12 +284,18 @@ class RikenFugaku(System):
                     },
                     "gmake": {
                         "externals": [
-                            {"spec": "gmake@4.2.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "gmake@4.2.1 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "gdbm": {
                         "externals": [
-                            {"spec": "gdbm@1.18 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "gdbm@1.18 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "gettext": {
@@ -290,7 +308,10 @@ class RikenFugaku(System):
                     },
                     "gmp": {
                         "externals": [
-                            {"spec": "gmp@6.1.2 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "gmp@6.1.2 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "gnutls": {
@@ -303,7 +324,10 @@ class RikenFugaku(System):
                     },
                     "hwloc": {
                         "externals": [
-                            {"spec": "hwloc@2.2.0 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "hwloc@2.2.0 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "jansson": {
@@ -324,7 +348,10 @@ class RikenFugaku(System):
                     },
                     "libcap": {
                         "externals": [
-                            {"spec": "libcap@2.48 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "libcap@2.48 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "libdrm": {
@@ -337,7 +364,10 @@ class RikenFugaku(System):
                     },
                     "libedit": {
                         "externals": [
-                            {"spec": "libedit@3.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "libedit@3.1 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "libevent": {
@@ -350,7 +380,10 @@ class RikenFugaku(System):
                     },
                     "libffi": {
                         "externals": [
-                            {"spec": "libffi@3.1 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "libffi@3.1 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "libglvnd": {
@@ -435,12 +468,18 @@ class RikenFugaku(System):
                     },
                     "lz4": {
                         "externals": [
-                            {"spec": "lz4@1.8.3 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "lz4@1.8.3 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "m4": {
                         "externals": [
-                            {"spec": "m4@1.4.18 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "m4@1.4.18 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "mpi": {"buildable": False},
@@ -479,22 +518,34 @@ class RikenFugaku(System):
                     },
                     "papi": {
                         "externals": [
-                            {"spec": "papi@5.6.0 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "papi@5.6.0 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "pcre": {
                         "externals": [
-                            {"spec": "pcre@8.42 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "pcre@8.42 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "pcre2": {
                         "externals": [
-                            {"spec": "pcre2@10.32 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "pcre2@10.32 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "perl": {
                         "externals": [
-                            {"spec": "perl@5.26.3 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "perl@5.26.3 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "pkgconf": {
@@ -507,7 +558,10 @@ class RikenFugaku(System):
                     },
                     "popt": {
                         "externals": [
-                            {"spec": "popt@1.18 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "popt@1.18 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "readline": {
@@ -528,7 +582,10 @@ class RikenFugaku(System):
                     },
                     "tcl": {
                         "externals": [
-                            {"spec": "tcl@8.6.8 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "tcl@8.6.8 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "valgrind": {
@@ -541,13 +598,19 @@ class RikenFugaku(System):
                     },
                     "xz": {
                         "externals": [
-                            {"spec": "xz@5.2.4 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "xz@5.2.4 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ]
                     },
                     "zlib": {
                         "buildable": False,
                         "externals": [
-                            {"spec": "zlib@1.2.11 arch=linux-rhel8-a64fx", "prefix": "/usr"}
+                            {
+                                "spec": "zlib@1.2.11 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
                         ],
                     },
                 }
@@ -582,18 +645,18 @@ class RikenFugaku(System):
                 "blas": {"require": ["fujitsu-ssl2"]},
                 "lapack": {"require": ["fujitsu-ssl2"]},
             }
-#        if self.spec.satisfies("compiler=gcc"):
-#            selections["packages"].pop("fujitsu-fftw", None)
-#            selections["packages"].pop("fujitsu-ssl2", None)
-#            selections["packages"].pop("fujitsu-mpi", None)
-#            selections["packages"].pop("rist-fftw", None)
-#            selections["packages"].pop("python", None)
-#            selections["packages"].pop("hdf5", None)
-#            selections["packages"].pop("netcdf-c", None)
-#            selections["packages"].pop("netcdf-fortran", None)
-#            selections["packages"].pop("parallel-netcdf", None)
-#            selections["packages"].pop("cmake", None)
-#            selections["packages"].pop("llvm", None)
+        #        if self.spec.satisfies("compiler=gcc"):
+        #            selections["packages"].pop("fujitsu-fftw", None)
+        #            selections["packages"].pop("fujitsu-ssl2", None)
+        #            selections["packages"].pop("fujitsu-mpi", None)
+        #            selections["packages"].pop("rist-fftw", None)
+        #            selections["packages"].pop("python", None)
+        #            selections["packages"].pop("hdf5", None)
+        #            selections["packages"].pop("netcdf-c", None)
+        #            selections["packages"].pop("netcdf-fortran", None)
+        #            selections["packages"].pop("parallel-netcdf", None)
+        #            selections["packages"].pop("cmake", None)
+        #            selections["packages"].pop("llvm", None)
 
         return selections
 
@@ -631,15 +694,15 @@ class RikenFugaku(System):
                         "gcc@14.3.0 languages:=c,c++,fortran",
                         "/vol0500/share/ra250029/spack/opt/spack/a64fx/gcc-14.3.0",
                         {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
-#                        env={
-#                            "set": {
-#                                "OPAL_PREFIX": "/vol0004/apps/oss/mpigcc/fjmpi-gcc12"
-#                            },
-#                            "append_path": {
-#                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.42/lib64"
-#                            },
-#                        },
-#                        flags={"ldflags": "-lelf -ldl"},
+                        #                        env={
+                        #                            "set": {
+                        #                                "OPAL_PREFIX": "/vol0004/apps/oss/mpigcc/fjmpi-gcc12"
+                        #                            },
+                        #                            "append_path": {
+                        #                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.42/lib64"
+                        #                            },
+                        #                        },
+                        #                        flags={"ldflags": "-lelf -ldl"},
                     )
                 ],
             )

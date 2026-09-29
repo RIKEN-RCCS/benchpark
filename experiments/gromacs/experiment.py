@@ -58,8 +58,8 @@ class Gromacs(
         npme = "0"
 
         if self.spec.satisfies("+openmp"):
-#            self.set_environment_variable("OMP_PROC_BIND", "close")
-#            self.set_environment_variable("OMP_PLACES", "cores")
+            #            self.set_environment_variable("OMP_PROC_BIND", "close")
+            #            self.set_environment_variable("OMP_PLACES", "cores")
             self.add_experiment_variable("n_threads_per_proc", 4, True)
             self.add_experiment_variable("n_nodes", 2, True)
             self.add_experiment_variable("n_ranks", 16, True)

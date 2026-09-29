@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import glob
-from spack_repo.builtin.build_systems.makefile import MakefilePackage
+import os
+
 from spack.package import *
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 
 class ScaleLetkf(MakefilePackage):
     """SCALE (Scalable Computing for Advanced Library and Environment) is

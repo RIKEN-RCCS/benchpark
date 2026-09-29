@@ -402,7 +402,12 @@ class RikenRikyu(System):
                 ompi_version = "4.1.9"
 
         if self.spec.satisfies("compiler=nvhpc"):
-            if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+            if (
+                str(nvhpc_version) == "26.9"
+                or str(nvhpc_version) == "26.5"
+                or str(nvhpc_version) == "26.3"
+                or str(nvhpc_version) == "25.11"
+            ):
                 selections["packages"] |= {
                     "openmpi": {
                         "externals": [
@@ -419,12 +424,12 @@ class RikenRikyu(System):
                     "externals": [
                         {
                             "spec": f"openmpi@{ompi_version}",
-                            "prefix": f"/shared/mpi/openmpi/4.1.8_ubuntu",
+                            "prefix": "/shared/mpi/openmpi/4.1.8_ubuntu",
                         },
                     ],
                 },
             }
-        if  self.spec.satisfies("compiler=nvhpc"):
+        if self.spec.satisfies("compiler=nvhpc"):
             selections["packages"] |= self.cuda_config()["packages"]
 
         return selections
@@ -432,7 +437,12 @@ class RikenRikyu(System):
     def cuda_config(self):
         nvhpc_version = self.nvhpc_version
         cuda_version = self.cuda_version
-        if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+        if (
+            str(nvhpc_version) == "26.9"
+            or str(nvhpc_version) == "26.5"
+            or str(nvhpc_version) == "26.3"
+            or str(nvhpc_version) == "25.11"
+        ):
             return {
                 "packages": {
                     "cuda": {
@@ -510,7 +520,12 @@ class RikenRikyu(System):
             return merge_dicts(cuda_cfg, gcc_cfg)
         if self.spec.satisfies("compiler=nvhpc"):
             nvhpc_version = self.nvhpc_version
-            if str(nvhpc_version) == "26.9" or str(nvhpc_version) == "26.5" or str(nvhpc_version) == "26.3" or str(nvhpc_version) == "25.11":
+            if (
+                str(nvhpc_version) == "26.9"
+                or str(nvhpc_version) == "26.5"
+                or str(nvhpc_version) == "26.3"
+                or str(nvhpc_version) == "25.11"
+            ):
                 return compiler_section_for(
                     "nvhpc",
                     [

@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import sys
+
 from ramble.appkit import *
+
 
 class Genesis(ExecutableApplication):
     name = "GENESIS"
