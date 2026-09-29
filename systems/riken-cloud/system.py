@@ -678,14 +678,6 @@ class RikenCloud(System):
                         }
                     ]
                 },
-                "bzip2": {
-                    "externals": [
-                        {
-                            "spec": "bzip2@1.0.8",
-                            "prefix": "/usr",
-                        }
-                    ]
-                },
                 "bison": {
                     "externals": [
                         {
