@@ -14,7 +14,7 @@ class SalmonTddft(ExecutableApplication):
 
     tags = ['mpi']
 
-    if 'cloud.r-ccs.riken.jp' in os.environ['HOSTNAME']:
+    if 'cloud.r-ccs.riken.jp' in os.environ.get('HOSTNAME', ''):
         url = 'file:///lvs0/dne1/rccs-nghpcadu/CX_input/SALMON/SALMON.tar.gz'
 
         exec_pp = '{preprocess} cp {input_path}/* .'

@@ -247,6 +247,7 @@ def command(args):
     repos_cfg = benchpark.config.configuration().repos
 
     pkg_str = ""
+    spack_env_cmd = ""
     if "spack" in pkg_manager and args.spack:
         # Things that are not applied:
         # - the benchpark package repository
@@ -303,21 +304,19 @@ export SPACK_DISABLE_LOCAL_CONFIG=1
                 f"config --scope=site add \"config:build_stage:['{spack_build_stage}']\""
             )
 
-        # 
         # Special settings for using spack public instance in RCCS-cloud and FUGAKU.
         # This is only valid on RCCS-cloud and FUGAKU.
         # It will be ignored in other environments.
         # If the following files do not exist, nothing will happen.
-        # 
-        spack_env = ["/lvs0/rccs-nghpcadu/share/spack_env/env/mirror.sh", \
-                     "/data1/rkp00015/share/spack_env/env/mirror.sh", \
-                     "/vol0500/share/ra250029/spack_env/env/mirror.sh"]
+        spack_env = [
+            "/lvs0/rccs-nghpcadu/share/spack_env/env/mirror.sh",
+            "/data1/rkp00015/share/spack_env/env/mirror.sh",
+            "/vol0500/share/ra250029/spack_env/env/mirror.sh",
+        ]
         for src in spack_env:
             if os.path.exists(src):
                 spack_env_cmd = src
                 break
-            else:
-                spack_env_cmd = ""
 
         pkg_str = f"""\
 export SPACK_USER_CACHE_PATH={spack_user_cache_path}
