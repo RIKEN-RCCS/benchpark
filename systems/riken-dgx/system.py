@@ -27,7 +27,7 @@ class RikenDgx(System):
             "sys_gpus_per_node": 1,
             "sys_mem_per_node_GB": 128,
             "system_site": "rccs",
-            "queue": "ng-dgx-3h",
+            "queue": "ng-dgx-s",
             "hardware_key": str(hardware_descriptions)
             + "/NVIDIA-cortex-GB10-Ethernet/hardware_description.yaml",
         },
@@ -214,19 +214,27 @@ class RikenDgx(System):
                         }
                     ]
                 },
-                "libtool": {
+                "libevent": {
                     "externals": [
                         {
-                            "spec": "libtool@2.4.7",
-                            "prefix": "/usr",
+                            "spec": "libevent@2.1.12",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libevent-2.1.12",
                         }
                     ]
                 },
                 "libiconv": {
                     "externals": [
                         {
-                            "spec": "libiconv@2.39",
-                            "prefix": "/usr",
+                            "spec": "libiconv@1.18",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libiconv-1.18",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                            "spec": "libtool@2.4.7",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925/libtool-2.4.7",
                         }
                     ]
                 },
@@ -413,7 +421,7 @@ class RikenDgx(System):
                     "openmpi": {
                         "buildable": True,
                         "version": ["4.1.7"],
-                        "variants": "+cuda+cxx cuda_arch=100 fabrics=ucx schedulers=slurm",
+                        "variants": "+cuda+cxx cuda_arch=121 fabrics=ucx schedulers=slurm",
                     },
                 }
             }
@@ -467,8 +475,22 @@ class RikenDgx(System):
                 [
                     compiler_def(
                         f"nvhpc@{self.nvhpc_version}",
-                        f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers",
-                        {"c": "nvc", "cxx": "nvc++", "fortran": "nvfortran"},
+                        # The SDK root, not .../compilers. spack's nvhpc
+                        # package appends Linux_<arch>/<version>/compilers
+                        # when locating libblas and liblapack, so a deeper
+                        # prefix resolves to a path that does not exist and
+                        # dependents receive an empty library list. The
+                        # compiler drivers are given as absolute paths,
+                        # since compiler_def joins bare names to the prefix.
+                        "/opt/nvidia/hpc_sdk",
+                        {
+                            lang: f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers/bin/{exe}"
+                            for lang, exe in (
+                                ("c", "nvc"),
+                                ("cxx", "nvc++"),
+                                ("fortran", "nvfortran"),
+                            )
+                        },
                         extra_rpaths=[
                             f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/lib64",
                         ],
@@ -483,8 +505,8 @@ class RikenDgx(System):
 
     def system_specific_variables(self):
         return {
-            "cuda_arch": "100",
-            "queue": "ng-dgx-3h",
+            "cuda_arch": "121",
+            "queue": "ng-dgx-s",
             "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
         }
 

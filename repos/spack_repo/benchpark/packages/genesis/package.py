@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from spack.package import *
 from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
@@ -38,13 +39,30 @@ class Genesis(AutotoolsPackage):
         "2.0.3", submodules=False, tag="v2.0.3", commit="6989e0b24470e374ea343b2b7b685aca87909571"
     )
 
+    patch("fix-nvtx-include.patch", when="+cuda")
+    patch("fix-nvtx-include.patch", when="+gpu")
+
     variant("mpi", default=True, description="Build with MPI.")
     variant("openmp", default=True, description="Build with OpenMP enabled.")
     variant("lapack", default=True, description="Build with LAPACK enabled.")
-    variant("gpu", default=False, description="Build with GPGPU enabled.")
-    variant("precision", description="Build with selected precision.", default="double", values=("double", "mixed", "single", "large_int"), multi=False)
+    variant("precision", description="Build with selected precision.", default="double", values=("double", "mixed", "single"), multi=False)
     variant("simd", description="Build with SIMD width.", default="auto", values=("auto", "MIC-AVX512", "CORE-AVX512", "CORE-AVX2"), multi=False)
     variant("debug", description="Set Debug level", default="0", values=("0", "1", "2", "3", "4"), multi=False)
+
+    variant("gpu", default=False, description="Build with GPGPU enabled.")
+    variant("cuda", default=False, description="Enable CUDA support")
+    variant("cuda_arch", default="none", description="CUDA architecture", values=("none", "90", "100", "120", "121"), multi=False)
+
+    depends_on("cuda", when="+cuda")
+    depends_on("cuda", when="+gpu")
+    depends_on("cuda@12:", when="cuda_arch=90")
+    depends_on("cuda@12.8:", when="cuda_arch=100")
+    depends_on("cuda@12.8:", when="cuda_arch=120")
+    depends_on("cuda@12.8:", when="cuda_arch=121")
+    conflicts("cuda_arch=90", when="~cuda ~gpu")
+    conflicts("cuda_arch=100", when="~cuda ~gpu")
+    conflicts("cuda_arch=120", when="~cuda ~gpu")
+    conflicts("cuda_arch=121", when="~cuda ~gpu")
 
     # Has Fortran but I didn't see c/c++ code
     depends_on("c", type="build")
@@ -52,8 +70,14 @@ class Genesis(AutotoolsPackage):
     depends_on("fortran", type="build")
 
     depends_on("mpi", when="+mpi")
+    depends_on("blas", when="+lapack")
     depends_on("lapack", when="+lapack")
-    depends_on("cuda", when="+gpu")
+
+    patch("fj_compiler_2.0.0.patch", when="@2.0.0:2.1.3 %fj")
+    patch("fj_compiler_2.1.4.patch", when="@2.1.4:2.1.6 %fj")
+
+    def _with_cuda(self):
+        return self.spec.satisfies("+gpu") or self.spec.satisfies("+cuda")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
@@ -68,16 +92,56 @@ class Genesis(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = [f"--enable-{spec.variants['precision'].value}",
-                       f"--with-simd={spec.variants['simd'].value}"]
+        args = []
 
-        if int(spec.variants['debug'].value) > 0:
-            config_args.extend(f"--enable-debug={spec.variants['debug'].value}")
+        precision = spec.variants["precision"].value
+        args.append(f"--enable-{precision}")
 
-        config_args.extend(self.enable_or_disable("mpi"))
-        config_args.extend(self.enable_or_disable("openmp"))
-        config_args.extend(self.with_or_without("lapack"))
-        config_args.extend(self.enable_or_disable("gpu"))
+        simd = spec.variants["simd"].value
+        args.append(f"--with-simd={simd}")
+
+        debug_level = int(spec.variants['debug'].value) 
+        if debug_level > 0:
+            args.append(f"--enable-debug={debug_level}")
+
+        args.append("--enable-mpi" if "+mpi" in spec else "--disable-mpi")
+        args.append("--with-lapack" if "+lapack" in spec else "--without-lapack")
+
+        if self._with_cuda():
+            args.append("--enable-gpu")
+            args.append("--enable-openmp")
+            # Without --with-gpuarch, GENESIS's configure falls back to a
+            # hardcoded list of --generate-code flags starting at
+            # compute_60 (Pascal). Recent CUDA toolkits (13.x) have dropped
+            # compile-time support for compute_60, so that default cascade
+            # fails outright with "nvcc fatal: Unsupported gpu architecture
+            # 'compute_60'" regardless of which GPU we actually target.
+            # Pin it to exactly the architecture we're building for instead.
+            gpuarch_for_cuda_arch = {"90": "sm_90", "100": "sm_100", "120": "sm_120", "121": "sm_121"}
+            cuda_arch = spec.variants["cuda_arch"].value
+            if cuda_arch in gpuarch_for_cuda_arch:
+                args.append(f"--with-gpuarch={gpuarch_for_cuda_arch[cuda_arch]}")
+
+            # GENESIS's configure only auto-detects libcudart.so in a
+            # handful of hardcoded system paths (/usr/lib/x86_64-linux-gnu,
+            # /usr/local/cuda/lib64, /usr/lib64). None of these exist for a
+            # spack-installed cuda, so point it at the right directory
+            # explicitly, otherwise configure fails with:
+            #   "CUDA is not found, set --with-cuda or CUDA_LIB_PATH"
+            cuda_prefix = spec["cuda"].prefix
+            cuda_lib_candidates = [
+                join_path(cuda_prefix, "lib64"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "lib"),
+                join_path(cuda_prefix, "targets", "x86_64-linux", "lib"),
+                str(cuda_prefix),
+            ]
+            for cand in cuda_lib_candidates:
+                if os.path.isfile(join_path(cand, "libcudart.so")):
+                    args.append(f"--with-cuda={cand}")
+                    break
+        else:
+            args.append("--disable-gpu")
+            args.append("--enable-openmp" if "+openmp" in spec else "--disable-openmp")
 
         if "+mpi" in spec:
             env["CC"] = spec["mpi"].mpicc
@@ -99,26 +163,49 @@ class Genesis(AutotoolsPackage):
                 env["FPP"] = "/opt/FJSVxtclanga/tcsds-1.2.38/bin/../lib/fpp"
                 env["PPFLAGS"] = "-traditional-cpp -traditional"
         elif spec.satisfies("%fj"):
-            opt_flags = "-Kfast"
-            env["CFLAGS"] = f"{opt_flags}"
-            env["CXXFLAGS"] = f"{opt_flags}"
-            env["FCFLAGS"] = f"{opt_flags}"
-            env["F77FLAGS"] = f"{opt_flags}"
             if spec.target == "a64fx":
-                # Using same flags as the version installed outside benchpark
-                env["CFLAGS"] = "-Kfast -Kocl -Kswp"
-                env["FCFLAGS"] = "-Kocl -Kfast -Kopenmp -Nlst=t -Koptmsg=2"
-                env["LDFLAGS"] = "-SSL2BLAMP -Kparallel -Kopenmp -Nlibomp"
                 # if Lapack_libs is not specified, build fails when linking
                 env["LAPACK_LIBS"] = spec["lapack"].libs.ld_flags
-        elif spec.satisfies("%gcc"):
-            opt_flags = "-O3 -ffast-math"
-            env["CFLAGS"] = f"{opt_flags}"
-            env["CXXFLAGS"] = f"{opt_flags}"
-            env["FCFLAGS"] = f"{opt_flags} -ffree-line-length-none"
-            env["F77FLAGS"] = f"{opt_flags} -ffree-line-length-none"
+                args.append("--host=Fugaku")
 
-        if "+gpu" in spec:
-            config_args.extend(self.with_or_without("cuda", activation_value=spec["cuda"].prefix))
+        return args
 
-        return config_args
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        spec = self.spec
+
+        if self.spec.satisfies("+lapack"):
+            env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
+
+        if self._with_cuda() :
+            cuda_prefix = spec["cuda"].prefix
+
+            inc_dirs = [
+                join_path(cuda_prefix, "include"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "include"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "include", "nvtx3"),
+            ]
+            lib_dirs = [
+                join_path(cuda_prefix, "lib64"),
+                join_path(cuda_prefix, "targets", "sbsa-linux", "lib"),
+            ]
+
+            existing_inc_dirs = [d for d in inc_dirs if os.path.isdir(d)]
+            existing_lib_dirs = [d for d in lib_dirs if os.path.isdir(d)]
+
+            if existing_inc_dirs:
+                incflags = " ".join(f"-I{x}" for x in existing_inc_dirs)
+                env.append_flags("CPPFLAGS", incflags)
+
+            if existing_lib_dirs:
+                ldflags = " ".join(f"-L{x}" for x in existing_lib_dirs)
+                env.append_flags("LDFLAGS", ldflags)
+
+            # Note: GENESIS's configure.ac recomputes NVCCFLAG itself
+            # (NVCCFLAG="-c -g -O3 ${GENCODEFLAG} ...") and substitutes it
+            # straight into the Makefile, so setting the NVCCFLAG
+            # environment variable here has no effect on the actual build.
+            # The GPU architecture is selected via --with-gpuarch in
+            # configure_args() instead.
+
+            env.set("CUDA_HOME", str(cuda_prefix))
+            env.set("CUDA_PATH", str(cuda_prefix))

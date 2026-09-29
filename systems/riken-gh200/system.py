@@ -40,40 +40,49 @@ class RikenGh200(System):
         description="Which compiler to use",
     )
     variant(
+        "gcc",
+        default="11.5.0",
+        values=("11.5.0", "14.3.0", "15.2.0"),
+        description="GCC version",
+    )
+    variant(
         "cuda",
-        default="12.9",
-        values=("12.3", "12.4", "12.5", "12.6", "12.8", "12.9", "13.0", "13.1", "13.2"),
+        default="13.3",
+        values=("13.0", "13.1", "13.2", "13.3", "12.9", "12.6", "12.3"),
         description="CUDA version",
     )
     variant(
-        "nvhpc",
-        default="25.7",
-        values=("26.3", "25.9", "25.7", "24.9", "24.3"),
-        description="NVHPC version",
-    )
-    variant(
-        "gtl",
+        "cuda12",
         default=False,
         values=(True, False),
-        description="Use GTL-enabled MPI",
+        description="CUDA 12 series, ON/OFF",
+    )
+    variant(
+        "nvhpc",
+        default="26.3",
+        values=("26.5", "26.3", "25.9", "25.7", "25.1", "24.9", "24.3"),
+        description="NVHPC version",
     )
 
     def __init__(self, spec):
         super().__init__(spec)
         self.programming_models = [CudaSystem(), OpenMPCPUOnlySystem()]
         self.cuda_version = Version(self.spec.variants["cuda"][0])
-        self.gtl_flag = self.spec.variants["gtl"][0]
+        self.gcc_version = Version(self.spec.variants["gcc"][0])
+        self.cuda_flag = self.spec.variants["cuda12"][0]
         self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
-        if str(self.nvhpc_version) == "26.3":
-            self.cuda_version = "13.1"
-        if str(self.nvhpc_version) == "25.9":
-            self.cuda_version = "13.0"
-        if str(self.nvhpc_version) == "25.7":
-            self.cuda_version = "12.9"
-        if str(self.nvhpc_version) == "24.9":
-            self.cuda_version = "12.6"
-        if str(self.nvhpc_version) == "24.3":
-            self.cuda_version = "12.3"
+        nvhpc_cuda_version = {
+            "26.5": "13.2", "26.3": "13.1", "25.9": "13.0", "25.7": "12.9",
+            "25.1": "12.6", "24.9": "12.6", "24.3": "12.3"
+        }
+        if self.spec.satisfies("compiler=nvhpc"):
+            self.cuda_version = nvhpc_cuda_version.get(str(self.nvhpc_version), self.cuda_version)
+        else:
+            if str(self.cuda_version).split(".")[0] == "12":
+                if str(self.cuda_flag) == "False":
+                    print("\n CUDA 12 series has been deleted by the administrator.")
+                    print(" Changing to cuda@13.0 and continuing the process.\n")
+                    self.cuda_version = "13.0"
         self.scheduler = "slurm"
 
         attrs = self.id_to_resources.get("gh200")
@@ -85,11 +94,11 @@ class RikenGh200(System):
             "packages": {
                 "all": {
                     "providers": {
-                        "mpi": ["fujitsu-mpi", "openmpi", "mpich"],
-                        "blas": ["fujitsu-ssl2", "openblas"],
-                        "lapack": ["fujitsu-ssl2", "openblas"],
-                        "scalapack": ["fujitsu-ssl2", "netlib-scalapack"],
-                        "fftw-api": ["fujitsu-fftw", "fftw", "rist-fftw"],
+                        "mpi": ["openmpi", "mpich"],
+                        "blas": ["openblas"],
+                        "lapack": ["openblas"],
+                        "scalapack": ["netlib-scalapack"],
+                        "fftw-api": ["fftw", "rist-fftw"],
                     },
                     "permissions": {"write": "group"},
                 },
@@ -221,11 +230,11 @@ class RikenGh200(System):
                         }
                     ]
                 },
-                "libtool": {
+                "libevent": {
                     "externals": [
                         {
-                            "spec": "libtool@2.4.6",
-                            "prefix": "/usr",
+                            "spec": "libevent@2.1.12",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libevent-2.1.12",
                         }
                     ]
                 },
@@ -233,7 +242,15 @@ class RikenGh200(System):
                     "externals": [
                         {
                             "spec": "libiconv@1.18",
-                            "prefix": "/usr",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libiconv-1.18",
+                        }
+                    ]
+                },
+                "libtool": {
+                    "externals": [
+                        {
+                            "spec": "libtool@2.4.7",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/libtool-2.4.7",
                         }
                     ]
                 },
@@ -356,11 +373,24 @@ class RikenGh200(System):
                 "openmpi": {
                     "externals": [
                         {
-                            "spec": "openmpi@4.1.7",
-                            "prefix": "/usr/mpi/gcc/openmpi-4.1.7rc1",
-                            "extra_attributes": {
-                                "ldflags": "-L/usr/mpi/gcc/openmpi-4.1.7rc1/lib64 -lmpi"
-                            },
+                            "spec": "openmpi@4.1.8",
+                            "prefix": "/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/openmpi-4.1.8",
+                        },
+                    ],
+                },
+            }
+        else:
+            ompi_version = "4.1.7a1"
+            if str(self.nvhpc_version) == "25.9" or str(self.nvhpc_version) == "26.3":
+                ompi_version = "4.1.9a1"
+            if str(self.nvhpc_version) == "26.5":
+                ompi_version = "5.0.10rc2"
+            selections["packages"] |= {
+                "openmpi": {
+                    "externals": [
+                        {
+                            "spec": f"openmpi@{ompi_version}",
+                            "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/comm_libs/{self.cuda_version}/hpcx/latest/ompi",
                         },
                     ],
                 },
@@ -380,63 +410,9 @@ class RikenGh200(System):
                             {
                                 "spec": f"cuda@{cuda_version}",
                                 "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/cuda/{cuda_version}",
-                                "modules": [
-                                    "system/qc-gh200",
-                                    f"nvhpc/{self.nvhpc_version}",
-                                ],
                             }
                         ],
                         "buildable": False,
-                    },
-                    "curand": {
-                        "externals": [
-                            {
-                                "spec": f"curand@{cuda_version}",
-                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
-                            }
-                        ],
-                        "buildable": False,
-                    },
-                    "cusparse": {
-                        "externals": [
-                            {
-                                "spec": f"cusparse@{cuda_version}",
-                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
-                            }
-                        ],
-                        "buildable": False,
-                    },
-                    "cublas": {
-                        "externals": [
-                            {
-                                "spec": f"cublas@{cuda_version}",
-                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
-                            }
-                        ],
-                        "buildable": False,
-                    },
-                    "cusolver": {
-                        "externals": [
-                            {
-                                "spec": f"cusolver@{cuda_version}",
-                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
-                            }
-                        ],
-                        "buildable": False,
-                    },
-                    "cufft": {
-                        "externals": [
-                            {
-                                "spec": f"cufft@{cuda_version}",
-                                "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/{cuda_version}",
-                            }
-                        ],
-                        "buildable": False,
-                    },
-                    "openmpi": {
-                        "buildable": True,
-                        "version": ["4.1.7"],
-                        "variants": "+cuda+cxx cuda_arch=90 fabrics=ucx schedulers=slurm",
                     },
                 }
             }
@@ -454,27 +430,58 @@ class RikenGh200(System):
         }
 
     def compute_compilers_section(self):
-        gcc_cfg = compiler_section_for(
-            "gcc",
-            [
-                compiler_def(
-                    "gcc@11.5.0 languages:=c,c++,fortran",
-                    "/usr/",
-                    {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
-                )
-            ],
-        )
-        if self.spec.satisfies("compiler=cuda"):
-            cuda_cfg = compiler_section_for(
-                "cuda",
+        if str(self.gcc_version) == "11.5.0":
+            gcc_cfg = compiler_section_for(
+                "gcc",
                 [
                     compiler_def(
-                        f"cuda@{self.cuda_version}",
-                        f"/usr/local/cuda-{self.cuda_version}",
-                        {"c": "nvcc", "cxx": "nvcc"},
+                        "gcc@11.5.0 languages:=c,c++,fortran",
+                        "/usr/",
+                        {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
                     )
                 ],
             )
+        else:
+            gcc_cfg = compiler_section_for(
+                "gcc",
+                [
+                    compiler_def(
+                        f"gcc@{self.gcc_version} languages:=c,c++,fortran",
+                        f"/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/gcc-{self.gcc_version}",
+                        {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
+                    )
+                ],
+            )
+
+        if self.spec.satisfies("compiler=cuda"):
+            if str(self.cuda_version).split(".")[0] == "12":
+                if str(self.cuda_version) == "12.9":
+                    cuda_version = "12.9.1"
+                if str(self.cuda_version) == "12.6":
+                    cuda_version = "12.6.3"
+                if str(self.cuda_version) == "12.3":
+                    cuda_version = "12.3.2"
+                cuda_cfg = compiler_section_for(
+                    "cuda",
+                    [
+                        compiler_def(
+                            f"cuda@{cuda_version}",
+                            f"/lvs0/rccs-nghpcadu/share/spack/opt/spack/neoverse_v2/cuda-{cuda_version}",
+                            {"c": "nvcc", "cxx": "nvcc"},
+                        )
+                    ],
+                )
+            else:
+                cuda_cfg = compiler_section_for(
+                    "cuda",
+                    [
+                        compiler_def(
+                            f"cuda@{self.cuda_version}",
+                            f"/usr/local/cuda-{self.cuda_version}",
+                            {"c": "nvcc", "cxx": "nvcc"},
+                        )
+                    ],
+                )
             return merge_dicts(cuda_cfg, gcc_cfg)
         if self.spec.satisfies("compiler=nvhpc"):
             return compiler_section_for(
@@ -482,14 +489,24 @@ class RikenGh200(System):
                 [
                     compiler_def(
                         f"nvhpc@{self.nvhpc_version}",
-                        f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers",
-                        {"c": "nvc", "cxx": "nvc++", "fortran": "nvfortran"},
+                        # The SDK root, not .../compilers. spack's nvhpc
+                        # package appends Linux_<arch>/<version>/compilers
+                        # when locating libblas and liblapack, so a deeper
+                        # prefix resolves to a path that does not exist and
+                        # dependents receive an empty library list. The
+                        # compiler drivers are given as absolute paths,
+                        # since compiler_def joins bare names to the prefix.
+                        "/opt/nvidia/hpc_sdk",
+                        {
+                            lang: f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/compilers/bin/{exe}"
+                            for lang, exe in (
+                                ("c", "nvc"),
+                                ("cxx", "nvc++"),
+                                ("fortran", "nvfortran"),
+                            )
+                        },
                         extra_rpaths=[
                             f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/math_libs/lib64",
-                        ],
-                        modules=[
-                            "system/qc-gh200",
-                            f"nvhpc/{self.nvhpc_version}",
                         ],
                     )
                 ],
