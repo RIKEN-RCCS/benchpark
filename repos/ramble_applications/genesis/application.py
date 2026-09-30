@@ -9,7 +9,7 @@ from ramble.appkit import *
 
 
 class Genesis(ExecutableApplication):
-    name = "GENESIS"
+    name = "genesis"
 
     tags = ['molecular-dynamics', 'mpi']
 
