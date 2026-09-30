@@ -341,6 +341,10 @@ class Allocation(BasicModifier):
 
         launch_cmd = "srun" if self._usage_mode == "standard" else self._usage_mode
 
+        if v.n_threads_per_proc and int(v.n_threads_per_proc) > 1:
+            srun_opts.append(f"-c {v.n_threads_per_proc}")
+            sbatch_opts.append(f"-c {v.n_threads_per_proc}")
+
         if v.n_ranks:
             if self._usage_mode == "torchrun-hpc":
                 srun_opts.append(f"-n {v.n_ranks_per_node}")
