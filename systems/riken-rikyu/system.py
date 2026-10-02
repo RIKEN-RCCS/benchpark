@@ -26,6 +26,8 @@ class RikenRikyu(System):
             "sys_cores_per_node": 144,
             "sys_gpus_per_node": 4,
             "sys_mem_per_node_GB": 960,
+            # Site job filter: at most 32 CPUs may be requested per GPU.
+            "sys_max_cores_per_gpu": 32,
             "system_site": "rccs",
             "hardware_key": str(hardware_descriptions)
             + "/NVIDIA-neoverse-RIKYU-Infiniband/hardware_description.yaml",

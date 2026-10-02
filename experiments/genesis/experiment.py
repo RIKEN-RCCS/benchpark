@@ -57,12 +57,23 @@ class Genesis(
         self.add_experiment_variable("n_resources", [str(n_resources)])
         self.add_experiment_variable("n_ranks", "{n_resources}")
 
-        if self.spec.satisfies("+openmp"):
-            self.add_experiment_variable("n_nodes", "1", True)
+        if self.spec.satisfies("backend=gpu"):
+            n_nodes = 1
+            system = self.system_spec.system
+            n_gpus = n_nodes * int(system.sys_gpus_per_node)
+            n_cores = int(system.sys_cores_per_node)
+            # Some sites limit the CPUs a job may request per GPU (e.g.
+            # RIKYU: 32 CPUs per GPU); stay within that limit.
+            max_cores_per_gpu = getattr(system, "sys_max_cores_per_gpu", None)
+            if max_cores_per_gpu:
+                n_cores = min(n_cores, int(max_cores_per_gpu) * n_gpus)
+            self.add_experiment_variable("n_nodes", str(n_nodes), True)
+            # Request the GPUs from the scheduler (adds --gpus to sbatch/srun).
+            self.add_experiment_variable("n_gpus", str(n_gpus), True)
             self.add_experiment_variable(
-                "n_threads_per_proc", ["{sys_cores_per_node} // {n_ranks}"]
+                "n_threads_per_proc", [str(max(n_cores // n_resources, 1))]
             )
-        elif self.spec.satisfies("backend=gpu"):
+        elif self.spec.satisfies("+openmp"):
             self.add_experiment_variable("n_nodes", "1", True)
             self.add_experiment_variable(
                 "n_threads_per_proc", ["{sys_cores_per_node} // {n_ranks}"]
