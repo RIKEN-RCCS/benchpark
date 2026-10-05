@@ -55,13 +55,13 @@ class RikenDgx(System):
     )
     variant(
         "cuda",
-        default="12.9",
+        default="13.1",
         values=("12.3", "12.4", "12.5", "12.6", "12.8", "12.9", "13.0", "13.1", "13.2"),
         description="CUDA version",
     )
     variant(
         "nvhpc",
-        default="26.9",
+        default="26.3",
         values=("26.9", "26.3", "25.9", "25.7", "24.9", "24.3"),
         description="NVHPC version",
     )
