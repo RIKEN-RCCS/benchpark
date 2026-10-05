@@ -389,16 +389,24 @@ class RikenGh200(System):
                 "openmpi": {
                     "externals": [
                         {
-                            "spec": f"openmpi@{ompi_version}",
+                            "spec": f"openmpi@{ompi_version}+cuda cuda_arch=90",
                             "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/comm_libs/{self.cuda_version}/hpcx/latest/ompi",
                         },
                     ],
+                    "buildable": False,
                 },
+                "mpi": {"buildable": False},
             }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
 
         return selections
+
+    def hpcx_dir(self):
+        return (
+            f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
+            f"/comm_libs/{self.cuda_version}/hpcx/latest"
+        )
 
     def cuda_config(self):
         cuda_version = self.cuda_version
@@ -514,10 +522,17 @@ class RikenGh200(System):
         return gcc_cfg
 
     def system_specific_variables(self):
+        pre_exec = "export SLURM_MPI_TYPE=pmix"
+        if self.spec.satisfies("compiler=nvhpc"):
+            pre_exec += (
+                f"; source {self.hpcx_dir()}/hpcx-init.sh && hpcx_load"
+                "; export OMPI_MCA_pml=ucx"
+                "; export PMIX_MCA_psec=native"
+            )
         return {
             "cuda_arch": "90",
             "queue": "qc-gh200",
-            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+            "pre_exec_cmds": pre_exec,
         }
 
     def compute_software_section(self):

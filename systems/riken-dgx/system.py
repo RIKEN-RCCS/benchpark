@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from packaging.version import Version
 
 from benchpark.cudasystem import CudaSystem
@@ -20,6 +21,19 @@ from benchpark.system import (
 class RikenDgx(System):
 
     maintainers("jdomke", "SBA0486")
+
+    nvhpc_bundles = {
+        "26.3": {
+            "cuda": "13.1",
+            "ompi": "4.1.9",
+            "ompi_dir": "comm_libs/13.1/hpcx/hpcx-2.25.1/ompi",
+        },
+        "26.9": {
+            "cuda": "13.3",
+            "ompi": "4.1.9",
+            "ompi_dir": "comm_libs/13.3/hpcx/hpcx-2.50/ompi4",
+        },
+    }
 
     id_to_resources = {
         "dgx": {
@@ -47,8 +61,8 @@ class RikenDgx(System):
     )
     variant(
         "nvhpc",
-        default="25.7",
-        values=("26.3", "25.9", "25.7", "24.9", "24.3"),
+        default="26.9",
+        values=("26.9", "26.3", "25.9", "25.7", "24.9", "24.3"),
         description="NVHPC version",
     )
     variant(
@@ -63,11 +77,21 @@ class RikenDgx(System):
         self.programming_models = [CudaSystem(), OpenMPCPUOnlySystem()]
         self.cuda_version = Version(self.spec.variants["cuda"][0])
         self.gtl_flag = self.spec.variants["gtl"][0]
-        self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
-        self.nvhpc_version = "26.3"
-        if str(self.nvhpc_version) == "26.3":
-            self.cuda_version = "13.1"
+        self.nvhpc_version = str(self.spec.variants["nvhpc"][0])
         self.scheduler = "slurm"
+
+        if self.spec.satisfies("compiler=nvhpc"):
+            bundle = self.nvhpc_bundles.get(self.nvhpc_version)
+            if bundle is None:
+                raise ValueError(
+                    f"nvhpc={self.nvhpc_version} is not configured for riken-dgx "
+                    f"(known: {', '.join(self.nvhpc_bundles)})"
+                )
+            self.cuda_version = bundle["cuda"]
+            self.ompi_version = bundle["ompi"]
+            self.hpcx_ompi_prefix = (
+                f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/{bundle['ompi_dir']}"
+            )
 
         attrs = self.id_to_resources.get("dgx")
         for k, v in attrs.items():
@@ -336,22 +360,20 @@ class RikenDgx(System):
                 },
             }
         }
-        if self.spec.satisfies("compiler=nvhpc"):
-            selections["packages"] |= {
-                "openmpi": {
-                    "externals": [
-                        {
-                            "spec": "openmpi@4.1.9",
-                            "prefix": "/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi",
-                            "extra_attributes": {
-                                "ldflags": "-L/opt/nvidia/hpc_sdk/Linux_aarch64/26.3/comm_libs/13.1/hpcx/hpcx-2.25.1/ompi -lmpi"
-                            },
-                        },
-                    ],
-                },
-            }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
+
+        if self.spec.satisfies("compiler=nvhpc"):
+            selections["packages"]["openmpi"] = {
+                "buildable": False,
+                "externals": [
+                    {
+                        "spec": f"openmpi@{self.ompi_version}+cuda~cxx~pmi "
+                                "cuda_arch=121 fabrics=ucx schedulers=slurm",
+                        "prefix": self.hpcx_ompi_prefix,
+                    }
+                ],
+            }
 
         return selections
 
@@ -417,11 +439,6 @@ class RikenDgx(System):
                             }
                         ],
                         "buildable": False,
-                    },
-                    "openmpi": {
-                        "buildable": True,
-                        "version": ["4.1.7"],
-                        "variants": "+cuda+cxx cuda_arch=121 fabrics=ucx schedulers=slurm",
                     },
                 }
             }
@@ -504,10 +521,20 @@ class RikenDgx(System):
         return gcc_cfg
 
     def system_specific_variables(self):
+        pre_exec = "export SLURM_MPI_TYPE=pmix"
+        if self.spec.satisfies("compiler=nvhpc"):
+            hpcx_root = os.path.dirname(self.hpcx_ompi_prefix)
+            libdirs = [f"{self.hpcx_ompi_prefix}/lib"] + [
+                f"{hpcx_root}/{d}/lib" for d in ("ucx", "ucc", "hcoll", "sharp")
+            ]
+            pre_exec += (
+                f"; export OPAL_PREFIX={self.hpcx_ompi_prefix}"
+                f"; export LD_LIBRARY_PATH={':'.join(libdirs)}:$LD_LIBRARY_PATH"
+            )
         return {
             "cuda_arch": "121",
             "queue": "ng-dgx-s",
-            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+            "pre_exec_cmds": pre_exec,
         }
 
     def compute_software_section(self):
