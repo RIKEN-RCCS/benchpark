@@ -106,7 +106,7 @@ class ScaleLetkf(
         if compiler == "gcc":
             spec_str += " %gcc ^openmpi %gcc"
         elif compiler == "nvhpc":
-            spec_str += " %nvhpc ^openmpi %nvhpc"
+            spec_str += " %nvhpc"
         elif compiler == "fj":
             spec_str += " %fj"
 
