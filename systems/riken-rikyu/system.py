@@ -544,9 +544,23 @@ class RikenRikyu(System):
         return gcc_cfg
 
     def system_specific_variables(self):
+        pre_exec = ["export SLURM_MPI_TYPE=pmix"]
+
+        nvhpc_hpcx_versions = ("26.9", "26.5", "26.3", "25.11")
+        if self.spec.satisfies("compiler=nvhpc") and str(self.nvhpc_version) in nvhpc_hpcx_versions:
+            hpcx = (
+                f"/shared/software/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
+                f"/comm_libs/{self.cuda_version}/hpcx/latest"
+            )
+            pre_exec += [
+                f"source {hpcx}/hpcx-init.sh",
+                "hpcx_load",
+                "export PMIX_MCA_psec=native",
+            ]
+
         return {
             "cuda_arch": "100",
-            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+            "pre_exec_cmds": "; ".join(pre_exec),
         }
 
     def compute_software_section(self):
