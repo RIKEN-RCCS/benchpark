@@ -28,10 +28,10 @@ ramble --workspace-dir ./workspace/rikyu/saxpy/workspace workspace analyze
 ```
 ---
 On the RIKYU environment, NVHPC is available for use.
-(available versions: 26.5, 26.3, 25.11, 25.7, and 24.9)
+(available versions: 26.9, 26.5, 26.3, and 25.11)
 ```bash
-benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← default is nvhpc@26.5
-benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc nvhpc=25.7  ← For switching to nvhpc@25.7
+benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← default is nvhpc@26.9
+benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc nvhpc=26.5  ← switch to nvhpc@26.5
 ```
 ---
 __Additional Information__ \

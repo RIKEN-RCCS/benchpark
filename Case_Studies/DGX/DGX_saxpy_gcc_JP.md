@@ -42,10 +42,10 @@ ramble --workspace-dir ./workspace/dgx/saxpy/workspace on
 ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace analyze
 ```
 ---
-DGX では、nvhpcを利用することができる。（バージョンは、26.5, 26.3 から選択できる）
+DGX では、nvhpcを利用することができる。（バージョンは、26.9, 26.5, 26.3 から選択できる）
 ```bash
-benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← デフォルトで nvhpc@26.5 が設定される
-benchpark system init --dest=dgx riken-dgx compiler=nvhpc nvhpc=26.3  ← nvhpc@26.3 に変更する
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← デフォルトで nvhpc@26.9 が設定される
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc nvhpc=26.5  ← nvhpc@26.5 に変更する
 ```
 ---
 cloneおよびvenv作成は初回の1回のみ。venv作成後は、benchparkコマンドとrambleコマンドを繰り返し実行できる。\

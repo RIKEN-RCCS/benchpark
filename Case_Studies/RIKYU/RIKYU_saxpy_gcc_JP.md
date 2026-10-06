@@ -27,10 +27,10 @@ ramble --workspace-dir ./workspace/rikyu/saxpy/workspace on
 ramble --workspace-dir ./workspace/rikyu/saxpy/workspace workspace analyze
 ```
 ---
-RIKYU では、nvhpcを利用することができる。（バージョンは、26.5, 26,3, 25.11, 25.7, 24.9 から選択できる）
+RIKYU では、nvhpcを利用することができる。（バージョンは、26.9, 26.5, 26,3, 25.11 から選択できる）
 ```bash
-benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← デフォルトは nvhpc@26.5
-benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc nvhpc=25.7  ← nvhpc@25.7 に変更する
+benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← デフォルトは nvhpc@26.9
+benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc nvhpc=26.5  ← nvhpc@26.5 に変更する
 ```
 ---
 cloneおよびvenv作成は初回の1回のみ。venv作成後は、benchparkコマンドとrambleコマンドを繰り返し実行できる。

@@ -43,10 +43,10 @@ ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace analyze
 ```
 ---
 On the DGX environment, NVHPC is available for use.
-(available versions: 26.5 and 26.3)
+(available versions: 26.9, 26.5 and 26.3)
 ```bash
-benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← default is nvhpc@26.5
-benchpark system init --dest=dgx riken-dgx compiler=nvhpc  nvhpc=26.3← default is nvhpc@26.3
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← default is nvhpc@26.9
+benchpark system init --dest=dgx riken-dgx compiler=nvhpc  nvhpc=26.5← switch to nvhpc@26.5
 ```
 ---
 __Additional Information__ \
