@@ -65,9 +65,9 @@ class ScaleLetkf(
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
             self.add_experiment_variable("omp_num_threads", ["1"], True)
-            self.add_experiment_variable("archives_path", "/lvs0/rccs-nghpcadu/CX_input/SCALE-LETKF", False)
-            self.add_experiment_variable("extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False)
-            self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
+            self.add_experiment_variable("archives_path", "/data1/rkp00015/CX_input/SCALE-LETKF", False)
+            self.add_experiment_variable("extra_batch_opts", "-N {n_nodes} -c {omp_num_threads} --gpus=4", False)
+            self.add_experiment_variable("extra_cmd_opts", "--gpus=4 --gpu-bind=map_gpu:0,1,2,3", False)
         else:
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
