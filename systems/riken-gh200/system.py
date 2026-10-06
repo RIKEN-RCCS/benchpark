@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import sys
 from packaging.version import Version
 
 from benchpark.cudasystem import CudaSystem
@@ -47,8 +48,8 @@ class RikenGh200(System):
     )
     variant(
         "cuda",
-        default="13.3",
-        values=("13.0", "13.1", "13.2", "13.3", "12.9", "12.6", "12.3"),
+        default="13.4",
+        values=("13.0", "13.2", "13.3", "13.4", "12.9", "12.6", "12.3"),
         description="CUDA version",
     )
     variant(
@@ -59,7 +60,7 @@ class RikenGh200(System):
     )
     variant(
         "nvhpc",
-        default="26.3",
+        default="26.5",
         values=("26.5", "26.3", "25.9", "25.7", "25.1", "24.9", "24.3"),
         description="NVHPC version",
     )
@@ -71,6 +72,7 @@ class RikenGh200(System):
         self.gcc_version = Version(self.spec.variants["gcc"][0])
         self.cuda_flag = self.spec.variants["cuda12"][0]
         self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
+        pnt = sys.argv[1]
         nvhpc_cuda_version = {
             "26.5": "13.2",
             "26.3": "13.1",
@@ -86,7 +88,7 @@ class RikenGh200(System):
             )
         else:
             if str(self.cuda_version).split(".")[0] == "12":
-                if str(self.cuda_flag) == "False":
+                if str(self.cuda_flag) == "False" and str(pnt) == "system":
                     print("\n CUDA 12 series has been deleted by the administrator.")
                     print(" Changing to cuda@13.0 and continuing the process.\n")
                     self.cuda_version = "13.0"
@@ -101,11 +103,11 @@ class RikenGh200(System):
             "packages": {
                 "all": {
                     "providers": {
-                        "mpi": ["openmpi", "mpich"],
+                        "mpi": ["openmpi"],
                         "blas": ["openblas"],
                         "lapack": ["openblas"],
                         "scalapack": ["netlib-scalapack"],
-                        "fftw-api": ["fftw", "rist-fftw"],
+                        "fftw-api": ["fftw"],
                     },
                     "permissions": {"write": "group"},
                 },
@@ -152,7 +154,7 @@ class RikenGh200(System):
                 "cmake": {
                     "externals": [
                         {
-                            "spec": "cmake@3.26.5",
+                            "spec": "cmake@3.31.8",
                             "prefix": "/usr",
                         }
                     ]
@@ -396,16 +398,24 @@ class RikenGh200(System):
                 "openmpi": {
                     "externals": [
                         {
-                            "spec": f"openmpi@{ompi_version}",
+                            "spec": f"openmpi@{ompi_version}+cuda cuda_arch=90",
                             "prefix": f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}/comm_libs/{self.cuda_version}/hpcx/latest/ompi",
                         },
                     ],
+                    "buildable": False,
                 },
+                "mpi": {"buildable": False},
             }
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
 
         return selections
+
+    def hpcx_dir(self):
+        return (
+            f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
+            f"/comm_libs/{self.cuda_version}/hpcx/latest"
+        )
 
     def cuda_config(self):
         cuda_version = self.cuda_version
@@ -521,10 +531,17 @@ class RikenGh200(System):
         return gcc_cfg
 
     def system_specific_variables(self):
+        pre_exec = "export SLURM_MPI_TYPE=pmix"
+        if self.spec.satisfies("compiler=nvhpc"):
+            pre_exec += (
+                f"; source {self.hpcx_dir()}/hpcx-init.sh && hpcx_load"
+                "; export OMPI_MCA_pml=ucx"
+                "; export PMIX_MCA_psec=native"
+            )
         return {
             "cuda_arch": "90",
             "queue": "qc-gh200",
-            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix",
+            "pre_exec_cmds": pre_exec,
         }
 
     def compute_software_section(self):
