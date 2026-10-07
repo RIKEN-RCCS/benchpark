@@ -70,6 +70,11 @@ class RikenDgx(System):
         values=(True, False),
         description="NVHPC 24 series, ON/OFF",
     )
+    variant(
+        "bank",
+        default="none",
+        description="Submit a job to a specific named bank",
+    )
 
     def __init__(self, spec):
         super().__init__(spec)

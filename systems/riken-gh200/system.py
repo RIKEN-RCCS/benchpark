@@ -64,6 +64,11 @@ class RikenGh200(System):
         values=("26.5", "26.3", "25.9", "25.7", "25.1", "24.9", "24.3"),
         description="NVHPC version",
     )
+    variant(
+        "bank",
+        default="none",
+        description="Submit a job to a specific named bank",
+    )
 
     def __init__(self, spec):
         super().__init__(spec)
