@@ -42,7 +42,10 @@ ramble --workspace-dir ./workspace/dgx/saxpy/workspace on
 ramble --workspace-dir ./workspace/dgx/saxpy/workspace workspace analyze
 ```
 ---
-DGX では、nvhpcを利用することができる。（バージョンは、26.9, 26.5, 26.3 から選択できる）
+コンパイラのバージョンは以下を指定することができる。[]はデフォルトで指定されるバージョン。
+gcc   : [13.3], 14.3, 15.2
+cuda  : 13.0, [13.2]
+nvhpc : 26.3, 26.5, [26.9]
 ```bash
 benchpark system init --dest=dgx riken-dgx compiler=nvhpc  ← デフォルトで nvhpc@26.9 が設定される
 benchpark system init --dest=dgx riken-dgx compiler=nvhpc nvhpc=26.5  ← nvhpc@26.5 に変更する

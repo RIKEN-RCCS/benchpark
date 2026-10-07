@@ -84,7 +84,8 @@ By replacing saxpy with your own application name, this procedure can be reused.
 * Example for compiling with GCC on GH200 \
 Specify in 'dest' the directory name where the settings will be stored (the directory name can be arbitrary). \
 'riken-gh200' refers to the directory containing system.py (for Fugaku, this becomes riken-fugaku). \
-In 'compiler', specify the compiler to be used (e.g., gcc, cuda, nvhpc, etc.).
+In 'compiler', specify the compiler to be used (e.g., gcc, cuda, nvhpc.).
+The compiler version can be selected. The available versions vary depending on the machine, so examples for each machine are provided below. (See the links at the end.)
 ```bash
 benchpark system init --dest=gh200 riken-gh200 compiler=gcc
 ```

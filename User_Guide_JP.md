@@ -84,7 +84,8 @@ benchpark/experiments/[apps]/experiment.py
 * gh200上で、gccでコンパイルする場合の事例 \
 'dest' に、設定を格納するディレクトリ名を指定する（ディレクトリ名は任意）\
 'riken-gh200' は、system.py を格納しているディレクトリ名（富岳の場合は、riken-fugaku になる）\
-'compiler' に、使用するコンパイラを指定する。（gcc, cuda, nvhpc などが指定できる）
+'compiler' に、使用するコンパイラを指定する。（gcc, cuda, nvhpc の3種が指定できる）
+また、コンパイラのバージョンを選択できる。選択可能なバージョンはマシンによって異なるため、各マシンの事例で示す。(末尾のリンクを参照)
 ```bash
 benchpark system init --dest=gh200 riken-gh200 compiler=gcc
 ```
