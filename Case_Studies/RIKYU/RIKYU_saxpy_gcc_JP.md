@@ -27,9 +27,9 @@ ramble --workspace-dir ./workspace/rikyu/saxpy/workspace on
 ramble --workspace-dir ./workspace/rikyu/saxpy/workspace workspace analyze
 ```
 ---
-コンパイラのバージョンは以下を指定することができる。[]はデフォルトで指定されるバージョン。
-gcc   : [13.3], 14.4, 15.3
-cuda  : 12.9, [13.2], 13.3, 13.4
+コンパイラのバージョンは以下を指定することができる。[]はデフォルトで指定されるバージョン。\
+gcc   : [13.3], 14.4, 15.3 \
+cuda  : 12.9, [13.2], 13.3, 13.4 \
 nvhpc : 25.11, 26.3, 26.5, [26.9]
 ```bash
 benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← デフォルトは nvhpc@26.9

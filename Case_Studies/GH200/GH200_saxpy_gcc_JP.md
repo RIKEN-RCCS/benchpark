@@ -42,9 +42,9 @@ ramble --workspace-dir ./workspace/gh200/saxpy/workspace on
 ramble --workspace-dir ./workspace/gh200/saxpy/workspace workspace analyze
 ```
 ---
-コンパイラのバージョンは以下を指定することができる。[]はデフォルトで指定されるバージョン。
-gcc   : [11.5], 14.3, 15.2
-cuda  : 13.0, 13.2, 13.3, [13.4]
+コンパイラのバージョンは以下を指定することができる。[]はデフォルトで指定されるバージョン。\
+gcc   : [11.5], 14.3, 15.2 \
+cuda  : 13.0, 13.2, 13.3, [13.4] \
 nvhpc : 24.3, 24.9, 25.7, 25.9, 26,3, [26.5]
 ```bash
 benchpark system init --dest=gh200 riken-gh200 compiler=nvhpc  ← デフォルトは nvhpc@26.5

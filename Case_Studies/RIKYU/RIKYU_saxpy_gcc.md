@@ -27,9 +27,9 @@ ramble --workspace-dir ./workspace/rikyu/saxpy/workspace on
 ramble --workspace-dir ./workspace/rikyu/saxpy/workspace workspace analyze
 ```
 ---
-The compiler version can be selected from the options below. The default version is indicated by brackets [].
-gcc   : [13.3], 14.4, 15.3
-cuda  : 12.9, [13.2], 13.3, 13.4
+The compiler version can be selected from the options below. The default version is indicated by brackets [].\
+gcc   : [13.3], 14.4, 15.3 \
+cuda  : 12.9, [13.2], 13.3, 13.4 \
 nvhpc : 25.11, 26.3, 26.5, [26.9]
 ```bash
 benchpark system init --dest=rikyu riken-rikyu compiler=nvhpc  ← default is nvhpc@26.9
