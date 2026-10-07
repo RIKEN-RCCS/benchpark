@@ -594,7 +594,7 @@ class RikenDgx(System):
             if str(self.nvhpc_version).split(".")[0] == "26":
                 libdirs = [f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
                            f"/comm_libs/{self.cuda_version}/hpcx/latest/{d}/lib" 
-                           for d in ("ompi", "ucx", "ucc", "hcoll", "sharp")
+                           for d in (ompi_dir, "ucx", "ucc", "hcoll", "sharp")
                 ]
                 pre_exec += (
                     f"; export OPAL_PREFIX=/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
@@ -605,7 +605,7 @@ class RikenDgx(System):
                 libdirs = [f"/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925"
                            f"/nvhpc-{self.nvhpc_version}/Linux_aarch64/{self.nvhpc_version}"
                            f"/comm_libs/{self.cuda_version}/hpcx/latest/{d}/lib"
-                           for d in ("ompi", "ucx", "ucc", "hcoll", "sharp")
+                           for d in (ompi_dir, "ucx", "ucc", "hcoll", "sharp")
                 ]
                 pre_exec += (
                     f"; export OPAL_PREFIX=/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925"
