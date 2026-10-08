@@ -106,6 +106,7 @@ class RikenRikyu(System):
                 if str(self.nvhpc_flag) == "False" and str(pnt) == "system":
                     print("\n NVHPC@26.9 or 26.5 or 26.3 or 25.11 available.")
                     print(" Changing to nvhpc@26.3 and continuing the process.\n")
+                if str(self.nvhpc_flag) == "False":
                     self.nvhpc_version = "26.3"
             self.cuda_version = nvhpc_cuda_version.get(
                 str(self.nvhpc_version), self.cuda_version
@@ -118,6 +119,7 @@ class RikenRikyu(System):
                 if str(self.cuda_flag) == "False" and str(pnt) == "system":
                     print("\n CUDA@13.4 or 13.3 or 13.2 or 12.9 available.")
                     print(" Changing to cuda@12.9 and continuing the process.\n")
+                if str(self.cuda_flag) == "False":
                     self.cuda_version = "12.9"
             self.cuda_version = cuda_cuda_version.get(
                 str(self.cuda_version), self.cuda_version

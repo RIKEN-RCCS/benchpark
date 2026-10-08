@@ -96,6 +96,7 @@ class RikenGh200(System):
                 if str(self.cuda_flag) == "False" and str(pnt) == "system":
                     print("\n CUDA 12 series has been deleted by the administrator.")
                     print(" Changing to cuda@13.0 and continuing the process.\n")
+                if str(self.cuda_flag) == "False":
                     self.cuda_version = "13.0"
         self.scheduler = "slurm"
 

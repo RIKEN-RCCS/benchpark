@@ -98,6 +98,7 @@ class RikenDgx(System):
                 if str(self.nvhpc_flag) == "False" and str(pnt) == "system":
                     print("\n NVHPC@26.9 or 26.5 or 26.3 available.")
                     print(" Changing to nvhpc@26.3 and continuing the process.\n")
+                if str(self.nvhpc_flag) == "False":
                     self.nvhpc_version = "26.3"
             self.cuda_version = nvhpc_cuda_version.get(
                 str(self.nvhpc_version), self.cuda_version
@@ -107,6 +108,7 @@ class RikenDgx(System):
                 if str(self.cuda_flag) == "False" and str(pnt) == "system":
                     print("\n CUDA 12 series has been deleted by the administrator.")
                     print(" Changing to cuda@13.0 and continuing the process.\n")
+                if str(self.cuda_flag) == "False":
                     self.cuda_version = "13.0"
         self.scheduler = "slurm"
 
@@ -594,7 +596,7 @@ class RikenDgx(System):
             if str(self.nvhpc_version).split(".")[0] == "26":
                 libdirs = [f"/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
                            f"/comm_libs/{self.cuda_version}/hpcx/latest/{d}/lib" 
-                           for d in ("ompi", "ucx", "ucc", "hcoll", "sharp")
+                           for d in (f"{ompi_dir}", "ucx", "ucc", "hcoll", "sharp")
                 ]
                 pre_exec += (
                     f"; export OPAL_PREFIX=/opt/nvidia/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
@@ -605,7 +607,7 @@ class RikenDgx(System):
                 libdirs = [f"/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925"
                            f"/nvhpc-{self.nvhpc_version}/Linux_aarch64/{self.nvhpc_version}"
                            f"/comm_libs/{self.cuda_version}/hpcx/latest/{d}/lib"
-                           for d in ("ompi", "ucx", "ucc", "hcoll", "sharp")
+                           for d in (f"{ompi_dir}", "ucx", "ucc", "hcoll", "sharp")
                 ]
                 pre_exec += (
                     f"; export OPAL_PREFIX=/lvs0/rccs-nghpcadu/share/spack/opt/spack/cortex_x925"
