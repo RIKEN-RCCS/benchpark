@@ -284,81 +284,343 @@ _SOURCE_SUFFIXES = (
 
 
 class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
-    """HeCBench is a collection of heterogeneous computing benchmarks written
-    in CUDA, HIP, SYCL and OpenMP target offloading, used to study performance,
-    portability and productivity across GPU programming models.
+    """HeCBench heterogeneous computing benchmark suite.
 
-    Benchpark treats the whole collection as a single application: one Spack
-    install builds every benchmark of the selected programming model, and one
-    run of `hecbench-run` executes the suite and reports a figure of merit per
-    benchmark plus suite-level aggregates.
+    `benchmark=<name>` builds a single benchmark (babelstream, softmax,
+    nbody, wmma), each driven by its own experiment (hecbench.softmax, ...).
+
+    `benchmark=suite` builds many benchmarks of one programming model (CUDA,
+    HIP, SYCL or OpenMP target offloading) and installs `hecbench-run`, which
+    executes them as one suite and reports a figure of merit per benchmark
+    plus suite-level aggregates (experiment hecbench.suite).
     """
 
-    tags = ["benchmark"]
-    # The upstream repository. RIKEN-RCCS/HeCBench is a fork of it that
-    # carries no commits of its own; 2026.08.16 is an upstream commit.
     homepage = "https://github.com/ORNL/HeCBench"
     git = "https://github.com/ORNL/HeCBench.git"
+    tags = ["benchmark"]
 
     maintainers("ando")
 
     license("BSD-3-Clause")
 
     version("master", branch="master")
-    version("2026.10.28", commit="098d5971289940e2750def6ea4f67c40523353e1")
-    version("2026.08.16", commit="06d24631a6f977ba8d3ba053073471ac9bd77b7a")
+    version(
+        "2026-09-25",
+        commit="8f7cf72937d9d24e73f29287e89a3c22d9eb5591",
+        preferred=True,
+    )
+    version("2026-08-13", commit="f9540404573a2be7ad1d1ee4b3106fd064825fa8")
+    # Versions the suite is pinned to by hecbench.suite.
+    version("2026-10-28", commit="098d5971289940e2750def6ea4f67c40523353e1")
+    version("2026-08-16", commit="06d24631a6f977ba8d3ba053073471ac9bd77b7a")
+
+    patch("select-benchmark.patch", when="@2026-08-13 ~mpi")
+    patch("find-hipcc.patch", when="@2026-08-13 ~mpi")
+    patch("caliper-instrumentation.patch", when="@2026-08-13 +caliper")
+    patch("mpi-replicas.patch", when="@2026-08-13 +mpi")
 
     # Six result patterns in benchmarks.yaml no longer match what the
     # programs print (aobench, all-pairs-distance, black-scholes, chi2,
-    # gelu, knn), so they finish but are reported as "result pattern not
-    # found". Upstream master still carries the old patterns. Apply the fix
-    # to the fixed commits until it is merged upstream, then move the
+    # gelu, knn), so the suite reports them as "result pattern not found".
+    # Upstream master still carries the old patterns. Apply the fix to the
+    # suite's fixed versions until it is merged upstream, then move the
     # default to a commit that contains it and drop the patch. master is
-    # left alone, since the patch would stop applying once merged. See
-    # RIKEN-RCCS/benchpark#35.
-    patch("stale-test-regex.patch", when="@2026.08.16:2026.10.28")
+    # left alone, since the patch would stop applying once merged. Only the
+    # suite reads these patterns. See RIKEN-RCCS/benchpark#35.
+    for _v in ("2026-08-16", "2026-10-28"):
+        patch("stale-test-regex.patch", when=f"@={_v} benchmark=suite")
 
     variant(
-        "openmp",
-        default=False,
-        description="Build the OpenMP target-offload flavour of the benchmarks",
-    )
-    variant(
-        "sycl",
-        default=False,
-        description="Build the SYCL flavour of the benchmarks",
+        "benchmark",
+        default="babelstream",
+        values=("babelstream", "softmax", "nbody", "wmma", "suite"),
+        multi=False,
+        description="HeCBench benchmark to build, or 'suite' for many "
+        "benchmarks of one programming model run by hecbench-run",
     )
     variant(
         "benchmarks",
         default="runnable",
         values=("smoke", "runnable", "all"),
         multi=False,
+        when="benchmark=suite",
         description="Which part of the suite to build: 'smoke' for a small "
         "representative set, 'runnable' for every benchmark Benchpark can "
         "measure (those with run arguments and a result pattern), or 'all' for "
         "every benchmark of the selected programming model",
     )
+    variant(
+        "openmp",
+        default=False,
+        when="benchmark=suite",
+        description="Build the OpenMP target-offload flavour of the suite",
+    )
+    variant(
+        "sycl",
+        default=False,
+        when="benchmark=suite",
+        description="Build the SYCL flavour of the suite",
+    )
+    variant(
+        "caliper",
+        default=False,
+        description="Instrument softmax, nbody, or wmma with Caliper",
+    )
+    variant(
+        "mpi",
+        default=False,
+        description="Run each MPI rank as an independent benchmark replica",
+    )
+    variant(
+        "cuda_arch",
+        default="none",
+        values=("none",) + CudaPackage.cuda_arch_values,
+        multi=False,
+        sticky=True,
+        when="+cuda",
+        description="CUDA architecture",
+    )
+    variant(
+        "amdgpu_target",
+        default="none",
+        values=("none",) + ROCmPackage.amdgpu_targets,
+        multi=False,
+        sticky=True,
+        when="+rocm",
+        description="AMD GPU architecture",
+    )
 
+    # +openmp and +sycl exist only for the suite, so a single benchmark is
+    # still limited to +cuda or +rocm.
     requires(
         "+cuda",
         "+rocm",
         "+sycl",
         "+openmp",
         policy="one_of",
-        msg="exactly one HeCBench programming model must be selected: "
-        "+cuda, +rocm (HIP), +sycl or +openmp (target offload)",
+        msg="Select exactly one programming model: +cuda or +rocm, or for "
+        "benchmark=suite also +sycl or +openmp",
+    )
+    conflicts(
+        "cuda_arch=none",
+        when="+cuda",
+        msg="CUDA builds require exactly one cuda_arch, e.g. cuda_arch=80",
+    )
+    conflicts(
+        "+caliper",
+        when="benchmark=babelstream",
+        msg="Caliper instrumentation is supported for softmax, nbody, and wmma",
+    )
+    conflicts(
+        "+mpi",
+        when="benchmark=babelstream",
+        msg="MPI replicas are supported for softmax, nbody, and wmma",
+    )
+    conflicts(
+        "+caliper",
+        when="benchmark=suite",
+        msg="Caliper instrumentation is supported for softmax, nbody, and wmma",
+    )
+    conflicts(
+        "+mpi",
+        when="benchmark=suite",
+        msg="the suite runs one process on one device; MPI replicas are "
+        "supported for softmax, nbody, and wmma",
+    )
+    conflicts(
+        "+caliper",
+        when="+mpi",
+        msg="Caliper support is paused and has not been validated with MPI replicas",
+    )
+    conflicts(
+        "+caliper",
+        when="@2026-09-25",
+        msg="Caliper instrumentation has not been rebased onto this HeCBench revision",
+    )
+    # The 2026-08-13 patches change HeCBench's CMake for single benchmarks;
+    # the suite has not been built on that revision.
+    conflicts(
+        "benchmark=suite",
+        when="@2026-08-13",
+        msg="benchmark=suite is not validated on 2026-08-13; use 2026-10-28",
     )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-    # a few benchmarks (axhelm, ccsd-trpdrv, ...) enable the Fortran language
-    depends_on("fortran", type="build")
+    # A few suite members (axhelm, ccsd-trpdrv, ...) enable Fortran.
+    depends_on("fortran", type="build", when="benchmark=suite")
     depends_on("cmake@3.21:", type="build")
-    depends_on("cuda", when="+cuda")
+    depends_on("mpi", when="+mpi")
+
+    # Minimum toolkit versions documented for the pinned HeCBench revision.
+    depends_on("hip@7.0:+rocm", when="+rocm")
+    depends_on("cuda@12.2:", when="+cuda")
+
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocwmma amdgpu_target={0}".format(arch),
+            when="benchmark=wmma +rocm amdgpu_target={0}".format(arch),
+        )
+        depends_on(
+            "caliper+rocm amdgpu_target={0}".format(arch),
+            when="+caliper +rocm amdgpu_target={0}".format(arch),
+        )
+
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "caliper+cuda cuda_arch={0}".format(arch),
+            when="+caliper +cuda cuda_arch={0}".format(arch),
+        )
+
+    @property
+    def is_suite(self):
+        return self.spec.satisfies("benchmark=suite")
+
+    def _single_value(self, name):
+        """Value of a single-valued variant, or None when unset or absent."""
+        variant = self.spec.variants.get(name)
+        if variant is None:
+            return None
+        value = variant.value
+        if isinstance(value, (tuple, list)):
+            value = value[0] if value else None
+        return None if value in (None, "none") else str(value)
+
+    # ------------------------------------------------------------------
+    # Dispatch between a single benchmark and the suite.
+    # ------------------------------------------------------------------
+
+    def cmake_args(self):
+        if self.is_suite:
+            return self._suite_cmake_args()
+        return self._single_cmake_args()
+
+    @property
+    def build_targets(self):
+        if self.is_suite:
+            return self._suite_build_targets()
+        return [self.selected_target()]
+
+    def build(self, spec, prefix):
+        """Build the selected targets.
+
+        The suite is a collection of independent programs, and in any given
+        environment a few of them will not compile (a missing optional
+        library, an upstream bug, an unsupported intrinsic). For the suite,
+        `make -k` keeps going so that one broken kernel does not cost the
+        whole suite; whatever was produced is installed, and `hecbench-run`
+        reports anything missing. A single benchmark must build.
+        """
+        targets = self.build_targets
+        with working_dir(self.build_directory):
+            if spec.satisfies("generator=ninja"):
+                ninja(*targets)
+            elif not self.is_suite:
+                make(*targets)
+            else:
+                try:
+                    make("-k", *targets)
+                except ProcessError:
+                    tty.warn(
+                        "hecbench: some benchmarks did not compile; continuing "
+                        "with the ones that did"
+                    )
+
+    def install(self, spec, prefix):
+        if self.is_suite:
+            return self._suite_install(spec, prefix)
+        return self._single_install(spec, prefix)
+
+    # ------------------------------------------------------------------
+    # A single benchmark (hecbench.babelstream, softmax, nbody, wmma).
+    # ------------------------------------------------------------------
+
+    def selected_benchmark(self):
+        return self.spec.variants["benchmark"].value
+
+    def selected_model(self):
+        if "+rocm" in self.spec:
+            return "hip"
+        if "+cuda" in self.spec:
+            return "cuda"
+        raise InstallError("No HeCBench programming model selected")
+
+    def selected_target(self):
+        return "{0}-{1}".format(self.selected_benchmark(), self.selected_model())
+
+    def _single_cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define("HECBENCH_ENABLE_CUDA", "+cuda" in spec),
+            self.define("HECBENCH_ENABLE_HIP", "+rocm" in spec),
+            self.define("HECBENCH_ENABLE_OPENMP", False),
+            self.define("HECBENCH_ENABLE_SYCL", False),
+            self.define("HECBENCH_ENABLE_TESTING", False),
+            self.define_from_variant("HECBENCH_ENABLE_CALIPER", "caliper"),
+            self.define_from_variant("HECBENCH_ENABLE_MPI_REPLICAS", "mpi"),
+            self.define("HECBENCH_BUILD_ALL_BENCHMARKS", False),
+            self.define("HECBENCH_BENCHMARK", self.selected_benchmark()),
+        ]
+
+        if "+rocm" in spec:
+            amdgpu_target = spec.variants["amdgpu_target"].value
+            args.extend(
+                [
+                    self.define("HECBENCH_HIP_ARCH", amdgpu_target),
+                    self.define("CMAKE_HIP_ARCHITECTURES", amdgpu_target),
+                    self.define(
+                        "CMAKE_HIP_COMPILER",
+                        join_path(spec["llvm-amdgpu"].prefix.bin, "amdclang++"),
+                    ),
+                    self.define(
+                        "HIP_COMPILER", join_path(spec["hip"].prefix.bin, "hipcc")
+                    ),
+                ]
+            )
+            if self.selected_benchmark() == "wmma":
+                # The real HIP compiler bypasses Spack's compiler-wrapper includes.
+                args.append(
+                    self.define(
+                        "CMAKE_HIP_FLAGS",
+                        "-I{0}".format(spec["rocwmma"].prefix.include),
+                    )
+                )
+
+        if "+cuda" in spec:
+            cuda_arch = spec.variants["cuda_arch"].value
+            args.extend(
+                [
+                    self.define("HECBENCH_CUDA_ARCH", cuda_arch),
+                    self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch),
+                    self.define(
+                        "CMAKE_CUDA_COMPILER",
+                        join_path(spec["cuda"].prefix.bin, "nvcc"),
+                    ),
+                    self.define("CUDAToolkit_ROOT", spec["cuda"].prefix),
+                ]
+            )
+
+        return args
+
+    def _single_install(self, spec, prefix):
+        model = self.selected_model()
+        benchmark = self.selected_benchmark()
+        built_binary = join_path(self.build_directory, "bin", model, benchmark)
+        if not os.path.isfile(built_binary):
+            raise InstallError(
+                "Expected HeCBench binary was not found: {0}".format(built_binary)
+            )
+
+        mkdirp(prefix.bin)
+        install(built_binary, join_path(prefix.bin, self.selected_target()))
+
+    # ------------------------------------------------------------------
+    # The suite (hecbench.suite).
+    # ------------------------------------------------------------------
 
     @property
     def model(self):
-        """HeCBench's name for the selected programming model."""
+        """HeCBench's name for the suite's programming model."""
         if self.spec.satisfies("+cuda"):
             return "cuda"
         if self.spec.satisfies("+rocm"):
@@ -486,6 +748,8 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
         list is rewritten to contain only what this checkout can actually
         build.
         """
+        if not self.is_suite:
+            return
         src_cmakelists = join_path(self.stage.source_path, "src", "CMakeLists.txt")
         with open(src_cmakelists) as handle:
             content = handle.read()
@@ -541,8 +805,7 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
             return [n for n in runnable if n in self.smoke_benchmarks]
         return runnable
 
-    @property
-    def build_targets(self):
+    def _suite_build_targets(self):
         # `benchmarks=all` builds CMake's default target, i.e. everything that
         # HeCBench registers for the selected programming model.
         if self.spec.satisfies("benchmarks=all"):
@@ -591,7 +854,7 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
             return candidate
         return None
 
-    def cmake_args(self):
+    def _suite_cmake_args(self):
         spec = self.spec
         model = self.model
         args = [
@@ -606,9 +869,9 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
         ]
 
         if model == "cuda":
-            cuda_arch = spec.variants["cuda_arch"].value
-            if cuda_arch and cuda_arch[0] != "none":
-                args.append(self.define("HECBENCH_CUDA_ARCH", cuda_arch[0]))
+            cuda_arch = self._single_value("cuda_arch")
+            if cuda_arch:
+                args.append(self.define("HECBENCH_CUDA_ARCH", cuda_arch))
             args.append(self.define("CUDAToolkit_ROOT", spec["cuda"].prefix))
             args.append(
                 self.define("CMAKE_CUDA_COMPILER", spec["cuda"].prefix.bin.nvcc)
@@ -642,16 +905,15 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("CMAKE_CUDA_HOST_COMPILER", host_cxx.path))
 
         elif model == "hip":
-            amdgpu_target = spec.variants["amdgpu_target"].value
-            if amdgpu_target and amdgpu_target[0] != "none":
-                args.append(self.define("HECBENCH_HIP_ARCH", amdgpu_target[0]))
+            amdgpu_target = self._single_value("amdgpu_target")
+            if amdgpu_target:
+                args.append(self.define("HECBENCH_HIP_ARCH", amdgpu_target))
 
         elif model == "omp":
             # nvhpc and amdclang need different offload flags; pick them from
             # the compiler that Spack selected for this build.
             if self._compiler_basename().startswith("nvc"):
-                cuda_arch = spec.variants["cuda_arch"].value
-                arch = cuda_arch[0] if cuda_arch and cuda_arch[0] != "none" else "80"
+                arch = self._single_value("cuda_arch") or "80"
                 args.append(self.define("HECBENCH_OMP_TARGET", "-mp=gpu"))
                 args.append(self.define("HECBENCH_OMP_TARGET_BACKEND", f"-gpu=cc{arch}"))
                 args.append(self.define("HECBENCH_OMP_FASTMATH", "-gpu=fastmath"))
@@ -660,25 +922,7 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    def build(self, spec, prefix):
-        """Build the selected benchmarks, tolerating individual failures.
-
-        HeCBench is a collection of independent programs, and in any given
-        environment a few of them will not compile (a missing optional library,
-        an upstream bug, an unsupported intrinsic).  `make -k` keeps going so
-        that one broken kernel does not cost the whole suite; whatever was
-        produced is installed, and `hecbench-run` reports anything missing.
-        """
-        with working_dir(self.build_directory):
-            try:
-                make("-k", *self.build_targets)
-            except ProcessError:
-                tty.warn(
-                    "hecbench: some benchmarks did not compile; continuing with "
-                    "the ones that did"
-                )
-
-    def install(self, spec, prefix):
+    def _suite_install(self, spec, prefix):
         """Install the benchmark binaries, their run directories and the driver.
 
         HeCBench's CMake project has no install rules of its own -- it does not
@@ -753,3 +997,103 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
                     shutil.copy2(path, join_path(dest_root, name))
                 except (OSError, shutil.Error):
                     continue
+
+    def test_selected_benchmark(self):
+        """Run the selected benchmark and verify its validation output."""
+        if self.is_suite:
+            # The suite validates each member when hecbench-run executes it.
+            return
+        executable = Executable(join_path(self.prefix.bin, self.selected_target()))
+        benchmark = self.selected_benchmark()
+
+        if benchmark == "babelstream":
+            output = executable(
+                "--arraysize", "1048576", "--numtimes", "2", output=str, error=str
+            )
+            results = re.findall(r"^(PASS|FAIL)$", output, re.MULTILINE)
+            if results != ["PASS", "PASS"]:
+                raise RuntimeError(
+                    "Expected BabelStream validation results ['PASS', 'PASS'], got {0}".format(
+                        results
+                    )
+                )
+            return
+
+        if benchmark == "softmax":
+            output = executable("8", "128", "1", "2", output=str, error=str)
+            if "+mpi" in self.spec:
+                results = re.findall(
+                    r"^OVERALL (PASS|FAIL) \([0-9]+/[0-9]+ replica ranks\)$",
+                    output,
+                    re.MULTILINE,
+                )
+                if results != ["PASS"]:
+                    raise RuntimeError(
+                        "Expected Softmax MPI result ['PASS'], got {0}".format(
+                            results
+                        )
+                    )
+                return
+            results = re.findall(r"^(PASS|FAIL)$", output, re.MULTILINE)
+            if results != ["PASS"]:
+                raise RuntimeError(
+                    "Expected Softmax validation results ['PASS'], got {0}".format(
+                        results
+                    )
+                )
+            return
+
+        if benchmark == "nbody":
+            output = executable("256", "3", output=str, error=str)
+            if "+mpi" in self.spec:
+                results = re.findall(
+                    r"^OVERALL (PASS|FAIL) \([0-9]+/[0-9]+ replica ranks\)$",
+                    output,
+                    re.MULTILINE,
+                )
+                if results != ["PASS"]:
+                    raise RuntimeError(
+                        "Expected N-body MPI result ['PASS'], got {0}".format(
+                            results
+                        )
+                    )
+                return
+            results = re.findall(r"^(PASS|FAIL)$", output, re.MULTILINE)
+            if results != ["PASS"]:
+                raise RuntimeError(
+                    "Expected N-body validation results ['PASS'], got {0}".format(
+                        results
+                    )
+                )
+            return
+
+        if benchmark == "wmma":
+            output = executable("0", "16", "16", "64", "1", "1", output=str, error=str)
+            if "+mpi" in self.spec:
+                results = re.findall(
+                    r"^OVERALL (PASSED|FAILED)"
+                    r"(?: \([0-9]+/[0-9]+ replica ranks\))?$",
+                    output,
+                    re.MULTILINE,
+                )
+                if results != ["PASSED"]:
+                    raise RuntimeError(
+                        "Expected WMMA MPI result ['PASSED'], got {0}".format(
+                            results
+                        )
+                    )
+                return
+            results = re.findall(
+                r"^(PASSED|FAILED|Unsupported size!)$", output, re.MULTILINE
+            )
+            if results != ["PASSED"]:
+                raise RuntimeError(
+                    "Expected WMMA validation results ['PASSED'], got {0}".format(
+                        results
+                    )
+                )
+            return
+
+        raise RuntimeError(
+            "No standalone test defined for benchmark '{0}'".format(benchmark)
+        )

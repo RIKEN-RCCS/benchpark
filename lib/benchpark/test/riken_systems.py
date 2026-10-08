@@ -57,7 +57,7 @@ def test_dgx_cuda_arch():
         ("riken-fugaku compiler=fj", "genesis+openmp"),
         ("riken-dgx compiler=nvhpc", "genesis+cuda backend=gpu"),
         ("riken-gh200 compiler=nvhpc", "gromacs+cuda"),
-        ("riken-dgx compiler=cuda", "hecbench+cuda"),
+        ("riken-dgx compiler=cuda", "hecbench.suite+cuda"),
         ("riken-fugaku compiler=fj", "mvmc"),
         ("riken-fugaku compiler=fj", "qws"),
         ("riken-fugaku compiler=fj", "salmon-tddft"),

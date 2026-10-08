@@ -9,9 +9,9 @@ from ramble.appkit import *
 from ramble.expander import Expander
 
 
-class Hecbench(ExecutableApplication):
-    """HeCBench, the heterogeneous computing benchmark suite, driven as a
-    single Benchpark application.
+class Suite(ExecutableApplication):
+    """HeCBench, the heterogeneous computing benchmark suite, driven as one
+    application (hecbench.suite).
 
     HeCBench is a collection of several hundred GPU kernels implemented in
     CUDA, HIP, SYCL and OpenMP target offloading.  Rather than exposing every
@@ -28,7 +28,7 @@ class Hecbench(ExecutableApplication):
         kernel time, throughput).
     """
 
-    name = "hecbench"
+    name = "suite"
 
     maintainers("ando")
 
@@ -44,6 +44,15 @@ class Hecbench(ExecutableApplication):
         "sub-node",
         "c++",
     )
+
+    # The application is named after its experiment (hecbench.suite), not
+    # after the package. Declare the package, as the other applications of
+    # this namespace do, so that the githash modifier queries spack for
+    # `hecbench` rather than for `suite`.
+    with when("package_manager_family=spack"):
+        software_spec("suite", pkg_spec="hecbench")
+
+    required_package("hecbench")
 
     executable(
         "execute",

@@ -44,8 +44,25 @@ def load_spack_json(raw):
 
 
 def spack_spec_json(name):
+    # Report the spec installed in the active environment. A bare
+    # `spack spec <name>` concretizes the name afresh, so it reports the
+    # package's preferred version and default variants rather than what the
+    # experiment built, e.g. hecbench@2026-09-25 benchmark=babelstream for a
+    # hecbench@2026-10-28 benchmark=suite install. Fall back to the name when
+    # the environment does not hold exactly one install of it.
+    query = name
+    try:
+        hashes = subprocess.check_output(
+            ["spack", "find", "--format", "{hash}", name],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).split()
+        if len(hashes) == 1:
+            query = f"/{hashes[0]}"
+    except subprocess.CalledProcessError:
+        pass
     raw = subprocess.check_output(
-        ["spack", "spec", "--json", name],
+        ["spack", "spec", "--json", query],
         text=True,
     )
     return load_spack_json(raw)["spec"]["nodes"]
@@ -62,10 +79,10 @@ def extract_package_hash(pkg_json):
     }
 
 
-def collect_package_info(application_name):
-    specs = spack_spec_json(application_name)
+def collect_package_info(package_name):
+    specs = spack_spec_json(package_name)
     specs_by_hash = {spec["hash"]: spec for spec in specs}
-    pkg_json = next(spec for spec in specs if spec["name"] == application_name)
+    pkg_json = next(spec for spec in specs if spec["name"] == package_name)
 
     application = extract_package_hash(pkg_json)
     dependencies = {}
@@ -83,7 +100,7 @@ if __name__ == "__main__":
 
     parser.add_argument("githash_metadata_file_path", type=str)
     parser.add_argument("repo_root", type=str)
-    parser.add_argument("application_name", type=str)
+    parser.add_argument("package_name", type=str)
 
     args = parser.parse_args()
 
@@ -93,7 +110,7 @@ if __name__ == "__main__":
             "benchpark_dependencies": extract_benchpark_dependencies_hash(
                 args.repo_root
             ),
-            "packages": collect_package_info(args.application_name),
+            "packages": collect_package_info(args.package_name),
         }
 
     except Exception as e:
