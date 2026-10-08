@@ -8,7 +8,7 @@ from benchpark.experiment import Experiment
 from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
 
-class Hecbench(
+class Suite(
     Experiment,
     ProgrammingModel(
         ProgrammingModelType.Cuda,
@@ -16,17 +16,19 @@ class Hecbench(
         ProgrammingModelType.Openmp,
     ),
 ):
-    """HeCBench run as a single Benchpark application.
+    """HeCBench run as a suite (hecbench.suite).
 
-    The whole HeCBench collection (several hundred GPU kernels in CUDA, HIP,
-    SYCL and OpenMP target offloading) is built and executed as one benchmark.
-    A single run walks the suite, reports a figure of merit for every
-    individual benchmark and aggregates them into suite level figures of merit.
+    Many HeCBench benchmarks of one programming model (CUDA, HIP or OpenMP
+    target offloading) are built by one install and executed by one run.
+    The run reports a figure of merit for every benchmark and aggregates them
+    into suite-level figures of merit. The single-benchmark experiments of
+    this namespace (hecbench.softmax, hecbench.nbody, hecbench.wmma) build
+    and run one benchmark each.
 
     Examples:
-        benchpark experiment init --dest=hecbench hecbench +cuda
-        benchpark experiment init --dest=hecbench hecbench +cuda benchmarks=all
-        benchpark experiment init --dest=hecbench hecbench +openmp
+        benchpark experiment init --dest=suite <system> hecbench.suite+cuda
+        benchpark experiment init --dest=suite <system> hecbench.suite+cuda benchmarks=smoke
+        benchpark experiment init --dest=suite <system> hecbench.suite+openmp
     """
 
     variant(
@@ -39,8 +41,8 @@ class Hecbench(
         "version",
         # A fixed commit, so that a result can be reproduced; master follows
         # upstream and changes the set of benchmarks built from day to day.
-        default="2026.10.28",
-        values=("master", "2026.10.28", "2026.08.16"),
+        default="2026-10-28",
+        values=("master", "2026-10-28", "2026-08-16"),
         description="app version",
     )
 
@@ -74,6 +76,10 @@ class Hecbench(
     )
 
     maintainers("ando")
+
+    def __init__(self, spec):
+        super().__init__(spec)
+        self.name = "suite"
 
     # Number of benchmarks HeCBench currently provides run metadata for. It is
     # only used to express the problem size of the suite; the driver discovers
@@ -119,7 +125,9 @@ class Hecbench(
         )
 
     def compute_package_section(self):
-        spack_specs = f"benchmarks={self.spec.variants['benchmarks'][0]} "
+        spack_specs = (
+            f"benchmark=suite benchmarks={self.spec.variants['benchmarks'][0]} "
+        )
 
         self.add_package_spec(
             self.name,
