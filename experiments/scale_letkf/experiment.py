@@ -2,7 +2,6 @@ from benchpark.directives import variant
 from benchpark.experiment import Experiment
 from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
-
 class ScaleLetkf(
     Experiment,
     ProgrammingModel(
@@ -47,7 +46,7 @@ class ScaleLetkf(
             self.add_experiment_variable("processes_per_node", ["4"], True)
             self.add_experiment_variable("omp_num_threads", ["10"], True)
             self.add_experiment_variable(
-                "archives_path", "/vol0500/share/ra250029/CX_input/SCALE-LETKF", False
+                "archives_path", "/vol0500/share/ra250029/CX_input/SCALE-LETKF", False,
             )
             self.add_experiment_variable(
                 "extra_batch_opts",
@@ -157,7 +156,7 @@ class ScaleLetkf(
         if compiler == "gcc":
             spec_str += " %gcc ^openmpi %gcc"
         elif compiler == "nvhpc":
-            spec_str += " %nvhpc ^openmpi %nvhpc"
+            spec_str += " %nvhpc"
         elif compiler == "fj":
             spec_str += " %fj"
 

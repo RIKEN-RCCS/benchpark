@@ -71,6 +71,10 @@ class ScaleLetkf(MakefilePackage):
         nf_libs = nf_config("--flibs", output=str).strip()
         env.set("SCALE_NETCDF_LIBS", "{} {}".format(nc_libs, nf_libs))
 
+        # set PNETCDF
+        if self.spec.satisfies("%fj"):
+            env.set("SCALE_ENABLE_PNETCDF", "F")
+
         # set OPENMP/OPENACC
         if self.spec.satisfies("%nvhpc"):
             env.set("SCALE_ENABLE_OPENMP", "F")
