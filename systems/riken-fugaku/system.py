@@ -48,16 +48,16 @@ class RikenFugaku(System):
         default_comp = self.spec.variants["compiler"][0]
         if default_comp == "clang":
             comp_version = "clang@19.1.4"
-            mpi_prefix = "/opt/FJSVxtclanga/tcsds-mpi-1.2.42"
+            mpi_prefix = "/opt/FJSVxtclanga/tcsds-mpi-1.2.43"
             ssl2_prefix = "/vol0004/apps/oss/llvm-v19.1.4/compute_node"
         if default_comp == "fj":
-            comp_version = "fj@4.12.1"
-            mpi_prefix = "/opt/FJSVxtclanga/tcsds-mpi-1.2.42"
-            ssl2_prefix = "/opt/FJSVxtclanga/tcsds-ssl2-1.2.42"
+            comp_version = "fj@4.12.2"
+            mpi_prefix = "/opt/FJSVxtclanga/tcsds-mpi-1.2.43"
+            ssl2_prefix = "/opt/FJSVxtclanga/tcsds-ssl2-1.2.43"
         if default_comp == "gcc":
             comp_version = "gcc@13.2.0"
             mpi_prefix = "/vol0004/apps/oss/mpigcc/fjmpi-gcc12"
-            ssl2_prefix = "/opt/FJSVxtclanga/tcsds-ssl2-1.2.42"
+            ssl2_prefix = "/opt/FJSVxtclanga/tcsds-ssl2-1.2.43"
 
         if self.spec.satisfies("compiler=fj"):
             selections = {
@@ -65,23 +65,15 @@ class RikenFugaku(System):
                     "all": {
                         "compiler": ["llvm", "fj", "gcc"],
                         "providers": {
-                            "mpi": ["fujitsu-mpi", "openmpi", "mpich"],
+                            "mpi": ["fujitsu-mpi", "openmpi"],
                             "blas": ["fujitsu-ssl2", "openblas"],
                             "lapack": ["fujitsu-ssl2", "openblas"],
                             "scalapack": ["fujitsu-ssl2", "netlib-scalapack"],
-                            "fftw-api": ["fujitsu-fftw", "fftw", "rist-fftw"],
+                            "fftw-api": ["fujitsu-fftw", "fftw"],
                         },
                         "permissions": {"write": "group"},
                     },
                     "htslib": {"version": [1.12]},
-                    "python": {
-                        "externals": [
-                            {
-                                "spec": "python@3.13.5 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/python-3.13.5-i4a7ezlzx4tlrfsax7cdyhkosjvtieui",
-                            }
-                        ]
-                    },
                     "openssh": {"permissions": {"write": "user"}},
                     "fujitsu-mpi": {
                         "buildable": False,
@@ -100,85 +92,6 @@ class RikenFugaku(System):
                                 "spec": "fujitsu-ssl2@4.12.2 arch=linux-rhel8-a64fx %"
                                 f"{comp_version}",
                                 "prefix": f"{ssl2_prefix}",
-                            },
-                        ],
-                    },
-                    "fujitsu-fftw": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "fujitsu-fftw@1.1.0 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/fujitsu-fftw-1.1.0-ulkgolqodib66cssjbi3r7nugluvr4dz",
-                            },
-                        ],
-                    },
-                    "rist-fftw": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "rist-fftw@3.3.9-272-g63d6bd70 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/share/rist/fftw/gcc-10.3.0/3.3.9-272-g63d6bd70",
-                            }
-                        ],
-                    },
-                    "hdf5": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "hdf5@1.14.6 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/hdf5-1.14.6-mngsrojzjw54lchhyi4d3ujre3r55yef",
-                            },
-                        ],
-                    },
-                    "netcdf-c": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "netcdf-c@4.9.2 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/netcdf-c-4.9.2-c5fwcvrfkb4nngzgemslmtgzbpfquxxa",
-                            },
-                        ],
-                    },
-                    "netcdf-fortran": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "netcdf-fortran@4.6.1 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/netcdf-fortran-4.6.1-gixlbroio6toobrt7p2swyffq7lf2gve",
-                            },
-                        ],
-                    },
-                    "parallel-netcdf": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "parallel-netcdf@1.14.0 arch=linux-rhel8-a64fx %fj@4.12.1",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/parallel-netcdf-1.14.0-2fw7jh257x4pvrygnlgsgijb5akm7cbi",
-                            },
-                        ],
-                    },
-                    "llvm": {
-                        "buildable": False,
-                        "externals": [
-                            {
-                                "spec": "llvm@17.0.6 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/llvm-17.0.6-uvfnypl2kvxmqtzcgatd6lkbwze275z7",
-                            },
-                            {
-                                "spec": "llvm@18.1.8 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/llvm-18.1.8-snndzqtaphydbhtrgi5fvso633ialrpc",
-                            },
-                            {
-                                "spec": "llvm@19.1.7 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/llvm-19.1.7-jan3nmlf6x5d4yo3xytsh3lqqcumvjkg",
-                            },
-                            {
-                                "spec": "llvm@20.1.6 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/llvm-20.1.6-wedpjljljnnqd2j2pjvmept3mlikceeg",
-                            },
-                            {
-                                "spec": "llvm@22.1.0 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/r/OSS_CN/llvm-22.1.0/own_clangfx/clang-comp",
                             },
                         ],
                     },
@@ -212,18 +125,6 @@ class RikenFugaku(System):
                                 "spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx",
                                 "prefix": "/usr",
                             }
-                        ]
-                    },
-                    "cmake": {
-                        "externals": [
-                            {
-                                "spec": "cmake@3.31.8 arch=linux-rhel8-a64fx",
-                                "prefix": "/vol0004/apps/oss/spack-v1.0.1/opt/spack/linux-a64fx/cmake-3.31.8-t3bzvycgatdcyvg6ac43sil5bfsq5icg",
-                            },
-                            {
-                                "spec": "cmake@3.31.8 arch=linux-rhel8-a64fx",
-                                "prefix": "/usr",
-                            },
                         ]
                     },
                     "curl": {
@@ -645,18 +546,6 @@ class RikenFugaku(System):
                 "blas": {"require": ["fujitsu-ssl2"]},
                 "lapack": {"require": ["fujitsu-ssl2"]},
             }
-        #        if self.spec.satisfies("compiler=gcc"):
-        #            selections["packages"].pop("fujitsu-fftw", None)
-        #            selections["packages"].pop("fujitsu-ssl2", None)
-        #            selections["packages"].pop("fujitsu-mpi", None)
-        #            selections["packages"].pop("rist-fftw", None)
-        #            selections["packages"].pop("python", None)
-        #            selections["packages"].pop("hdf5", None)
-        #            selections["packages"].pop("netcdf-c", None)
-        #            selections["packages"].pop("netcdf-fortran", None)
-        #            selections["packages"].pop("parallel-netcdf", None)
-        #            selections["packages"].pop("cmake", None)
-        #            selections["packages"].pop("llvm", None)
 
         return selections
 
@@ -679,7 +568,7 @@ class RikenFugaku(System):
                         {"c": "clang", "cxx": "clang++", "fortran": "flang"},
                         env={
                             "append_path": {
-                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.42/lib64"
+                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.43/lib64"
                             }
                         },
                         # flags = maybe_flags
@@ -711,8 +600,8 @@ class RikenFugaku(System):
                 "fj",
                 [
                     compiler_def(
-                        "fj@4.12.1",
-                        "/opt/FJSVxtclanga/tcsds-1.2.42/",
+                        "fj@4.12.2",
+                        "/opt/FJSVxtclanga/tcsds-1.2.43/",
                         {"c": "fcc", "cxx": "FCC", "fortran": "frt"},
                         env={
                             "set": {
@@ -720,8 +609,8 @@ class RikenFugaku(System):
                                 "FCC_ENV": "-Nclang",
                             },
                             "prepend_path": {
-                                "PATH": "/opt/FJSVxtclanga/tcsds-1.2.42/bin",
-                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.42/lib64",
+                                "PATH": "/opt/FJSVxtclanga/tcsds-1.2.43/bin",
+                                "LD_LIBRARY_PATH": "/opt/FJSVxtclanga/tcsds-1.2.43/lib64",
                             },
                         },
                     )
