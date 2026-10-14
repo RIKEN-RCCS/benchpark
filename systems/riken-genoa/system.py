@@ -53,13 +53,17 @@ class RikenGenoa(System):
                     },
                     "permissions": {"write": "group"},
                 },
+                # The genoa nodes run Ubuntu 24.04 since the 2026-10 maintenance
+                # (Rocky 9 before). Everything below is the distribution's own,
+                # as found on the compute nodes: Open MPI 4.1.6 (built
+                # --with-slurm and against PMIx), gcc 13.3.0, and the tools.
                 "mpi": {
                     "externals": [
                         {
-                            "spec": "openmpi@4.1.1",
-                            "prefix": "/usr/lib64/openmpi",
+                            "spec": "openmpi@4.1.6",
+                            "prefix": "/usr",
                             "extra_attributes": {
-                                "ldflags": "-L/usr/lib64/openmpi/lib -lmpi"
+                                "ldflags": "-L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi"
                             },
                         },
                     ],
@@ -67,7 +71,7 @@ class RikenGenoa(System):
                 "pkgconf": {
                     "externals": [
                         {
-                            "spec": "pkgconf@1.7.3",
+                            "spec": "pkgconf@1.8.1",
                             "prefix": "/usr",
                         }
                     ]
@@ -75,7 +79,7 @@ class RikenGenoa(System):
                 "git": {
                     "externals": [
                         {
-                            "spec": "git@2.47.3",
+                            "spec": "git@2.43.0",
                             "prefix": "/usr",
                         }
                     ]
@@ -83,7 +87,7 @@ class RikenGenoa(System):
                 "cmake": {
                     "externals": [
                         {
-                            "spec": "cmake@3.26.5",
+                            "spec": "cmake@3.28.3",
                             "prefix": "/usr",
                         }
                     ]
@@ -91,7 +95,7 @@ class RikenGenoa(System):
                 "python": {
                     "externals": [
                         {
-                            "spec": "python@3.9.25",
+                            "spec": "python@3.12.3",
                             "prefix": "/usr",
                         }
                     ]
@@ -104,18 +108,10 @@ class RikenGenoa(System):
                         }
                     ]
                 },
-                "gettext": {
-                    "externals": [
-                        {
-                            "spec": "gettext@0.21",
-                            "prefix": "/usr",
-                        }
-                    ]
-                },
                 "gawk": {
                     "externals": [
                         {
-                            "spec": "gawk@5.1.0",
+                            "spec": "gawk@5.2.1",
                             "prefix": "/usr",
                         }
                     ]
@@ -123,7 +119,7 @@ class RikenGenoa(System):
                 "openssl": {
                     "externals": [
                         {
-                            "spec": "openssl@3.5.1",
+                            "spec": "openssl@3.0.13",
                             "prefix": "/usr",
                         }
                     ]
@@ -131,15 +127,7 @@ class RikenGenoa(System):
                 "bison": {
                     "externals": [
                         {
-                            "spec": "bison@3.7.4",
-                            "prefix": "/usr",
-                        }
-                    ]
-                },
-                "groff": {
-                    "externals": [
-                        {
-                            "spec": "groff@1.22.4",
+                            "spec": "bison@3.8.2",
                             "prefix": "/usr",
                         }
                     ]
@@ -147,7 +135,7 @@ class RikenGenoa(System):
                 "tar": {
                     "externals": [
                         {
-                            "spec": "tar@1.34",
+                            "spec": "tar@1.35",
                             "prefix": "/usr",
                         }
                     ]
@@ -155,7 +143,7 @@ class RikenGenoa(System):
                 "automake": {
                     "externals": [
                         {
-                            "spec": "automake@1.16.2",
+                            "spec": "automake@1.16.5",
                             "prefix": "/usr",
                         }
                     ]
@@ -179,7 +167,7 @@ class RikenGenoa(System):
                 "sed": {
                     "externals": [
                         {
-                            "spec": "sed@4.8",
+                            "spec": "sed@4.9",
                             "prefix": "/usr",
                         }
                     ]
@@ -187,7 +175,7 @@ class RikenGenoa(System):
                 "autoconf": {
                     "externals": [
                         {
-                            "spec": "autoconf@2.69",
+                            "spec": "autoconf@2.71",
                             "prefix": "/usr",
                         }
                     ]
@@ -195,7 +183,7 @@ class RikenGenoa(System):
                 "perl": {
                     "externals": [
                         {
-                            "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
+                            "spec": "perl@5.38.2~cpanm+opcode+open+shared+threads",
                             "prefix": "/usr",
                         }
                     ]
@@ -203,7 +191,7 @@ class RikenGenoa(System):
                 "curl": {
                     "externals": [
                         {
-                            "spec": "curl@7.76.1",
+                            "spec": "curl@8.5.0",
                             "prefix": "/usr",
                         }
                     ]
@@ -211,7 +199,7 @@ class RikenGenoa(System):
                 "libtool": {
                     "externals": [
                         {
-                            "spec": "libtool@2.4.6",
+                            "spec": "libtool@2.4.7",
                             "prefix": "/usr",
                         }
                     ]
@@ -219,7 +207,7 @@ class RikenGenoa(System):
                 "singularity": {
                     "externals": [
                         {
-                            "spec": "singularity@4.3.7",
+                            "spec": "singularity@4.1.1",
                             "prefix": "/usr",
                         }
                     ]
@@ -232,7 +220,7 @@ class RikenGenoa(System):
             "gcc",
             [
                 compiler_def(
-                    "gcc@11.5.0 languages:=c,c++,fortran",
+                    "gcc@13.3.0 languages:=c,c++,fortran",
                     "/usr/",
                     {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
                 )
