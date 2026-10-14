@@ -465,6 +465,21 @@ class RikenFugaku(System):
                             }
                         ]
                     },
+                    # The OS's own python 3.12 (python3.12 in /usr/bin on
+                    # both login and compute nodes since the 2026-10
+                    # maintenance). caliper needs a python to build, and
+                    # without an external spack builds python@3.14 with fj,
+                    # which fails: fj's clang accepts -mavx2 on A64FX, so
+                    # CPython compiles its AVX2 Blake2b code and stops on
+                    # Lib_IntVector_Intrinsics_vec256.
+                    "python": {
+                        "externals": [
+                            {
+                                "spec": "python@3.12.14 arch=linux-rhel8-a64fx",
+                                "prefix": "/usr",
+                            }
+                        ]
+                    },
                     "readline": {
                         "externals": [
                             {
