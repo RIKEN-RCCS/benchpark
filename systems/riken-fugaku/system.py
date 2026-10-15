@@ -33,6 +33,12 @@ class RikenFugaku(System):
         description="Which compiler to use",
     )
 
+    variant(
+        "group",
+        default="none",
+        description="Resource group to charge (pjsub -g)",
+    )
+
     def __init__(self, spec):
         super().__init__(spec)
         self.programming_models = [OpenMPCPUOnlySystem()]
@@ -635,10 +641,18 @@ class RikenFugaku(System):
         return cfg
 
     def system_specific_variables(self):
+        batch_opts = []
+        group = self.spec.variants["group"][0]
+        if group != "none":
+            batch_opts.append(f"-g {group}")
+        batch_opts.append(
+            '-x PJM_LLIO_GFSCACHE="/vol0002:/vol0003:/vol0004:/vol0005:/vol0006"'
+        )
+
         return {
             "queue": "small",
             "extra_cmd_opts": "-std-proc fjmpioutdir/bmexe\n",
-            "extra_batch_opts": '-x PJM_LLIO_GFSCACHE="/vol0002:/vol0003:/vol0004:/vol0005:/vol0006"\n',
+            "extra_batch_opts": " ".join(batch_opts) + "\n",
             # Standard output of a run reaches one of two locations,
             # depending on whether ramble constructs the launch line.
             #
