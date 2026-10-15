@@ -42,8 +42,8 @@ class RikenGh200(System):
     )
     variant(
         "gcc",
-        default="11.5.0",
-        values=("11.5.0", "14.3.0", "15.2.0"),
+        default="13.3.0",
+        values=("13.3.0", "14.3.0", "15.2.0"),
         description="GCC version",
     )
     variant(
@@ -60,8 +60,8 @@ class RikenGh200(System):
     )
     variant(
         "nvhpc",
-        default="26.5",
-        values=("26.5", "26.3", "25.9", "25.7", "25.1", "24.9", "24.3"),
+        default="26.9",
+        values=("26.9", "26.5", "26.3", "25.9", "25.7", "25.1", "24.9", "24.3"),
         description="NVHPC version",
     )
     variant(
@@ -79,6 +79,7 @@ class RikenGh200(System):
         self.nvhpc_version = Version(self.spec.variants["nvhpc"][0])
         pnt = sys.argv[1]
         nvhpc_cuda_version = {
+            "26.9": "13.3",
             "26.5": "13.2",
             "26.3": "13.1",
             "25.9": "13.0",
@@ -117,10 +118,13 @@ class RikenGh200(System):
                     },
                     "permissions": {"write": "group"},
                 },
+                # The qc-gh200 nodes run Ubuntu 24.04 since the 2026-10
+                # maintenance (Rocky 9 before); the /usr externals below are
+                # the Ubuntu packages found on them.
                 "autoconf": {
                     "externals": [
                         {
-                            "spec": "autoconf@2.69",
+                            "spec": "autoconf@2.71",
                             "prefix": "/usr",
                         }
                     ]
@@ -128,7 +132,7 @@ class RikenGh200(System):
                 "automake": {
                     "externals": [
                         {
-                            "spec": "automake@1.16.2",
+                            "spec": "automake@1.16.5",
                             "prefix": "/usr",
                         }
                     ]
@@ -136,7 +140,7 @@ class RikenGh200(System):
                 "binutils": {
                     "externals": [
                         {
-                            "spec": "binutils@2.35.2~gold~headers",
+                            "spec": "binutils@2.42~gold~headers",
                             "prefix": "/usr",
                         }
                     ]
@@ -144,7 +148,7 @@ class RikenGh200(System):
                 "bzip2": {
                     "externals": [
                         {
-                            "spec": "bzip2@1.0.6 arch=linux-rhel8-a64fx",
+                            "spec": "bzip2@1.0.8",
                             "prefix": "/usr",
                         }
                     ]
@@ -152,7 +156,7 @@ class RikenGh200(System):
                 "bison": {
                     "externals": [
                         {
-                            "spec": "bison@3.7.4",
+                            "spec": "bison@3.8.2",
                             "prefix": "/usr",
                         }
                     ]
@@ -160,7 +164,7 @@ class RikenGh200(System):
                 "cmake": {
                     "externals": [
                         {
-                            "spec": "cmake@3.31.8",
+                            "spec": "cmake@3.28.3",
                             "prefix": "/usr",
                         }
                     ]
@@ -168,7 +172,7 @@ class RikenGh200(System):
                 "coreutils": {
                     "externals": [
                         {
-                            "spec": "coreutils@8.32",
+                            "spec": "coreutils@9.4",
                             "prefix": "/usr",
                         }
                     ]
@@ -176,7 +180,7 @@ class RikenGh200(System):
                 "curl": {
                     "externals": [
                         {
-                            "spec": "curl@7.76.1+gssapi+ldap+nghttp2",
+                            "spec": "curl@8.5.0+gssapi+ldap+nghttp2",
                             "prefix": "/usr",
                         }
                     ]
@@ -184,7 +188,7 @@ class RikenGh200(System):
                 "diffutils": {
                     "externals": [
                         {
-                            "spec": "diffutils@3.7",
+                            "spec": "diffutils@3.10",
                             "prefix": "/usr",
                         }
                     ]
@@ -192,7 +196,7 @@ class RikenGh200(System):
                 "findutils": {
                     "externals": [
                         {
-                            "spec": "findutils@4.8.0",
+                            "spec": "findutils@4.9.0",
                             "prefix": "/usr",
                         }
                     ]
@@ -208,7 +212,7 @@ class RikenGh200(System):
                 "gawk": {
                     "externals": [
                         {
-                            "spec": "gawk@5.1.0",
+                            "spec": "gawk@5.2.1",
                             "prefix": "/usr",
                         }
                     ]
@@ -224,7 +228,7 @@ class RikenGh200(System):
                 "git": {
                     "externals": [
                         {
-                            "spec": "git@2.47.3~tcltk",
+                            "spec": "git@2.43.0~tcltk",
                             "prefix": "/usr",
                         }
                     ]
@@ -240,7 +244,7 @@ class RikenGh200(System):
                 "groff": {
                     "externals": [
                         {
-                            "spec": "groff@1.22.4",
+                            "spec": "groff@1.23.0",
                             "prefix": "/usr",
                         }
                     ]
@@ -280,7 +284,7 @@ class RikenGh200(System):
                 "openssh": {
                     "externals": [
                         {
-                            "spec": "openssh@8.7p1",
+                            "spec": "openssh@9.6p1",
                             "prefix": "/usr",
                         }
                     ]
@@ -288,7 +292,7 @@ class RikenGh200(System):
                 "openssl": {
                     "externals": [
                         {
-                            "spec": "openssl@3.2.2",
+                            "spec": "openssl@3.0.13",
                             "prefix": "/usr",
                         }
                     ]
@@ -296,23 +300,15 @@ class RikenGh200(System):
                 "perl": {
                     "externals": [
                         {
-                            "spec": "perl@5.32.1~cpanm+opcode+open+shared+threads",
+                            "spec": "perl@5.38.2~cpanm+opcode+open+shared+threads",
                             "prefix": "/usr",
                         }
                     ]
                 },
-                "pigz": {
-                    "externals": [
-                        {
-                            "spec": "pigz@2.8",
-                            "prefix": "/usr",
-                        }
-                    ],
-                },
                 "pkgconf": {
                     "externals": [
                         {
-                            "spec": "pkgconf@1.7.3",
+                            "spec": "pkgconf@1.8.1",
                             "prefix": "/usr",
                         }
                     ]
@@ -320,7 +316,7 @@ class RikenGh200(System):
                 "python": {
                     "externals": [
                         {
-                            "spec": "python@3.9.21+bz2+crypt+ctypes+dbm+lzma+pyexpat+pythoncmd+readline+sqlite3+ssl+tix+tkinter+uuid+zlib",
+                            "spec": "python@3.12.3",
                             "prefix": "/usr",
                         }
                     ]
@@ -328,15 +324,7 @@ class RikenGh200(System):
                 "sed": {
                     "externals": [
                         {
-                            "spec": "sed@4.8",
-                            "prefix": "/usr",
-                        }
-                    ]
-                },
-                "singularity": {
-                    "externals": [
-                        {
-                            "spec": "singularity@4.3.3",
+                            "spec": "sed@4.9",
                             "prefix": "/usr",
                         }
                     ]
@@ -352,7 +340,7 @@ class RikenGh200(System):
                 "tar": {
                     "externals": [
                         {
-                            "spec": "tar@1.34",
+                            "spec": "tar@1.35",
                             "prefix": "/usr",
                         }
                     ]
@@ -360,7 +348,7 @@ class RikenGh200(System):
                 "xz": {
                     "externals": [
                         {
-                            "spec": "xz@5.2.5",
+                            "spec": "xz@5.4.5",
                             "prefix": "/usr",
                         }
                     ]
@@ -368,7 +356,7 @@ class RikenGh200(System):
                 "zlib": {
                     "externals": [
                         {
-                            "spec": "zlib@1.2.11",
+                            "spec": "zlib@1.3",
                             "prefix": "/usr",
                         }
                     ]
@@ -376,7 +364,7 @@ class RikenGh200(System):
                 "zstd": {
                     "externals": [
                         {
-                            "spec": "zstd@5.2.5",
+                            "spec": "zstd@1.5.5",
                             "prefix": "/usr",
                         }
                     ]
@@ -398,7 +386,7 @@ class RikenGh200(System):
             ompi_version = "4.1.7a1"
             if str(self.nvhpc_version) == "25.9" or str(self.nvhpc_version) == "26.3":
                 ompi_version = "4.1.9a1"
-            if str(self.nvhpc_version) == "26.5":
+            if str(self.nvhpc_version) == "26.5" or str(self.nvhpc_version) == "26.9":
                 ompi_version = "5.0.10rc2"
             selections["packages"] |= {
                 "openmpi": {
@@ -453,12 +441,12 @@ class RikenGh200(System):
         }
 
     def compute_compilers_section(self):
-        if str(self.gcc_version) == "11.5.0":
+        if str(self.gcc_version) == "13.3.0":
             gcc_cfg = compiler_section_for(
                 "gcc",
                 [
                     compiler_def(
-                        "gcc@11.5.0 languages:=c,c++,fortran",
+                        "gcc@13.3.0 languages:=c,c++,fortran",
                         "/usr/",
                         {"c": "gcc", "cxx": "g++", "fortran": "gfortran"},
                     )
