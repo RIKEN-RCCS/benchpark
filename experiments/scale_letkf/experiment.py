@@ -48,11 +48,6 @@ class ScaleLetkf(
             self.add_experiment_variable(
                 "archives_path", "/vol0500/share/ra250029/CX_input/SCALE-LETKF", False,
             )
-            self.add_experiment_variable(
-                "extra_batch_opts",
-                "-g ra250029 -x PJM_LLIO_GFSCACHE=/vol0004:/vol0005",
-                False,
-            )
             tuning_cmds += "; export FORT90L=-Wl,-T; export PLE_MPI_STD_EMPTYFILE=off"
         elif system == "riken-fx700":
             self.add_experiment_variable("n_nodes", ["3"], True)
