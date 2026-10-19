@@ -69,11 +69,19 @@ class SalmonTddft(
             match cluster:
                 case "gh200":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
-                    self.add_experiment_variable(
-                        "preprocess",
-                        "module purge && module load system/qc-gh200 && module load nvhpc-hpcx-cuda12/25.7 && ",
-                        False,
-                    )
+                    # No module juggling, for the reason the dgx branch
+                    # below already has none: `module purge` runs in the
+                    # same shell as the run steps, so it replaces the
+                    # environment spack set up, and the binary then meets
+                    # an MPI it was not built against:
+                    #
+                    #     .../bin/salmon: symbol lookup error
+                    #     Exit code: 127
+                    #
+                    # salmon is built here against the MPI the system
+                    # provides to spack; loading nvhpc-hpcx on top of that
+                    # is what breaks it.
+                    self.add_experiment_variable("preprocess", "", False)
 
                 case "dgx":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
@@ -92,11 +100,12 @@ class SalmonTddft(
 
                 case "genoa":
                     self.add_experiment_variable("processes_per_node", ["1"], True)
-                    self.add_experiment_variable(
-                        "preprocess",
-                        "module purge && module load system/genoa && module load mpi/mpich-x86_64 && ",
-                        False,
-                    )
+                    # No modules: genoa runs Ubuntu 24.04 since the 2026-10
+                    # maintenance and has no `module` command, so the old
+                    # `module purge && module load ...` stopped the run
+                    # before the input was copied. The MPI is the system's,
+                    # declared to spack.
+                    self.add_experiment_variable("preprocess", "", False)
                     if self.spec.satisfies("+openmp"):
                         self.add_experiment_variable("omp_num_threads", ["48"], True)
 
