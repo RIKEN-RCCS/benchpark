@@ -37,6 +37,28 @@ class ScaleLetkf(MakefilePackage):
 
     patch("fj-own_compiler.patch", when="%fj", working_dir="scale")
 
+    def edit(self, spec, prefix):
+        # Workaround for NVIDIA HPC SDK Bug 6861191:
+        #   fort2 corrupts its heap at -O2 and above when compiling a CUDA Fortran
+        #   module with many !$acc kernels regions (mod_mkinit.F90).
+        #   NVIDIA's workaround is to compile the affected file with -O1.
+        #   -fast and -Mvect=assoc must be removed as well, otherwise nvfortran
+        #   reports "Switch -Mvect -acc -ta=acc forces -O2".
+        # Remove this once a fixed NVHPC release is available.
+        if spec.satisfies("%nvhpc"):
+            makefile = join_path("scale", "scale-rm", "src", "Makefile")
+            marker = "# NVIDIA HPC SDK Bug 6861191 workaround"
+            with open(makefile) as f:
+                already = marker in f.read()
+            if not already:
+                with open(makefile, "a") as f:
+                    f.write(
+                        "\n"
+                        f"{marker}\n"
+                        "MKINIT_FFLAGS := $(filter-out -fast -O% -Mvect%,$(FFLAGS)) -O1\n"
+                        "$(BUILD_DIR)/mod_mkinit.o: FFLAGS = $(MKINIT_FFLAGS)\n"
+                    )
+
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PREFIX", self.prefix)
         target_family = str(self.spec.target.family)
