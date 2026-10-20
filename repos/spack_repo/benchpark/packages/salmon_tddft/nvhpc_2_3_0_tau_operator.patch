@@ -1,0 +1,32 @@
+diff --git a/src/common/hamiltonian.f90 b/src/common/hamiltonian.f90
+index accb7ee..8110a9d 100644
+--- a/src/common/hamiltonian.f90
++++ b/src/common/hamiltonian.f90
+@@ -897,6 +897,9 @@ subroutine add_xc_tau_operator(htpsi,tpsi,info,mg,system,stencil,srg)
+   type(s_dft_system),         intent(in)    :: system
+   type(s_stencil),            intent(in)    :: stencil
+   type(s_sendrecv_grid),      intent(inout) :: srg
++#ifdef USE_OPENACC
++  call fail_tau_operator("support is unavailable for OpenACC builds")
++#else
+   !
+   integer :: im, ik, io, ispin, ix, iy, iz, c, d, n
+   real(8) :: kvec(3), kvec_u(3), Bmat(3,3), vt, cnab(4,3), rwc(3), rdivg
+@@ -912,9 +915,6 @@ subroutine add_xc_tau_operator(htpsi,tpsi,info,mg,system,stencil,srg)
+   real(8),    allocatable :: rwvec(:,:,:,:)         ! (grid, 3)                    no r-space division
+   real(8),    allocatable :: ruorb(:,:,:,:,:,:,:,:) ! (grid, nspin,io,ik,im, 3)    r-space division
+ 
+-#ifdef USE_OPENACC
+-  call fail_tau_operator("support is unavailable for OpenACC builds")
+-#endif
+   if (.not. system%xc_payload%use_tau_operator) return
+   if (.not. allocated(system%xc_payload%vtau%f)) then
+     call fail_tau_operator("payload is enabled without a vtau field")
+@@ -1183,6 +1183,7 @@ subroutine add_xc_tau_operator(htpsi,tpsi,info,mg,system,stencil,srg)
+   end do
+   end do
+   deallocate(gpsi,uorb)
++#endif
+ 
+ end subroutine add_xc_tau_operator
+ 

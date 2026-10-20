@@ -1,0 +1,18 @@
+--- a/src/xc/builtin_pz.f90
++++ b/src/xc/builtin_pz.f90
+@@ -33,7 +33,7 @@
+     ! if(flag_nlcc)rho_s = rho_s + 0.5d0*rho_nlcc
+     
+ #ifdef USE_OPENACC
+-!$acc kernels loop private(i,trho,e_xc,de_xc_drho)
++!$acc parallel loop private(i,trho,e_xc,de_xc_drho)
+ #else
+ !$omp parallel do private(i,trho,e_xc,de_xc_drho)
+ #endif
+@@ -46,5 +46,5 @@
+     enddo
+ #ifdef USE_OPENACC
+-!$acc end kernels
++!$acc end parallel loop
+ #endif
+     return

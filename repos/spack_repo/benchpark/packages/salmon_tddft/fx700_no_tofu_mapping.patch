@@ -1,0 +1,12 @@
+--- a/src/parallel/init_communicator.f90
++++ b/src/parallel/init_communicator.f90
+@@ -63,7 +63,8 @@
+ 
+ ! communicator r,o,k,ro,ko
+ #ifdef __FUJITSU
+-  call tofu_network_oriented_mapping(iret)
++  ! FX700 has no Tofu network; use the generic MPI rank mapping.
++  iret = -1
+   if (iret < 0) then
+     if (comm_is_root(info%id_rko)) then
+       print *, 'Requested process shape does not match Tofu network shape.'
