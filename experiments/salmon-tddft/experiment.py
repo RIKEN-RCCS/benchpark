@@ -46,7 +46,7 @@ class SalmonTddft(
         self.add_experiment_variable("processes_per_node", ["1"], True)
 
         input_urls = {
-            "riken-fugaku": "file:///vol0003/rccs-sdt/data/a01010/benchmark_data/SALMON.tar.gz",
+            "riken-fugaku": "file:///vol0500/share/ra250029/CX_input/SALMON/SALMON.tar.gz",
             "riken-rikyu": "file:///data1/rkp00015/CX_input/SALMON/SALMON.tar.gz",
             "riken-gh200": "file:///lvs0/dne1/rccs-nghpcadu/CX_input/SALMON/SALMON.tar.gz",
             "riken-dgx": "file:///lvs0/dne1/rccs-nghpcadu/CX_input/SALMON/SALMON.tar.gz",
