@@ -22,9 +22,10 @@ class Mvmc(ExecutableApplication):
         use_mpi=True,
     )
 
+    # Normalize the work proxy by 1e-9; FOM remains time / normalized work.
     executable(
         "compute-fom",
-        r"""bash -c "test -s output/zvo_CalcTimer.dat && python3 -c 'import sys; get=lambda key: int(next(line.split()[-1] for line in open(sys.argv[1]) if line.split() and line.split()[0] == key)); W=get(\"W\"); L=get(\"L\"); Wsub=get(\"Wsub\"); Lsub=get(\"Lsub\"); time=float(next(line.split()[-1] for line in open(sys.argv[2]) if \"All\" in line)); work=((Lsub*Wsub)*(L*W)+(L*W))**3; print(\"mvmc_fom %.17e\nmvmc_time %.10f\nmvmc_work %.17e\" % (time/work, time, work))' Hubbard.def output/zvo_CalcTimer.dat | tee mvmc_fom.dat" """,
+        r"""bash -c "test -s output/zvo_CalcTimer.dat && python3 -c 'import sys; get=lambda key: int(next(line.split()[-1] for line in open(sys.argv[1]) if line.split() and line.split()[0] == key)); W=get(\"W\"); L=get(\"L\"); Wsub=get(\"Wsub\"); Lsub=get(\"Lsub\"); time=float(next(line.split()[-1] for line in open(sys.argv[2]) if \"All\" in line)); work=((Lsub*Wsub)*(L*W)+(L*W))**3 * 1e-9; print(\"mvmc_fom %.17e\nmvmc_time %.10f\nmvmc_work %.17e\" % (time/work, time, work))' Hubbard.def output/zvo_CalcTimer.dat | tee mvmc_fom.dat" """,
         use_mpi=False,
     )
 
