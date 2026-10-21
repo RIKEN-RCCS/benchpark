@@ -10,7 +10,7 @@ class Mvmc(
     Experiment,
     ProgrammingModel(ProgrammingModelType.Mpionly),
 ):
-    """mVMC FermionHubbard benchmark on Fugaku."""
+    """mVMC FermionHubbard benchmark."""
 
     variant(
         "workload",
@@ -28,14 +28,35 @@ class Mvmc(
     maintainers("otsukay")
 
     def compute_applications_section(self):
-        # Run condition corresponding to the supplied Fugaku script:
-        #   12 nodes, 48 MPI processes, 12 OpenMP threads per MPI process.
-        #
         # The Spack recipe used for mVMC does not define an "openmp" variant,
         # so the Benchpark programming model is kept as MPI-only. Runtime
         # threading is controlled by OMP_NUM_THREADS in the Ramble application.
-        self.add_experiment_variable("n_nodes", 12, True)
-        self.add_experiment_variable("n_ranks", 48, True)
+        if (
+            self.system_spec.satisfies("riken-cloud cluster=gh200")
+            or self.system_spec.satisfies("riken-rikyu")
+        ):
+            # CPU-only smoke test; Rikyu permits 32 CPUs per allocated GPU.
+            ranks_per_node = 2 if self.system_spec.satisfies("riken-rikyu") else 6
+            self.add_experiment_variable("n_nodes", 1, True)
+            self.add_experiment_variable("n_ranks", ranks_per_node, True)
+            if self.system_spec.satisfies("riken-rikyu"):
+                # Reserve one GPU to satisfy allocation policy; computation is CPU-only.
+                self.add_experiment_variable("n_gpus", 1, False)
+            self.add_experiment_variable(
+                "extra_batch_opts",
+                "--nodes={n_nodes} "
+                f"--ntasks-per-node={ranks_per_node} "
+                "--cpus-per-task={n_threads_per_proc}",
+                False,
+            )
+            self.set_environment_variable("OMP_PLACES", "cores")
+            self.set_environment_variable("OMP_PROC_BIND", "close")
+        else:
+            # Run condition corresponding to the supplied Fugaku script:
+            # 12 nodes x 4 ranks/node x 12 threads/rank.
+            self.add_experiment_variable("n_nodes", 12, True)
+            self.add_experiment_variable("n_ranks", 48, True)
+
         self.add_experiment_variable(
             "n_threads_per_proc", ["12"], named=True, matrixed=True
         )
@@ -58,7 +79,7 @@ class Mvmc(
         # strings such as "18x18" to avoid expression-parsing warnings.
         self.set_required_variables(
             n_resources="{n_ranks}",
-            process_problem_size="6.75",
+            process_problem_size="{total_problem_size} / {n_ranks}",
             total_problem_size="324",
         )
 
