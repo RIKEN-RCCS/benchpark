@@ -56,9 +56,6 @@ class ScaleLetkf(
             self.add_experiment_variable(
                 "archives_path", "/lvs0/rccs-nghpcadu/CX_input/SCALE-LETKF", False
             )
-            self.add_experiment_variable(
-                "extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False
-            )
             tuning_cmds += "; export FORT90L=-Wl,-T; export PLE_MPI_STD_EMPTYFILE=off"
         elif system == "riken-gh200":
             self.add_experiment_variable("n_nodes", ["1"], True)
