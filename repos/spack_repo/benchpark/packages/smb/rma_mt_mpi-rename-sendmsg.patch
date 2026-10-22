@@ -1,0 +1,22 @@
+diff --git a/src/rma_mt_mpi/msgrate.c b/src/rma_mt_mpi/msgrate.c
+index 412ec88..9d1f590 100644
+--- a/src/rma_mt_mpi/msgrate.c
++++ b/src/rma_mt_mpi/msgrate.c
+@@ -231,7 +231,7 @@ void destroywindow()
+ /***********************End RMA FUNCS**************************/
+ 
+ 
+-void *sendmsg(void * input)
++void *smb_rma_sendmsg(void * input)
+ {
+     int nreqs= 0;
+     int i, j;
+@@ -283,7 +283,7 @@ test_one_way(void)
+                 info[thread_count].iters = nmsgs/threads;
+                 info[thread_count].local_reqs = &reqs[(nmsgs/threads)*thread_count];
+                 info[thread_count].rank = rank;
+-                pthread_create(&pthreads[thread_count], NULL, sendmsg, (void *)&info[thread_count]);
++                pthread_create(&pthreads[thread_count], NULL, smb_rma_sendmsg, (void *)&info[thread_count]);
+             }
+             for (i = 0 ; i < niters ; ++i) {
+                 cache_invalidate();
