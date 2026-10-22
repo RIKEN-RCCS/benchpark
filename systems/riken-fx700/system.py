@@ -605,7 +605,7 @@ class RikenFx700(System):
     def system_specific_variables(self):
         return {
             "queue": "fx700",
-            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix ; module load system/fx700 FJSVstclanga",
+            "pre_exec_cmds": "export SLURM_MPI_TYPE=pmix ; module load FJSVstclanga",
         }
 
     def compute_software_section(self):
