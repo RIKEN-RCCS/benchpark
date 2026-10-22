@@ -23,9 +23,16 @@ class Smb(MakefilePackage):
     variant("mpi", default=False, description="Build with MPI support")
     variant("rma", default=False, description="Build RMA-MT variant")    
 
+    # The RMA-MT test names its sender thread function `sendmsg`, which
+    # shadows the C library's sendmsg(2) for every library in the process:
+    # UCX's rdma-core/libnl netlink calls land in it and wait on the
+    # benchmark's condition variable before MPI_Init_thread returns. Renamed.
+    patch("rma_mt_mpi-rename-sendmsg.patch", when="+rma")
+
     depends_on("c", type="build")
 
     depends_on("mpi", when="+mpi")
+    depends_on("mpi", when="+rma")
 
     build_directory = ["src/mpi_overhead"]
     
@@ -47,9 +54,13 @@ class Smb(MakefilePackage):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
         install("src/mpi_overhead/mpi_overhead", prefix.bin)
-        install("src/mpi_overhead/README", prefix.doc)
+        install("src/mpi_overhead/README", join_path(prefix.doc, "README.mpi_overhead"))
         if "+rma" in spec:
+            # The RMA-MT build also produces a binary called msgrate; keep
+            # it under its own name (rma_mt_mpi) next to the plain one.
             install("src/rma_mt_mpi/msgrate", prefix.bin)
+            install("src/rma_mt_mpi/msgrate", join_path(prefix.bin, "rma_mt_mpi"))
+            install("src/rma_mt_mpi/README", join_path(prefix.doc, "README.rma_mt_mpi"))
         else:
             install("src/msgrate/msgrate", prefix.bin)
-            install("src/msgrate/README", prefix.doc)
+            install("src/msgrate/README", join_path(prefix.doc, "README.msgrate"))
