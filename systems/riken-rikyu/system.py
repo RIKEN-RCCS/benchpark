@@ -76,6 +76,22 @@ class RikenRikyu(System):
         default="none",
         description="Submit a job to a specific named bank",
     )
+    variant(
+        "mpi_threads",
+        default=False,
+        values=(True, False),
+        description="Load HPC-X's thread-safe stack (hpcx-mt-init.sh, the UCX built with "
+        "--enable-mt) for applications that ask for MPI_THREAD_MULTIPLE; under srun the "
+        "default stack does not complete MPI_Init_thread for them",
+    )
+    variant(
+        "comm_env",
+        default="none",
+        values=("none", "module"),
+        description="Communication environment for the batch job: 'module' exports what "
+        "the site's nvhpc-hpcx module sets (UCX transports and rails, UCC radix, "
+        "hcoll off, no launcher binding); 'none' leaves HPC-X's own defaults",
+    )
 
     def __init__(self, spec):
         super().__init__(spec)
@@ -131,6 +147,59 @@ class RikenRikyu(System):
         attrs = self.id_to_resources.get("RIKYU")
         for k, v in attrs.items():
             setattr(self, k, v)
+
+    # What the NVIDIA HPC SDK's comm_libs bring beside the MPI, per release.
+    # NCCL is read from comm_libs/<cuda>/nccl/include/nccl.h, UCX from the
+    # HPC-X VERSION file (HPC-X 2.25.1 with 26.3, 2.50 with 26.5 and 26.9).
+    comm_libs_versions = {
+        "26.9": {"nccl": "2.31.2", "ucx": "1.21.0"},
+        "26.5": {"nccl": "2.29.3", "ucx": "1.21.0"},
+        "26.3": {"nccl": "2.29.3", "ucx": "1.20.0"},
+    }
+
+    def comm_libs_config(self):
+        """Externals for the communication benchmarks: the NCCL and the UCX
+        that come with the same HPC-X as the MPI, so that nccl-tests,
+        osu-micro-benchmarks+xccl and ucx_perftest measure the libraries the
+        MPI itself uses instead of building their own.
+        """
+        versions = self.comm_libs_versions.get(str(self.nvhpc_version))
+        if not versions:
+            return {"packages": {}}
+        comm_libs = (
+            f"/shared/software/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
+            f"/comm_libs/{self.cuda_version}"
+        )
+        return {
+            "packages": {
+                "nccl": {
+                    "externals": [
+                        {
+                            "spec": f"nccl@{versions['nccl']}",
+                            "prefix": f"{comm_libs}/nccl",
+                        }
+                    ],
+                    "buildable": False,
+                },
+                # HPC-X's UCX, built with CUDA, gdrcopy, xpmem and the mlx5
+                # direct verbs (ucx_info -v / -b). The single-threaded tree;
+                # the thread-safe one is in ucx/mt. cuda_arch is stated so
+                # that a +cuda request from an experiment matches it. Not
+                # buildable: left to itself spack would rather build a newer
+                # UCX than take this one, and a UCX other than the MPI's is
+                # not what the benchmarks here are after.
+                "ucx": {
+                    "externals": [
+                        {
+                            "spec": f"ucx@{versions['ucx']}+cuda cuda_arch=100 "
+                            "+gdrcopy+xpmem+verbs+rc+ud+dc+mlx5_dv+rdmacm",
+                            "prefix": f"{comm_libs}/hpcx/latest/ucx",
+                        }
+                    ],
+                    "buildable": False,
+                },
+            }
+        }
 
     def compute_packages_section(self):
         selections = {
@@ -444,6 +513,8 @@ class RikenRikyu(System):
                     },
                 }
             else:
+                # and the NCCL and UCX of the same HPC-X (comm_libs_config)
+                selections["packages"] |= self.comm_libs_config()["packages"]
                 selections["packages"] |= {
                     "openmpi": {
                         "externals": [
@@ -611,8 +682,11 @@ class RikenRikyu(System):
                 f"/shared/software/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
                 f"/comm_libs/{self.cuda_version}/hpcx/latest"
             )
+            # hpcx-mt-init.sh puts the thread-safe UCX (ucx/mt) and UCC on the
+            # library path in place of the default ones; the MPI is the same.
+            init = "hpcx-mt-init.sh" if self.spec.satisfies("+mpi_threads") else "hpcx-init.sh"
             pre_exec += [
-                f"source {hpcx}/hpcx-init.sh",
+                f"source {hpcx}/{init}",
                 "hpcx_load",
                 "export PMIX_MCA_psec=native",
             ]
@@ -630,9 +704,36 @@ class RikenRikyu(System):
                 "export PMIX_MCA_psec=native",
             ]
 
+        if self.spec.satisfies("comm_env=module"):
+            # The lines the site's nvhpc-hpcx/26.x modules export (module
+            # show, 2026-10-22). hpcx_load above does not set them, so a
+            # benchpark job runs on HPC-X's defaults unless asked for these.
+            # The library paths matter too: UCX loads its CUDA allocator
+            # module through libcudart, and without cuda/lib64 on the path
+            # ucx_perftest reports "Unsupported memory types cuda<->cuda".
+            sdk = f"/shared/software/hpc_sdk/Linux_aarch64/{self.nvhpc_version}"
+            comm = f"{sdk}/comm_libs/{self.cuda_version}"
+            pre_exec += [
+                "export LD_LIBRARY_PATH="
+                f"{comm}/nvshmem/lib:{comm}/nccl/lib:{sdk}/math_libs/lib64:"
+                f"{sdk}/compilers/lib:{sdk}/cuda/lib64${{LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}}",
+                "export OMPI_MCA_coll_hcoll_enable=0",
+                "export OMPI_MCA_hwloc_base_binding_policy=none",
+                "export UCX_MAX_RNDV_RAILS=4",
+                "export UCX_TLS=self,sm,rc,ud,cuda_copy,cuda_ipc,gdr_copy",
+                "export UCC_TL_UCP_ALLREDUCE_SRA_KN_RADIX=auto,host:16M-inf:8",
+                "export UCC_TL_UCP_BCAST_SAG_KN_RADIX=auto,host:16M-inf:8",
+                "export SHARP_ROUNDING_METHOD=0",
+            ]
+
         return {
             "cuda_arch": "100",
             "pre_exec_cmds": "; ".join(pre_exec),
+            # The site's submit plugin sizes a job by its GPU request and
+            # ignores -N: `-N 4 -n 16` is one node, `-N 4 -n 16 --gpus 16`
+            # four. The allocation modifier reads this and asks for every
+            # GPU of every node a multi-node job spans.
+            "sys_nodes_by_gpus": 1,
         }
 
     def compute_software_section(self):
