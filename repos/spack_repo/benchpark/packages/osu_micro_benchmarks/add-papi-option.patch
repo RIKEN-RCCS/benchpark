@@ -1,0 +1,119 @@
+--- a/c/util/osu_util_options.h
++++ b/c/util/osu_util_options.h
+@@ -61,18 +61,18 @@
+ /*OMBOP[__ACCEL]__<options.bench>__<options.subtype>*/
+ #define OMBOP__PT2PT__LAT                    "+:hvm:x:i:b:c::u:G:D:P:T:Iz::"
+ #define OMBOP__PT2PT__PART_LAT               "+:hvm:x:i:b:c::u:G:D:P:T:Iz::q:"
+-#define OMBOP__ACCEL__PT2PT__LAT             "+:x:i:m:d:hvc::u:G:D:T:Iz::"
+-#define OMBOP__ACCEL__PT2PT__PART_LAT        "+:x:i:m:d:hvc::u:G:D:T:Iz::q:"
++#define OMBOP__ACCEL__PT2PT__LAT             "+:x:i:m:d:hvc::u:G:D:P:T:Iz::"
++#define OMBOP__ACCEL__PT2PT__PART_LAT        "+:x:i:m:d:hvc::u:G:D:P:T:Iz::q:"
+ #define OMBOP__PT2PT__BW                     "+:hvm:x:i:t:W:b:c::u:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__PT2PT__BW              "+:x:i:t:m:d:W:hvb:c::u:G:D:T:Iz::"
++#define OMBOP__ACCEL__PT2PT__BW              "+:x:i:t:m:d:W:hvb:c::u:G:D:P:T:Iz::"
+ #define OMBOP__PT2PT__LAT_MT                 "+:hvm:x:i:t:c::u:G:D:T:Iz::"
+ #define OMBOP__ACCEL__PT2PT__LAT_MT          OMBOP__ACCEL__PT2PT__LAT
+ #define OMBOP__PT2PT__LAT_MP                 "+:hvm:x:i:t:c::u:G:D:P:T:Iz::"
+ #define OMBOP__ACCEL__PT2PT__LAT_MP          OMBOP__ACCEL__PT2PT__LAT
+ #define OMBOP__COLLECTIVE__ALLTOALL          "+:hvfm:i:x:a:c::u:G:D:P:T:Ilz::"
+-#define OMBOP__ACCEL__COLLECTIVE__ALLTOALL   "+:d:hvfm:i:x:a:c::u:G:D:T:Ilz::"
++#define OMBOP__ACCEL__COLLECTIVE__ALLTOALL   "+:d:hvfm:i:x:a:c::u:G:D:P:T:Ilz::"
+ #define OMBOP__PT2PT__CONG_BW                "+:hvm:x:i:W:b:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__PT2PT__CONG_BW         "p:W:R:x:i:m:d:Vhvb:G:D:T:Iz::"
++#define OMBOP__ACCEL__PT2PT__CONG_BW         "p:W:R:x:i:m:d:Vhvb:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__GATHER            OMBOP__COLLECTIVE__ALLTOALL "k:"
+ #define OMBOP__ACCEL__COLLECTIVE__GATHER     OMBOP__ACCEL__COLLECTIVE__ALLTOALL "k:"
+ #define OMBOP__COLLECTIVE__ALL_GATHER        OMBOP__COLLECTIVE__ALLTOALL
+@@ -81,18 +81,18 @@
+ #define OMBOP__ACCEL__COLLECTIVE__SCATTER                                      \
+     OMBOP__ACCEL__COLLECTIVE__ALLTOALL "k:"
+ #define OMBOP__COLLECTIVE__BCAST              "+:hvfm:i:x:a:c::u:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__BCAST       "+:d:hvfm:i:x:a:c::u:G:D:T:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__BCAST       "+:d:hvfm:i:x:a:c::u:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__NHBR_GATHER        "+:hvfm:i:x:a:c::u:N:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__NHBR_GATHER "+:d:hvfm:i:x:a:c::u:N:G:D:T:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__NHBR_GATHER "+:d:hvfm:i:x:a:c::u:N:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__NHBR_ALLTOALL      OMBOP__COLLECTIVE__NHBR_GATHER
+ #define OMBOP__ACCEL__COLLECTIVE__NHBR_ALLTOALL                                \
+     OMBOP__ACCEL__COLLECTIVE__NHBR_GATHER
+ #define OMBOP__COLLECTIVE__BARRIER           "+:hvfm:i:x:a:c::u:G:P:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__BARRIER    "+:d:hvfm:i:x:a:c::u:G:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__BARRIER    "+:d:hvfm:i:x:a:c::u:G:P:Iz::"
+ #define OMBOP__COLLECTIVE__LAT               "+:hvfm:i:x:a:z::"
+ #define OMBOP__ACCEL__COLLECTIVE__LAT        "+:d:hvfm:i:x:a:z::"
+ #define OMBOP__COLLECTIVE__ALL_REDUCE        "+:hvfm:i:x:a:c::u:G:P:T:Ilz::"
+-#define OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE "+:d:hvfm:i:x:a:c::u:G:T:Ilz::"
++#define OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE "+:d:hvfm:i:x:a:c::u:G:P:T:Ilz::"
+ #define OMBOP__COLLECTIVE__REDUCE            OMBOP__COLLECTIVE__ALL_REDUCE "k:"
+ #define OMBOP__ACCEL__COLLECTIVE__REDUCE                                       \
+     OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE "k:"
+@@ -100,10 +100,10 @@
+ #define OMBOP__ACCEL__COLLECTIVE__REDUCE_SCATTER                               \
+     OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE
+ #define OMBOP__COLLECTIVE__NBC_BARRIER        "+:hvfm:i:x:t:a:c::u:G:P:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__NBC_BARRIER "+:d:hvfm:i:x:t:a:c::u:G:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__NBC_BARRIER "+:d:hvfm:i:x:t:a:c::u:G:P:Iz::"
+ #define OMBOP__COLLECTIVE__NBC_ALLTOALL       "+:hvfm:i:x:t:a:c::u:G:D:P:T:Ilz::"
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_ALLTOALL                                 \
+-    "+:d:hvfm:i:x:t:a:c::u:G:D:T:Ilz::"
++    "+:d:hvfm:i:x:t:a:c::u:G:D:P:T:Ilz::"
+ #define OMBOP__COLLECTIVE__NBC_GATHER OMBOP__COLLECTIVE__NBC_ALLTOALL "k:"
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_GATHER                                   \
+     OMBOP__ACCEL__COLLECTIVE__NBC_ALLTOALL "k:"
+@@ -114,10 +114,10 @@
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_SCATTER                                  \
+     OMBOP__ACCEL__COLLECTIVE__NBC_ALLTOALL "k:"
+ #define OMBOP__COLLECTIVE__NBC_BCAST        "+:hvfm:i:x:t:a:c::u:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__NBC_BCAST "+:d:hvfm:i:x:t:a:c::u:G:D:T:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__NBC_BCAST "+:d:hvfm:i:x:t:a:c::u:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__NBC_ALL_REDUCE   "+:hvfm:i:x:t:a:c::u:G:P:T:Ilz::"
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_ALL_REDUCE                               \
+-    "+:d:hvfm:i:x:t:a:c::u:G:T:Ilz::"
++    "+:d:hvfm:i:x:t:a:c::u:G:P:T:Ilz::"
+ #define OMBOP__COLLECTIVE__NBC_REDUCE OMBOP__COLLECTIVE__NBC_ALL_REDUCE "k:"
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_REDUCE                                   \
+     OMBOP__ACCEL__COLLECTIVE__NBC_ALL_REDUCE "k:"
+@@ -126,23 +126,23 @@
+     OMBOP__ACCEL__COLLECTIVE__NBC_ALL_REDUCE
+ #define OMBOP__COLLECTIVE__NBC_NHBR_GATHER "+:hvfm:i:x:t:a:c::u:N:G:D:P:T:Iz::"
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_NHBR_GATHER                              \
+-    "+:d:hvfm:i:x:t:a:c::u:N:G:D:T:Iz::"
++    "+:d:hvfm:i:x:t:a:c::u:N:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__NBC_NHBR_ALLTOALL OMBOP__COLLECTIVE__NBC_NHBR_GATHER
+ #define OMBOP__ACCEL__COLLECTIVE__NBC_NHBR_ALLTOALL                            \
+     OMBOP__ACCEL__COLLECTIVE__NBC_NHBR_GATHER
+ #define OMBOP__ONE_SIDED__BW         "+:w:s:hvm:x:i:W:G:P:I"
+-#define OMBOP__ACCEL__ONE_SIDED__BW  "+:w:s:hvm:d:x:i:W:G:I"
++#define OMBOP__ACCEL__ONE_SIDED__BW  "+:w:s:hvm:d:x:i:W:G:P:I"
+ #define OMBOP__ONE_SIDED__LAT        "+:w:s:hvm:x:i:G:P:I"
+-#define OMBOP__ACCEL__ONE_SIDED__LAT "+:w:s:hvm:d:x:i:G:I"
++#define OMBOP__ACCEL__ONE_SIDED__LAT "+:w:s:hvm:d:x:i:G:P:I"
+ #define OMBOP__MBW_MR                "p:W:R:x:i:m:Vhvb:c::u:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__MBW_MR         "p:W:R:x:i:m:d:Vhvb:c::u:G:D:T:Iz::"
++#define OMBOP__ACCEL__MBW_MR         "p:W:R:x:i:m:d:Vhvb:c::u:G:D:P:T:Iz::"
+ #define OMBOP__OSHM                  ":hvfm:i:";
+ #define OMBOP__UPC                   OMBOP__OSHM
+ #define OMBOP__UPCXX                 OMBOP__OSHM
+ #define OMBOP__STARTUP__INIT         "I"
+ /*Persistent Collectives*/
+ #define OMBOP__COLLECTIVE__ALLTOALL_P        "+:hvfm:i:x:a:c::u:G:D:P:T:Ilz::"
+-#define OMBOP__ACCEL__COLLECTIVE__ALLTOALL_P "+:d:hvfm:i:x:a:c::u:G:D:T:Ilz::"
++#define OMBOP__ACCEL__COLLECTIVE__ALLTOALL_P "+:d:hvfm:i:x:a:c::u:G:D:P:T:Ilz::"
+ #define OMBOP__COLLECTIVE__GATHER_P          OMBOP__COLLECTIVE__ALLTOALL_P
+ #define OMBOP__ACCEL__COLLECTIVE__GATHER_P   OMBOP__ACCEL__COLLECTIVE__ALLTOALL_P
+ #define OMBOP__COLLECTIVE__ALL_GATHER_P      OMBOP__COLLECTIVE__ALLTOALL_P
+@@ -151,11 +151,11 @@
+ #define OMBOP__COLLECTIVE__SCATTER_P           OMBOP__COLLECTIVE__ALLTOALL_P
+ #define OMBOP__ACCEL__COLLECTIVE__SCATTER_P    OMBOP__ACCEL__COLLECTIVE__ALLTOALL_P
+ #define OMBOP__COLLECTIVE__BCAST_P             "+:hvfm:i:x:a:c::u:G:D:P:T:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__BCAST_P      "+:d:hvfm:i:x:a:c::u:G:D:T:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__BCAST_P      "+:d:hvfm:i:x:a:c::u:G:D:P:T:Iz::"
+ #define OMBOP__COLLECTIVE__BARRIER_P           "+:hvfm:i:x:a:u:G:P:Iz::"
+-#define OMBOP__ACCEL__COLLECTIVE__BARRIER_P    "+:d:hvfm:i:x:a:u:G:Iz::"
++#define OMBOP__ACCEL__COLLECTIVE__BARRIER_P    "+:d:hvfm:i:x:a:u:G:P:Iz::"
+ #define OMBOP__COLLECTIVE__ALL_REDUCE_P        "+:hvfm:i:x:a:c::u:G:P:T:Ilz::"
+-#define OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE_P "+:d:hvfm:i:x:a:c::u:G:T:Ilz::"
++#define OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE_P "+:d:hvfm:i:x:a:c::u:G:P:T:Ilz::"
+ #define OMBOP__COLLECTIVE__REDUCE_P            OMBOP__COLLECTIVE__ALL_REDUCE_P
+ #define OMBOP__ACCEL__COLLECTIVE__REDUCE_P                                     \
+     OMBOP__ACCEL__COLLECTIVE__ALL_REDUCE_P
