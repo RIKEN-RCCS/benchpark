@@ -39,9 +39,11 @@ class Qws(
         self.add_experiment_variable("maxiter_inner", "50")
 
         if self.spec.satisfies("exec_mode=test"):
+            # CASE0: qws.exe 32 6 4 3 1 1 1 1 -1 -1 6 50.
+            # Keep the application defaults and test experiment on the same input.
             self.add_experiment_variable(
                 "process_problem_size_dict",
-                {"lx": 32, "ly": 6, "lz": 4, "lt": 2},
+                {"lx": 32, "ly": 6, "lz": 4, "lt": 3},
                 True,
             )
             self.add_experiment_variable(
