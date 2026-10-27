@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import sys
+import math
+import re
+from pathlib import Path
 
 from ramble.appkit import *
 
@@ -61,11 +63,55 @@ class Qws(ExecutableApplication):
                       description='Maximum iterations of inner DD solver. (Default: 50)',
                       workloads=['qws'])
 
-    figure_of_merit('Figure of Merit (FOM)', log_file='{experiment_run_dir}/{experiment_name}.out', fom_regex=r'etime for so.ler =\s+(?P<fom>[-+]?([0-9]*[.])?[0-9]+([eED][-+]?[0-9]+)?)', group_name='fom', units='')
+    # This interval surrounds bicgstab_dd_mix_ and its trailing MPI barrier,
+    # excluding initialization and the subsequent residual validation.
+    figure_of_merit(
+        "DDSolverJacobi",
+        fom_map_key="qws_jacobi_seconds",
+        units="s",
+        fom_type=FomType.TIME,
+    )
+    success_criteria(
+        "jacobi-time-valid",
+        mode="fom_comparison",
+        fom_name="DDSolverJacobi",
+        formula="{value} >= 0",
+    )
 
-    # "print timing" is emitted only when the Makefile defines
-    # _CHECK_TIMING, which its Fujitsu branch does not. Runs built with
-    # that branch are therefore recorded as failed although they produce a
-    # figure of merit. Match the line from which the figure of merit is
-    # read, which every build emits.
-    success_criteria('pass', mode='string', match=r'etime for so.ler', file='{experiment_run_dir}/{experiment_name}.out')
+    @staticmethod
+    def jacobi_seconds(text):
+        """Select the named Jacobi interval, never the first or last solver."""
+        heading = "LDDHMC solver with Jacobi method instead of SSOR"
+        timing = re.compile(
+            r"^etime for so(?:vl|lv)er\s*=\s*"
+            r"([-+]?[0-9]+(?:\.[0-9]*)?(?:[eEdD][-+]?[0-9]+)?)\s+sec\.\s*$"
+        )
+        active = False
+        headings = 0
+        values = []
+        for line in text.splitlines():
+            line = line.strip()
+            if line.startswith("LDDHMC solver"):
+                active = line == heading
+                headings += active
+            match = timing.fullmatch(line)
+            if active and match:
+                value = float(match[1].replace("D", "e").replace("d", "e"))
+                if not math.isfinite(value) or value < 0:
+                    raise ValueError("Invalid QWS Jacobi timing")
+                values.append(value)
+        if headings != 1 or len(values) != 1:
+            raise ValueError("Missing or ambiguous QWS Jacobi interval")
+        return values[0]
+
+    def _prepare_analysis(self, workspace, app_inst=None):
+        self.add_inmem_fom_value("qws_jacobi_seconds", None)
+        try:
+            log = Path(
+                self.expander.expand_var("{experiment_run_dir}/{experiment_name}.out")
+            )
+            self.add_inmem_fom_value(
+                "qws_jacobi_seconds", self.jacobi_seconds(log.read_text())
+            )
+        except (OSError, UnicodeError, ValueError) as error:
+            logger.warn(f"QWS Jacobi timing: {error}")
