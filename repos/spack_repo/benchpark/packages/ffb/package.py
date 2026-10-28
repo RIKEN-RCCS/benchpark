@@ -34,6 +34,28 @@ class Ffb(Package):
     depends_on("gmake", type="build")
     depends_on("mpi", type=("build", "link", "run"))
 
+    # nvhpc 25.11 and later (25.11, 26.3, 26.5, 26.9 tested) cannot compile
+    # the GPU archive's les3x.f:
+    #
+    #     nvnvvmd: error: ... parse integer constant must have integer type
+    #     NVFORTRAN-F-0155-Compiler failed to translate accelerator region
+    #         (les3x.f: 5846)
+    #
+    # The loop at 5846 is not the cause; it is the last OpenACC region of
+    # the main program. These versions emit the main program's DATA-
+    # initialized storage into the device module, and print its zero
+    # values as a bare `0` regardless of type (`float 0`, `double 0`,
+    # `[6 x [4 x i32]] 0`), which NVVM rejects. nvhpc 25.7 does not emit
+    # that storage on the device and builds the archive. See
+    # RIKEN-RCCS/benchpark#28.
+    conflicts(
+        "%nvhpc@25.11:",
+        when="@=67.01-gpu-gh200",
+        msg="nvhpc 25.11 and later fail on les3x.f (RIKEN-RCCS/benchpark#28);"
+        " use nvhpc 25.7, e.g. `benchpark system init riken-gh200"
+        " compiler=nvhpc nvhpc=25.7 cuda=12.9`",
+    )
+
     def setup_build_environment(self, env):
         # make/OPTION reads ${MPI_HOME} for its include and library paths.
         env.set("MPI_HOME", self.spec["mpi"].prefix)
