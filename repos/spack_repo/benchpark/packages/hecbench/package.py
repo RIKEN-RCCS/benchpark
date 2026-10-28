@@ -295,15 +295,28 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     tags = ["benchmark"]
-    homepage = "https://github.com/RIKEN-RCCS/HeCBench"
-    git = "https://github.com/RIKEN-RCCS/HeCBench.git"
+    # The upstream repository. RIKEN-RCCS/HeCBench is a fork of it that
+    # carries no commits of its own; 2026.08.16 is an upstream commit.
+    homepage = "https://github.com/ORNL/HeCBench"
+    git = "https://github.com/ORNL/HeCBench.git"
 
     maintainers("ando")
 
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("2026.10.28", commit="098d5971289940e2750def6ea4f67c40523353e1")
     version("2026.08.16", commit="06d24631a6f977ba8d3ba053073471ac9bd77b7a")
+
+    # Six result patterns in benchmarks.yaml no longer match what the
+    # programs print (aobench, all-pairs-distance, black-scholes, chi2,
+    # gelu, knn), so they finish but are reported as "result pattern not
+    # found". Upstream master still carries the old patterns. Apply the fix
+    # to the fixed commits until it is merged upstream, then move the
+    # default to a commit that contains it and drop the patch. master is
+    # left alone, since the patch would stop applying once merged. See
+    # RIKEN-RCCS/benchpark#35.
+    patch("stale-test-regex.patch", when="@2026.08.16:2026.10.28")
 
     variant(
         "openmp",
