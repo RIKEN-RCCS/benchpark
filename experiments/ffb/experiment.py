@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from benchpark.directives import maintainers, variant
+from benchpark.error import BenchparkError
 from benchpark.experiment import Experiment
 from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 
@@ -70,57 +71,77 @@ class Ffb(
             total_problem_size="{size}",
         )
 
+    # The archives the package declares, by machine and backend, with the
+    # compute capability of the machine's GPU for the GPU archive.
+    #
+    # The versions are named per machine, and the names nest (67.01-cpu,
+    # 67.01-cpu-genoa, 67.01-gpu-gh200), so they are requested exactly
+    # with `@=`. A bare `@` is a range: `ffb@67.01-cpu` also matches
+    # `67.01-cpu-genoa`, which spack then selects, and the fetch fails on a
+    # machine where that archive is not present:
+    #
+    #     Error: FetchError: All fetchers failed for
+    #       spack-stage-ffb-67.01-cpu-genoa-...
+    #
+    # An undeclared version is no better with `@=`: spack concretizes
+    # `ffb@=67.01-cpu-gh200` without complaint and fails only at the fetch.
+    # Building the name from the machine and backend produced such names
+    # for every combination without an archive, so look it up here and
+    # stop at `benchpark experiment init` instead. See
+    # RIKEN-RCCS/benchpark#7.
+    _archives = {
+        # Fugaku's archive carries no machine suffix
+        # (url ffb-frt_cpu.fugaku.tar.gz).
+        ("fugaku", "cpu"): ("cpu", None),
+        ("genoa", "cpu"): ("cpu-genoa", None),
+        ("gh200", "gpu"): ("gpu-gh200", "90"),
+    }
+
+    def _machine(self):
+        """The machine this system runs on, as used in _archives.
+
+        riken-cloud names its machine with a `cluster` variant; the
+        machines that left it (riken-gh200, riken-genoa, ...) name it in
+        the system name. Reading variants['cluster'] on those raises
+        KeyError, so accept both forms.
+        """
+        name = self.system_spec.name
+        if name == "riken-cloud":
+            cluster = self.system_spec.variants.get("cluster")
+            return cluster[0] if cluster else None
+        if name.startswith("riken-"):
+            return name[len("riken-"):]
+        return None
+
     def compute_package_section(self):
         base_version = self.spec.variants["version"][0]
-        # Machine identification.
-        #
-        # riken-cloud distinguished its machines with a `cluster` variant.
-        # Since each machine became its own system (riken-dgx, riken-gh200,
-        # riken-genoa, riken-fx700), reading variants['cluster'] raises:
-        #
-        #     benchpark experiment init ... -> KeyError: 'cluster'
-        #
-        # Accept both forms; a system with neither retains the empty suffix.
-        name = self.system_spec.name
-        if "cluster" in self.system_spec.variants:
-            ret = self.system_spec.variants["cluster"]
-            cluster = f"-{ret[0]}" if ret else ""
-        elif name.startswith("riken-") and name != "riken-cloud":
-            cluster = f"-{name[len('riken-'):]}"
-        else:
-            cluster = ""
-
-        # The package declares Fugaku's archive without a machine suffix
-        # (67.01-cpu, url ffb-frt_cpu.fugaku.tar.gz), alongside
-        # 67.01-cpu-genoa and 67.01-gpu-gh200. Appending the machine name
-        # for riken-fugaku therefore requests an undeclared version.
-        if cluster == "-fugaku":
-            cluster = ""
-
         # The GPU archive is selected by the experiment's own `backend`
         # variant, as in the genesis experiment, rather than by the system's
         # compiler. The two are not the same choice: riken-gh200's
         # `compiler=cuda` is gcc with CUDA, while the GPU archive compiles
         # with nvfortran-only flags (-Mpreprocess, -acc, -gpu=managed,
         # -cuda) and links nvc++ objects, so it needs compiler=nvhpc.
-        suffix = "-gpu" if self.spec.satisfies("backend=gpu") else "-cpu"
-        # `@=` denotes an exact version; a bare `@` denotes a range.
-        # These version names nest, so `ffb@67.01-cpu` also matches
-        # `67.01-cpu-genoa`, which spack then selects. The fetch fails on
-        # a machine where that archive is not present:
-        #
-        #     Error: FetchError: All fetchers failed for
-        #       spack-stage-ffb-67.01-cpu-genoa-...
-        #
-        # The same ambiguity reports an undeclared version as
-        # "Cannot satisfy 'ffb@67.01-cpu-fugaku' 1(67.01-gpu-gh200)".
-        spec_str = f"ffb@={base_version}{suffix}{cluster}"
+        backend = self.spec.variants["backend"][0]
+        machine = self._machine()
 
-        if self.spec.satisfies("backend=gpu"):
+        archive = self._archives.get((machine, backend))
+        if archive is None:
+            available = ", ".join(
+                f"{m} backend={b}" for m, b in sorted(self._archives)
+            )
+            raise BenchparkError(
+                f"ffb has no {backend} archive for system "
+                f"{self.system_spec.name}"
+                + (f" (machine {machine})" if machine else "")
+                + f"; archives exist for: {available}"
+            )
+        suffix, cuda_arch = archive
+        spec_str = f"ffb@={base_version}-{suffix}"
+
+        if cuda_arch:
             # The GPU archive compiles with `-gpu=managed` and defines
             # -Dgpudirect, so it hands device pointers to MPI and needs a
-            # CUDA-aware MPI. cuda_arch is the compute capability of the
-            # machine's GPU.
+            # CUDA-aware MPI.
             #
             # The system provides openmpi as a non-buildable external (the
             # HPC-X build in the NVIDIA HPC SDK). An external carries no
@@ -129,10 +150,6 @@ class Ffb(
             #
             #     Cannot build openmpi, since it is configured
             #     `buildable:false` and no externals satisfy the request
-            cuda_arch = {"riken-gh200": "90", "riken-dgx": "121"}.get(
-                self.system_spec.name
-            )
-            if cuda_arch:
-                spec_str += f" %nvhpc ^openmpi+cuda cuda_arch={cuda_arch}"
+            spec_str += f" %nvhpc ^openmpi+cuda cuda_arch={cuda_arch}"
 
         self.add_package_spec(self.name, [spec_str])
