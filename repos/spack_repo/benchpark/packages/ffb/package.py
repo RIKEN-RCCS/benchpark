@@ -75,6 +75,32 @@ class Ffb(Package):
                 refiner,
             )
 
+            # ver.67.01/FILES links NVTX as
+            #
+            #     LOPT+=-L$(NVHPC_CUDA_HOME)/lib64 -lnvToolsExt
+            #
+            # NVHPC_CUDA_HOME is set by the nvhpc module, not by spack, and
+            # CUDA 12.9 and later no longer ship libnvToolsExt (NVTX v2), so
+            # the link stops with "cannot find -lnvToolsExt". Point at the
+            # SDK's CUDA and fall back to libnvtx3interop, which exports the
+            # same nvtxRangePushA/PushEx/Pop entry points that nvtx.f90 binds.
+            nvhpc = spec["fortran"]
+            cuda_lib = join_path(
+                nvhpc.prefix,
+                f"Linux_{os.uname().machine}",
+                str(nvhpc.version),
+                "cuda",
+                "lib64",
+            )
+            nvtx = "nvToolsExt"
+            if not os.path.exists(join_path(cuda_lib, "libnvToolsExt.so")):
+                nvtx = "nvtx3interop"
+            filter_file(
+                r"-L\$\(NVHPC_CUDA_HOME\)/lib64 -lnvToolsExt",
+                f"-L{cuda_lib} -Wl,-rpath,{cuda_lib} -l{nvtx}",
+                join_path("ver.67.01", "FILES"),
+            )
+
         chmod = which("chmod")
         chmod("+x", "make.FP3.sh")
 

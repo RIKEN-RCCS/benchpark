@@ -32,11 +32,15 @@ class Ffb(ExecutableApplication):
     partition = os.environ.get("SLURM_JOB_PARTITION", "")
 
     if 'qc-gh200' in partition:
-        cmd = "module purge && module load system/qc-gh200 nvhpc/24.3 && mpiexec -np {n_ranks} les3x.mpi"
+        # The system/qc-gh200 and nvhpc/24.3 modules were removed with the
+        # move to Ubuntu ("Unable to locate a modulefile"). The riken-gh200
+        # system sets up HPC-X in pre_exec_cmds and supplies mpi_command,
+        # so launch through it like the other MPI applications.
+        cmd = "les3x.mpi"
         chksum = '2db68022eb463a328ca69dc949f6abf53126d2f177281d6b3533d7c85c6da5f3'
         url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-7.8M.tar.gz'
         executables = ["cpdata", "execute"]
-        use_mpi = False
+        use_mpi = True
     elif 'genoa' in partition:
         cmd = "ulimit -s unlimited && module purge && module load system/genoa mpi/openmpi-x86_64 && mpiexec -np {n_ranks} les3x.mpi"
         chksum = 'ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501'

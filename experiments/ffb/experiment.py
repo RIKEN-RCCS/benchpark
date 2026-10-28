@@ -121,17 +121,20 @@ class Ffb(
         if self.spec.satisfies("backend=gpu"):
             # The GPU archive compiles with `-gpu=managed` and defines
             # -Dgpudirect, so it hands device pointers to MPI and needs a
-            # CUDA-aware MPI, as the scale_letkf OpenACC build does. ucx
-            # needs +cuda as well, since openmpi is built fabrics=ucx and
-            # the ucx pml takes the send. cuda_arch is the compute
-            # capability of the machine's GPU.
+            # CUDA-aware MPI. cuda_arch is the compute capability of the
+            # machine's GPU.
+            #
+            # The system provides openmpi as a non-buildable external (the
+            # HPC-X build in the NVIDIA HPC SDK). An external carries no
+            # compiler and no dependencies, so `^openmpi %nvhpc` or
+            # `^ucx+cuda` cannot be satisfied:
+            #
+            #     Cannot build openmpi, since it is configured
+            #     `buildable:false` and no externals satisfy the request
             cuda_arch = {"riken-gh200": "90", "riken-dgx": "121"}.get(
                 self.system_spec.name
             )
             if cuda_arch:
-                spec_str += (
-                    f" %nvhpc ^openmpi+cuda cuda_arch={cuda_arch} %nvhpc"
-                    f" ^ucx+cuda cuda_arch={cuda_arch}"
-                )
+                spec_str += f" %nvhpc ^openmpi+cuda cuda_arch={cuda_arch}"
 
         self.add_package_spec(self.name, [spec_str])
