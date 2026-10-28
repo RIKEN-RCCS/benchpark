@@ -34,6 +34,25 @@ class Ffb(Package):
     depends_on("gmake", type="build")
     depends_on("mpi", type=("build", "link", "run"))
 
+    # The GPU archive compiles with nvfortran-only flags (-Mpreprocess,
+    # -acc, -gpu=managed, -cuda) and links nvc++ objects, so it builds only
+    # with nvhpc. Without a requirement, a system whose default compiler is
+    # gcc (riken-gh200 compiler=gcc or compiler=cuda) concretizes, builds
+    # the libraries, and fails at the first nvfortran flag. See
+    # RIKEN-RCCS/benchpark#8.
+    #
+    # The requirement names the fortran language. A bare `%nvhpc` is
+    # accepted by the directive but not enforced by this spack: the spec
+    # still concretizes with gcc. requires() does not report its message
+    # either, so the common case, gcc, also gets a conflict that does.
+    _nvhpc_only = (
+        "the GPU archive builds only with nvhpc; use a system with"
+        " compiler=nvhpc, e.g. `benchpark system init riken-gh200"
+        " compiler=nvhpc nvhpc=25.7 cuda=12.9`"
+    )
+    requires("%fortran=nvhpc", when="@=67.01-gpu-gh200", msg=_nvhpc_only)
+    conflicts("%gcc", when="@=67.01-gpu-gh200", msg=_nvhpc_only)
+
     # nvhpc 25.11 and later (25.11, 26.3, 26.5, 26.9 tested) cannot compile
     # the GPU archive's les3x.f:
     #
@@ -61,7 +80,9 @@ class Ffb(Package):
         env.set("MPI_HOME", self.spec["mpi"].prefix)
 
     def install(self, spec, prefix):
-        has_cuda = "gpu" in str(spec)
+        # Match the version, not the spec string: str(spec) also holds the
+        # variants and dependencies, which may contain "gpu" on a CPU build.
+        has_cuda = spec.satisfies("@=67.01-gpu-gh200")
 
         if has_cuda:
             # The archive names its toolchain by bare command name in three
