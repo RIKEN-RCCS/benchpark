@@ -5,6 +5,7 @@
 
 from benchpark.caliper import Caliper
 from benchpark.directives import maintainers, variant
+from benchpark.error import BenchparkError
 from benchpark.experiment import Experiment
 from benchpark.programming_model import ProgrammingModel, ProgrammingModelType
 from benchpark.scaling import Scaling, ScalingMode
@@ -20,7 +21,11 @@ class Qws(
     variant(
         "workload",
         default="qws",
-        description="qws",
+        # qws: the input follows exec_mode (and scaling). CASE0-CASE9: the
+        # test cases of QWS's README, each a fixed input defined by the
+        # application's workload of that name.
+        values=("qws",) + tuple(f"CASE{i}" for i in range(10)),
+        description="qws, or a README test case CASE0-CASE9",
     )
 
     variant(
@@ -38,7 +43,15 @@ class Qws(
         self.add_experiment_variable("maxiter_plus1_outer", "6")
         self.add_experiment_variable("maxiter_inner", "50")
 
-        if self.spec.satisfies("exec_mode=test"):
+        if self.workload[0] != "qws":
+            # A README test case: its input is the workload's own defaults
+            # (lattice and process grid), so nothing here may override them,
+            # and scaling - which would change them - does not apply.
+            if any(self.spec.satisfies(s) for s in ["+strong", "+weak", "+throughput"]):
+                raise BenchparkError(
+                    f"qws workload={self.workload[0]} is a fixed input; it cannot be scaled"
+                )
+        elif self.spec.satisfies("exec_mode=test"):
             # CASE0: qws.exe 32 6 4 3 1 1 1 1 -1 -1 6 50.
             # Keep the application defaults and test experiment on the same input.
             self.add_experiment_variable(
