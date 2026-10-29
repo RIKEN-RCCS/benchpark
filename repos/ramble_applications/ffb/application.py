@@ -3,13 +3,25 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-
 from ramble.appkit import *
 
 
 class Ffb(ExecutableApplication):
-    """Define FFB application"""
+    """Define FFB application
+
+    The application holds no knowledge of the machine it runs on. It used to
+    branch on SLURM_JOB_PARTITION (and before that on RAMBLE_ROOT) when it
+    was imported, so `ramble workspace setup` in a compute-node job and
+    `ramble on` on a login node took different branches and stopped with
+    "Mismatch on experiment hash". The machine-dependent parts are set by
+    the experiment instead (RIKEN-RCCS/benchpark#54):
+
+      * which input: one workload per input, chosen by the experiment;
+      * where the input is: ffb_input_url;
+      * how to launch: the system's mpi_command;
+      * where rank 0 writes its log: ffb_log;
+      * shell setup before the launch: ffb_setup.
+    """
 
     name = "FFB"
 
@@ -17,68 +29,81 @@ class Ffb(ExecutableApplication):
 
     tags('fluid-dynamics')
 
-    # Machine identification, taken from the partition rather than from
-    # RAMBLE_ROOT.
-    #
-    # RAMBLE_ROOT is the location of the workspace, which is independent of
-    # the machine. Testing it for '/lvs' selects the Fugaku branch whenever
-    # a workspace is created on another filesystem, and the input fetch
-    # then fails with "All fetchers failed".
-    #
-    # SLURM_JOB_PARTITION is defined in the job that fetches the input and
-    # generates the run script, and undefined on a login node, where this
-    # module is also imported. It is read with .get() so that the import
-    # succeeds there, falling back to the Fugaku branch.
-    partition = os.environ.get("SLURM_JOB_PARTITION", "")
+    # Each input is partitioned for a fixed number of ranks (MESH.P0001,
+    # ...), so it is tied to the run configuration that uses it.
+    inputs = {
+        # 4 domains, the GPU run on riken-gh200.
+        "cavity_7_8M": (
+            "benchmark-input-7.8M",
+            "2db68022eb463a328ca69dc949f6abf53126d2f177281d6b3533d7c85c6da5f3",
+        ),
+        # 16 domains, the CPU runs on riken-genoa and riken-fugaku.
+        "cavity_2_0M": (
+            "benchmark-input-2.0M",
+            "ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501",
+        ),
+    }
 
-    if 'qc-gh200' in partition:
-        # The system/qc-gh200 and nvhpc/24.3 modules were removed with the
-        # move to Ubuntu ("Unable to locate a modulefile"). The riken-gh200
-        # system sets up HPC-X in pre_exec_cmds and supplies mpi_command,
-        # so launch through it like the other MPI applications.
-        cmd = "les3x.mpi"
-        chksum = '2db68022eb463a328ca69dc949f6abf53126d2f177281d6b3533d7c85c6da5f3'
-        url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-7.8M.tar.gz'
-        executables = ["cpdata", "execute"]
-        use_mpi = True
-    elif 'genoa' in partition:
-        cmd = "ulimit -s unlimited && module purge && module load system/genoa mpi/openmpi-x86_64 && mpiexec -np {n_ranks} les3x.mpi"
-        chksum = 'ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501'
-        url = 'file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-2.0M.tar.gz'
-        executables = ["cpdata", "execute", "replace_cpu"]
-        use_mpi = False
-    else:
-        cmd = "les3x.mpi"
-        use_mpi = True
-        url = 'file:///vol0003/rccs-sdt/data/a01008/apps/ffb/benchmark-input.tar.gz'
-        chksum = 'ac8021b07012f78452e7a964712a849ed8e50364352a3f65677c4eb499e1c501'
-        executables = ["cpdata", "execute", "replace"]
+    executable("setup", "{ffb_setup}", use_mpi=False)
 
     executable("cpdata", "cp {input}/* .", use_mpi=False)
 
+    executable("execute", "les3x.mpi", use_mpi=True)
+
+    # Rank 0's log is les3x.log.P0001 on riken-gh200, the experiment's own
+    # output on riken-genoa and fjmpioutdir/bmexe.1.0 on riken-fugaku
+    # (Fujitsu MPI's -std-proc). Copy it to one file, converting Fortran's
+    # D exponents, so that the figure of merit reads the same place
+    # everywhere.
     executable(
-        "execute",
-        cmd,
-        use_mpi=use_mpi
+        "collect",
+        'sed -e "s/D+/E+/g" -e "s/D-/E-/g" {ffb_log}',
+        use_mpi=False,
+        redirect="{experiment_run_dir}/ffb.log",
+        output_capture=OUTPUT_CAPTURE.STDOUT,
     )
 
-    executable("replace", "cp {experiment_run_dir}/fjmpioutdir/bmexe.1.0 {experiment_run_dir}/les3x.log.P0001 && sed -i -e \"s/D+/E+/\" -e \"s/D-/E-/\" {experiment_run_dir}/les3x.log.P*", use_mpi=False)
-    executable("replace_cpu", "cp {experiment_run_dir}/ffb_*.out {experiment_run_dir}/les3x.log.P0001 && sed -i -e \"s/D+/E+/\" -e \"s/D-/E-/\" {experiment_run_dir}/les3x.log.P*", use_mpi=False)
+    for _workload, (_input, _sha256) in inputs.items():
+        input_file(
+            _input,
+            url="{ffb_input_url}",
+            sha256=_sha256,
+            description='Benchmark set for FFB',
+        )
 
-    input_file('benchmark-input',
-               url=url,
-               sha256=chksum,
-               description='Benchmark set for FFB')
+        workload(
+            _workload,
+            executables=["setup", "cpdata", "execute", "collect"],
+            input=_input,
+        )
 
-    workload("cavity",
-             executables=executables,
-             input="benchmark-input")
+        workload_variable(
+            'input',
+            default='{' + _input + '}',
+            description='input/ : benchmark-input root directory',
+            workloads=[_workload],
+        )
 
-    workload_variable('input', default='{benchmark-input}',
-                      description='input/ : benchmark-input root directory',
-                      workloads=['cavity'])
+    workload_variable(
+        'ffb_input_url',
+        default='',
+        description='Location of the input archive; set by the experiment',
+        workloads=list(inputs),
+    )
+    workload_variable(
+        'ffb_log',
+        default='{experiment_run_dir}/les3x.log.P0001',
+        description="Rank 0's log, which carries the timing summary",
+        workloads=list(inputs),
+    )
+    workload_variable(
+        'ffb_setup',
+        default=':',
+        description='Shell command run before the launch, e.g. ulimit',
+        workloads=list(inputs),
+    )
 
-    figure_of_merit('Figure of Merit (FOM)', log_file='{experiment_run_dir}/les3x.log.P0001', fom_regex=r'^\s+1\s+USRT:TIME-LOOP\s+(?P<fom>[-+]?([0-9]*[.])?[0-9]+([eED][-+]?[0-9]+)?)', group_name='fom', units='')
+    figure_of_merit('Figure of Merit (FOM)', log_file='{experiment_run_dir}/ffb.log', fom_regex=r'^\s+1\s+USRT:TIME-LOOP\s+(?P<fom>[-+]?([0-9]*[.])?[0-9]+([eED][-+]?[0-9]+)?)', group_name='fom', units='')
 
     success_criteria(
         name="fom_below_400s",
@@ -86,4 +111,3 @@ class Ffb(ExecutableApplication):
         fom_name="Figure of Merit (FOM)",
         formula="{value} <= 400"
     )
-

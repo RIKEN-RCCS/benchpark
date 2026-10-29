@@ -17,8 +17,10 @@ class Ffb(
 ):
     variant(
         "workload",
-        default="cavity",
-        description="ffb",
+        default="auto",
+        values=("auto", "cavity_7_8M", "cavity_2_0M"),
+        description="ffb input: 'auto' takes the one prepared for the "
+        "system and backend (see _archives)",
     )
 
     variant(
@@ -38,6 +40,25 @@ class Ffb(
 
     def compute_applications_section(self):
         has_cuda = self.spec.satisfies("backend=gpu")
+        run = self._run()
+
+        # The application does not look at the machine; everything that
+        # differs between machines is chosen here. See
+        # RIKEN-RCCS/benchpark#54.
+        requested = self.spec.variants["workload"][0]
+        if requested not in ("auto", run["workload"]):
+            raise BenchparkError(
+                f"ffb workload={requested} is not prepared for "
+                f"{self.system_spec.name} backend="
+                f"{self.spec.variants['backend'][0]}; its input is "
+                f"{run['workload']}"
+            )
+        self.workload = [run["workload"]]
+        self.add_experiment_variable("ffb_input_url", run["input_url"], False)
+        if run.get("log"):
+            self.add_experiment_variable("ffb_log", run["log"], False)
+        if run.get("setup"):
+            self.add_experiment_variable("ffb_setup", run["setup"], False)
 
         # Do not set extra_batch_opts here. The allocation modifier already
         # writes the node count from n_nodes in each scheduler's own syntax
@@ -71,8 +92,11 @@ class Ffb(
             total_problem_size="{size}",
         )
 
-    # The archives the package declares, by machine and backend, with the
-    # compute capability of the machine's GPU for the GPU archive.
+    # What runs on each machine, by machine and backend: the package
+    # version (archive), the compute capability of the GPU for the GPU
+    # archive, and the input with its location. `log` is where rank 0
+    # writes the timing summary when it is not les3x.log.P0001, and `setup`
+    # a shell command run before the launch.
     #
     # The versions are named per machine, and the names nest (67.01-cpu,
     # 67.01-cpu-genoa, 67.01-gpu-gh200), so they are requested exactly
@@ -90,12 +114,49 @@ class Ffb(
     # stop at `benchpark experiment init` instead. See
     # RIKEN-RCCS/benchpark#7.
     _archives = {
-        # Fugaku's archive carries no machine suffix
-        # (url ffb-frt_cpu.fugaku.tar.gz).
-        ("fugaku", "cpu"): ("cpu", None),
-        ("genoa", "cpu"): ("cpu-genoa", None),
-        ("gh200", "gpu"): ("gpu-gh200", "90"),
+        ("fugaku", "cpu"): {
+            # Fugaku's archive carries no machine suffix
+            # (url ffb-frt_cpu.fugaku.tar.gz).
+            "archive": "cpu",
+            "cuda_arch": None,
+            "workload": "cavity_2_0M",
+            "input_url": "file:///vol0003/rccs-sdt/data/a01008/apps/ffb/benchmark-input.tar.gz",
+            # Fujitsu MPI's -std-proc sends rank output to files.
+            "log": "{experiment_run_dir}/fjmpioutdir/bmexe.1.0",
+        },
+        ("genoa", "cpu"): {
+            "archive": "cpu-genoa",
+            "cuda_arch": None,
+            "workload": "cavity_2_0M",
+            "input_url": "file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-2.0M.tar.gz",
+            # The CPU archive writes its log to standard output.
+            "log": "{experiment_run_dir}/{experiment_name}.out",
+            "setup": "ulimit -s unlimited",
+        },
+        ("gh200", "gpu"): {
+            "archive": "gpu-gh200",
+            "cuda_arch": "90",
+            "workload": "cavity_7_8M",
+            "input_url": "file:///lvs0/rccs-sdt/kazuto.ando/apps/ffb/benchmark-input-7.8M.tar.gz",
+        },
     }
+
+    def _run(self):
+        """The _archives entry for this system and backend."""
+        backend = self.spec.variants["backend"][0]
+        machine = self._machine()
+        run = self._archives.get((machine, backend))
+        if run is None:
+            available = ", ".join(
+                f"{m} backend={b}" for m, b in sorted(self._archives)
+            )
+            raise BenchparkError(
+                f"ffb has no {backend} archive for system "
+                f"{self.system_spec.name}"
+                + (f" (machine {machine})" if machine else "")
+                + f"; archives exist for: {available}"
+            )
+        return run
 
     def _machine(self):
         """The machine this system runs on, as used in _archives.
@@ -121,22 +182,9 @@ class Ffb(
         # `compiler=cuda` is gcc with CUDA, while the GPU archive compiles
         # with nvfortran-only flags (-Mpreprocess, -acc, -gpu=managed,
         # -cuda) and links nvc++ objects, so it needs compiler=nvhpc.
-        backend = self.spec.variants["backend"][0]
-        machine = self._machine()
-
-        archive = self._archives.get((machine, backend))
-        if archive is None:
-            available = ", ".join(
-                f"{m} backend={b}" for m, b in sorted(self._archives)
-            )
-            raise BenchparkError(
-                f"ffb has no {backend} archive for system "
-                f"{self.system_spec.name}"
-                + (f" (machine {machine})" if machine else "")
-                + f"; archives exist for: {available}"
-            )
-        suffix, cuda_arch = archive
-        spec_str = f"ffb@={base_version}-{suffix}"
+        run = self._run()
+        cuda_arch = run["cuda_arch"]
+        spec_str = f"ffb@={base_version}-{run['archive']}"
 
         if cuda_arch:
             # The GPU archive compiles with `-gpu=managed` and defines
