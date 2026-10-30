@@ -98,14 +98,12 @@ def test_qws_analysis_resets_missing_or_invalid_log(qws, tmp_path):
     assert app.foms["qws_jacobi_seconds"] is None
 
 
-@pytest.mark.parametrize(
-    "test_mode,expected",
-    [
-        (True, [32, 6, 4, 3, 1, 1, 1, 1, -1, -1, 6, 50]),
-        (False, [64, 12, 8, 2, 2, 2, 2, 1, -1, -1, 6, 50]),
-    ],
-)
-def test_qws_experiment_inputs_and_perf_preservation(test_mode, expected):
+class _BenchparkError(Exception):
+    pass
+
+
+def _compute_applications_section(workload, satisfied):
+    """Run Qws.compute_applications_section on a mock; return the variables."""
     tree = ast.parse((ROOT / "experiments/qws/experiment.py").read_text())
     cls = next(node for node in tree.body if isinstance(node, ast.ClassDef))
     method = next(
@@ -115,9 +113,10 @@ def test_qws_experiment_inputs_and_perf_preservation(test_mode, expected):
         and node.name == "compute_applications_section"
     )
     namespace = {
+        "BenchparkError": _BenchparkError,
         "ScalingMode": types.SimpleNamespace(
             Strong="strong", Weak="weak", Throughput="throughput"
-        )
+        ),
     }
     exec(
         compile(ast.Module(body=[method], type_ignores=[]), "qws-experiment", "exec"),
@@ -132,15 +131,47 @@ def test_qws_experiment_inputs_and_perf_preservation(test_mode, expected):
             values[name] = value
 
     app = types.SimpleNamespace(
-        spec=types.SimpleNamespace(
-            satisfies=lambda selection: (
-                test_mode if selection == "exec_mode=test" else False
-            )
-        ),
+        workload=[workload],
+        spec=types.SimpleNamespace(satisfies=lambda selection: selection in satisfied),
         add_experiment_variable=add,
         set_required_variables=lambda **kwargs: None,
         register_scaling_config=lambda value: None,
     )
     namespace["compute_applications_section"](app)
-    names = "lx ly lz lt px py pz pt tol_outer tol_inner maxiter_plus1_outer maxiter_inner".split()
+    return values
+
+
+LATTICE = "lx ly lz lt px py pz pt".split()
+
+
+@pytest.mark.parametrize(
+    "test_mode,expected",
+    [
+        (True, [32, 6, 4, 3, 1, 1, 1, 1, -1, -1, 6, 50]),
+        (False, [64, 12, 8, 2, 2, 2, 2, 1, -1, -1, 6, 50]),
+    ],
+)
+def test_qws_experiment_inputs_and_perf_preservation(test_mode, expected):
+    # The default workload: its lattice comes from exec_mode.
+    values = _compute_applications_section(
+        "qws", {"exec_mode=test"} if test_mode else set()
+    )
+    names = LATTICE + "tol_outer tol_inner maxiter_plus1_outer maxiter_inner".split()
     assert [int(values[name]) for name in names] == expected
+
+
+@pytest.mark.parametrize("test_mode", [True, False])
+def test_qws_case_workload_keeps_its_own_input(test_mode):
+    # A README test case takes its lattice and process grid from the workload,
+    # so the experiment must not set them, whatever the exec_mode.
+    values = _compute_applications_section(
+        "CASE3", {"exec_mode=test"} if test_mode else set()
+    )
+    assert not set(LATTICE) & set(values)
+    assert values["n_ranks"] == "{n_resources}"
+
+
+@pytest.mark.parametrize("scaling", ["+strong", "+weak", "+throughput"])
+def test_qws_case_workload_cannot_be_scaled(scaling):
+    with pytest.raises(_BenchparkError, match="workload=CASE3 is a fixed input"):
+        _compute_applications_section("CASE3", {scaling})
