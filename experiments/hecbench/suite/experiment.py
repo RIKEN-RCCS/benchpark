@@ -41,8 +41,8 @@ class Suite(
         "version",
         # A fixed commit, so that a result can be reproduced; master follows
         # upstream and changes the set of benchmarks built from day to day.
-        default="2026-10-28",
-        values=("master", "2026-10-28", "2026-08-16"),
+        default="2026-11-02",
+        values=("master", "2026-11-02", "2026-10-28", "2026-08-16"),
         description="app version",
     )
 
