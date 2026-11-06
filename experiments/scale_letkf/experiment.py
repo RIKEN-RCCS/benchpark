@@ -68,6 +68,7 @@ class ScaleLetkf(
                 "extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False
             )
             self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
+            tuning_cmds += "; export CUDA_MPS_PIPE_DIRECTORY=/tmp/mps-pipe-$SLURM_JOB_ID; export CUDA_MPS_LOG_DIRECTORY=/tmp/mps-log-$SLURM_JOB_ID; mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY; nvidia-cuda-mps-control -d"
         elif system == "riken-dgx":
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
@@ -79,6 +80,7 @@ class ScaleLetkf(
                 "extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False
             )
             self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
+            tuning_cmds += "; export CUDA_MPS_PIPE_DIRECTORY=/tmp/mps-pipe-$SLURM_JOB_ID; export CUDA_MPS_LOG_DIRECTORY=/tmp/mps-log-$SLURM_JOB_ID; mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY; nvidia-cuda-mps-control -d"
         elif system == "riken-rikyu":
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
@@ -90,6 +92,7 @@ class ScaleLetkf(
                 "extra_batch_opts", "-N {n_nodes} -c {omp_num_threads}", False
             )
             self.add_experiment_variable("extra_cmd_opts", "--gpus 1", False)
+            tuning_cmds += "; export CUDA_MPS_PIPE_DIRECTORY=/tmp/mps-pipe-$SLURM_JOB_ID; export CUDA_MPS_LOG_DIRECTORY=/tmp/mps-log-$SLURM_JOB_ID; mkdir -p $CUDA_MPS_PIPE_DIRECTORY $CUDA_MPS_LOG_DIRECTORY; nvidia-cuda-mps-control -d"
         else:
             self.add_experiment_variable("n_nodes", ["1"], True)
             self.add_experiment_variable("processes_per_node", ["12"], True)
@@ -148,7 +151,7 @@ class ScaleLetkf(
         if compiler == "gcc":
             spec_str += " %gcc ^openmpi %gcc"
         elif compiler == "nvhpc":
-            spec_str += " %nvhpc"
+            spec_str += " %nvhpc ^netcdf-c %nvhpc ^netcdf-fortran %nvhpc ^parallel-netcdf %nvhpc ^hdf5 %nvhpc"
         elif compiler == "fj":
             spec_str += " %fj"
 
