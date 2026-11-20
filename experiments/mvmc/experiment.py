@@ -31,10 +31,7 @@ class Mvmc(
         # The Spack recipe used for mVMC does not define an "openmp" variant,
         # so the Benchpark programming model is kept as MPI-only. Runtime
         # threading is controlled by OMP_NUM_THREADS in the Ramble application.
-        if (
-            self.system_spec.satisfies("riken-cloud cluster=gh200")
-            or self.system_spec.satisfies("riken-rikyu")
-        ):
+        if (self.system_spec.satisfies("riken-rikyu")):
             # CPU-only smoke test; Rikyu permits 32 CPUs per allocated GPU.
             ranks_per_node = 2 if self.system_spec.satisfies("riken-rikyu") else 6
             self.add_experiment_variable("n_nodes", 1, True)
@@ -49,6 +46,42 @@ class Mvmc(
                 "--cpus-per-task={n_threads_per_proc}",
                 False,
             )
+            self.set_environment_variable("OMP_PLACES", "cores")
+            self.set_environment_variable("OMP_PROC_BIND", "close")
+        elif (self.system_spec.satisfies("riken-gh200")
+              or
+              self.system_spec.satisfies("riken-cloud cluster=gh200")
+              ):
+           # qc-gh200 has 72 Grace CPU cores per node.  Keep this CPU-only
+            # smoke test on one node to avoid waiting for a multi-node
+            # allocation and use all cores as 6 ranks x 12 threads.
+            self.add_experiment_variable("n_nodes", 1, True)
+            self.add_experiment_variable("n_ranks", 6, True)
+            self.add_experiment_variable(
+                "extra_batch_opts",
+                "--nodes={n_nodes} --ntasks-per-node=6 "
+                "--cpus-per-task={n_threads_per_proc}",
+                False,
+            )
+            self.set_environment_variable("OMP_PLACES", "cores")
+            self.set_environment_variable("OMP_PROC_BIND", "close")
+        elif (self.system_spec.satisfies("riken-genoa")
+              or
+              self.system_spec.satisfies("riken-cloud cluster=genoa")
+              ):
+            self.add_experiment_variable("n_nodes", 1, True)
+            self.add_experiment_variable("n_ranks", 8, True)
+            self.add_experiment_variable(
+                "extra_batch_opts",
+                "--nodes={n_nodes} --ntasks-per-node=8 "
+                "--cpus-per-task={n_threads_per_proc}",
+                False,
+            )
+            # Restrict Open MPI data transport to shared memory while this
+            # benchmark runs on one node.  Genoa's automatic UCX/TCP network
+            # selection currently fails for multi-node execution.
+            self.set_environment_variable("OMPI_MCA_pml", "ob1")
+            self.set_environment_variable("OMPI_MCA_btl", "self,vader")
             self.set_environment_variable("OMP_PLACES", "cores")
             self.set_environment_variable("OMP_PROC_BIND", "close")
         else:
