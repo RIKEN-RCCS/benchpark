@@ -536,14 +536,48 @@ class RikenRikyu(System):
                     ],
                 },
             }
-        if self.spec.satisfies("compiler=nvhpc"):
+        # Every compiler but `cuda` needs the toolkit declared as an external
+        # package: anything with `depends_on("cuda")` - hecbench, genesis's
+        # GPU backend - concretizes against it, and without one spack falls
+        # back to building the toolkit from a runfile. `compiler=cuda` is the
+        # exception because compute_compilers_section() already declares the
+        # same prefix there, as a compiler. riken-gh200 draws the line in
+        # exactly this place.
+        if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
 
         return selections
 
+    # The standalone toolkits under /shared/software/cuda carry a third
+    # version component that the `cuda` variant does not; map the variant
+    # value onto the directory that is actually there.
+    standalone_cuda = {
+        "13.3": "13.3.1",
+        "13.2": "13.2.2",
+        "12.9": "12.9.2",
+    }
+
     def cuda_config(self):
         nvhpc_version = self.nvhpc_version
         cuda_version = self.cuda_version
+        if not self.spec.satisfies("compiler=nvhpc"):
+            # gcc: the toolkit is the standalone one, not the copy inside the
+            # HPC SDK. __init__ only resolves the full version for
+            # `compiler=cuda`, so resolve it here too.
+            full = self.standalone_cuda.get(str(cuda_version), str(cuda_version))
+            return {
+                "packages": {
+                    "cuda": {
+                        "externals": [
+                            {
+                                "spec": f"cuda@{full}",
+                                "prefix": f"/shared/software/cuda/{full}",
+                            }
+                        ],
+                        "buildable": False,
+                    },
+                }
+            }
         if str(nvhpc_version) == "25.7" or str(nvhpc_version) == "24.9":
             return {
                 "packages": {
