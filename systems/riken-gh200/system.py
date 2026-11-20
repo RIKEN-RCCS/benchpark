@@ -402,6 +402,11 @@ class RikenGh200(System):
         if not self.spec.satisfies("compiler=cuda"):
             selections["packages"] |= self.cuda_config()["packages"]
 
+        # libxml2 2.15 (spack-packages 2722a129) builds with
+        # -Wno-array-bounds, which nvc rejects ("Unknown switch"). 2.13 is
+        # what this system built with nvhpc before.
+        selections["packages"]["libxml2"] = {"require": "@:2.13"}
+
         return selections
 
     def hpcx_dir(self):
