@@ -310,7 +310,9 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
         preferred=True,
     )
     version("2026-08-13", commit="f9540404573a2be7ad1d1ee4b3106fd064825fa8")
-    # Versions the suite is pinned to by hecbench.suite.
+    # Versions the suite is pinned to by hecbench.suite. 2026-11-02 is the
+    # merge of ORNL/HeCBench#442 and includes #441.
+    version("2026-11-02", commit="1b93e346a201aa6d92b9c39645918a8cdeda8e4e")
     version("2026-10-28", commit="098d5971289940e2750def6ea4f67c40523353e1")
     version("2026-08-16", commit="06d24631a6f977ba8d3ba053073471ac9bd77b7a")
 
@@ -319,14 +321,13 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
     patch("caliper-instrumentation.patch", when="@2026-08-13 +caliper")
     patch("mpi-replicas.patch", when="@2026-08-13 +mpi")
 
-    # Six result patterns in benchmarks.yaml no longer match what the
+    # Six result patterns in benchmarks.yaml did not match what the
     # programs print (aobench, all-pairs-distance, black-scholes, chi2,
-    # gelu, knn), so the suite reports them as "result pattern not found".
-    # Upstream master still carries the old patterns. Apply the fix to the
-    # suite's fixed versions until it is merged upstream, then move the
-    # default to a commit that contains it and drop the patch. master is
-    # left alone, since the patch would stop applying once merged. Only the
-    # suite reads these patterns. See RIKEN-RCCS/benchpark#35.
+    # gelu, knn), so the suite reported them as "result pattern not found".
+    # The fix is upstream as ORNL/HeCBench#441 (and #442 for knn), which
+    # 2026-11-02 and master contain. The patch is kept only for the older
+    # pins, so that their results can still be reproduced. See
+    # RIKEN-RCCS/benchpark#35.
     for _v in ("2026-08-16", "2026-10-28"):
         patch("stale-test-regex.patch", when=f"@={_v} benchmark=suite")
 
@@ -741,12 +742,22 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_before("cmake")
     def prune_unbuildable_benchmarks(self):
-        """Drop benchmarks that cannot be configured from HeCBench's own list.
+        """Trim HeCBench's benchmark list to what this install builds.
 
-        `src/CMakeLists.txt` enumerates every benchmark it adds; a single
-        unbuildable entry fails the configure step for the whole suite, so the
-        list is rewritten to contain only what this checkout can actually
-        build.
+        `src/CMakeLists.txt` enumerates every benchmark it adds, and CMake
+        configures all of them even when only some are built. A single
+        entry that cannot be configured therefore fails the configure step
+        for the whole suite. Two kinds are dropped:
+
+        * benchmarks whose sources or inputs are missing from the checkout
+          (DVC content that was never pulled, sources a CMakeLists names
+          but the repository does not ship);
+        * unless benchmarks=all, benchmarks this install does not build.
+          Upstream adds benchmarks often, and those without a result
+          pattern are never measured here. One of them breaking the
+          configure step should not cost the measured ones; twell-cuda in
+          2026-11-02 links `CUDA::cuda`, which FindCUDAToolkit does not
+          define, and stopped the whole configure.
         """
         if not self.is_suite:
             return
@@ -762,24 +773,42 @@ class Hecbench(CMakePackage, CudaPackage, ROCmPackage):
             return
 
         model = self.model
-        keep, dropped = [], []
+        wanted = (
+            None
+            if self.spec.satisfies("benchmarks=all")
+            else set(self.selected_benchmarks())
+        )
+        keep, missing, unselected = [], [], []
         for line in match.group("body").splitlines():
             name = line.split("#")[0].strip()
             if not name:
                 continue
-            (keep if self.benchmark_is_buildable(name, model) else dropped).append(name)
+            if not self.benchmark_is_buildable(name, model):
+                missing.append(name)
+            elif wanted is not None and name not in wanted:
+                unselected.append(name)
+            else:
+                keep.append(name)
 
-        if not dropped:
+        if not missing and not unselected:
             return
 
         body = "\n" + "\n".join(f"    {name}" for name in keep) + "\n"
         content = content[: match.start("body")] + body + content[match.end("body"):]
         with open(src_cmakelists, "w") as handle:
             handle.write(content)
-        tty.msg(
-            f"hecbench: skipping {len(dropped)} benchmark(s) whose sources or "
-            f"inputs are missing from this checkout: {' '.join(sorted(dropped))}"
-        )
+        if missing:
+            tty.msg(
+                f"hecbench: skipping {len(missing)} benchmark(s) whose sources "
+                f"or inputs are missing from this checkout: "
+                f"{' '.join(sorted(missing))}"
+            )
+        if unselected:
+            tty.msg(
+                f"hecbench: configuring {len(keep)} benchmark(s); "
+                f"{len(unselected)} not selected by benchmarks="
+                f"{self.spec.variants['benchmarks'].value} are left out"
+            )
 
     #: A small, fast and self-contained cross section of the suite, used to
     #: validate an installation without building several hundred kernels.
